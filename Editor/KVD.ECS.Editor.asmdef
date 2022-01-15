@@ -1,0 +1,19 @@
+{
+    "name": "KVD.ECS.Editor",
+    "rootNamespace": "KVD.ECS.Editor",
+    "references": [
+        "GUID:6c3923f6700910949986cbf4e882c8f9",
+        "GUID:59ecb471de80f35478a4ac410fa00fcf"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

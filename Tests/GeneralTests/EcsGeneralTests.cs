@@ -1,0 +1,78 @@
+using System.Collections;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
+using KVD.ECS.Systems;
+using KVD.ECS.Tests.Components;
+using NUnit.Framework;
+using UnityEngine.TestTools;
+
+#nullable disable
+
+namespace KVD.ECS.Tests
+{
+	public class EcsGeneralTests : EcsTestsBase
+	{
+		private SparseList<Position> _positions;
+		private SparseList<Acceleration> _accelerations;
+
+		protected override Task OnSetup()
+		{
+			_positions         = world.defaultStorage.List<Position>();
+			_accelerations     = world.defaultStorage.List<Acceleration>();
+			return base.OnSetup();
+		}
+
+		[UnityTest]
+		public IEnumerator Systems_WorldUpdate_SystemsUpdate()
+		{
+			// Arrange
+			yield return world.RegisterSystem(new MovementSystem()).ToCoroutine();
+			
+			var nextEntity = world.defaultStorage.NextEntity();
+			_positions.Add(nextEntity, new());
+			_accelerations.Add(nextEntity, new() { x = 1, y = 1, z = 1, });
+			
+			// Act & Assert
+			for (var i = 0; i < 10; i++)
+			{
+				world.Update();
+				Assert.AreEqual(i+1, _positions.Value(nextEntity).x);
+				Assert.AreEqual(i+1, _positions.Value(nextEntity).y);
+				Assert.AreEqual(i+1, _positions.Value(nextEntity).z);
+			}
+		}
+
+		#region Helper data
+		private class MovementSystem : SystemBase
+		{
+			private SparseList<Position> _positionComponents;
+			private SparseList<Acceleration> _accelerationComponents;
+			private ComponentsView _componentsView;
+
+			protected override UniTask InitialSetup()
+			{
+				_positionComponents     = World.defaultStorage.List<Position>();
+				_accelerationComponents = World.defaultStorage.List<Acceleration>();
+				_componentsView         = RegisterComponentsView(
+					ViewDescriptor.New<Position, Acceleration>(World.defaultStorage)
+					);
+				
+				return base.InitialSetup();
+			}
+
+			protected override void Update()
+			{
+				foreach (var entity in _componentsView)
+				{
+					ref var position     = ref _positionComponents.Value(entity);
+					var acceleration = _accelerationComponents.Value(entity);
+
+					position.x += acceleration.x;
+					position.y += acceleration.y;
+					position.z += acceleration.z;
+				}
+			}
+		}
+		#endregion Helper data
+	}
+}
