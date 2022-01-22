@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using Unity.Profiling;
 using Unity.Profiling.LowLevel;
 
-namespace KVD.ECS.Systems
+namespace KVD.ECS.Core.Systems
 {
 	public class SystemsGroup : ISystem
 	{

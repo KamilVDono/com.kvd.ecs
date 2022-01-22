@@ -1,9 +1,9 @@
 ﻿using System;
-using KVD.ECS.Components;
+using KVD.ECS.Core.Components;
 
 #nullable enable
 
-namespace KVD.ECS
+namespace KVD.ECS.Core
 {
 	public sealed class ViewDescriptor
 	{

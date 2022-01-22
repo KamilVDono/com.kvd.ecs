@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using KVD.ECS.Components;
+using KVD.ECS.ComponentHelpers;
 
 namespace KVD.ECS.Serializers
 {

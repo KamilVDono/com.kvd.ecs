@@ -1,14 +1,15 @@
 using System.Collections;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
-using KVD.ECS.Systems;
-using KVD.ECS.Tests.Components;
+using KVD.ECS.Core;
+using KVD.ECS.Core.Systems;
+using KVD.ECS.GeneralTests.Tests.GeneralTests.Components;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
 #nullable disable
 
-namespace KVD.ECS.Tests
+namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 {
 	public class EcsGeneralTests : EcsTestsBase
 	{

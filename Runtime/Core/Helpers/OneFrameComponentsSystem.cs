@@ -1,7 +1,7 @@
-﻿using KVD.ECS.Systems;
+﻿using KVD.ECS.Core.Systems;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 
-namespace KVD.ECS
+namespace KVD.ECS.Core.Helpers
 {
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 	public class OneFrameComponentsSystem : SystemBase

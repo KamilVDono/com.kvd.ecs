@@ -6,7 +6,7 @@ using KVD.Utils.Extensions;
 
 #nullable enable
 
-namespace KVD.ECS
+namespace KVD.ECS.Core
 {
 	[Serializable]
 	public struct ComponentsStorageKey : IComponentsStorageKeyProvider, IEquatable<ComponentsStorageKey>

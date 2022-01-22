@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
-using KVD.ECS.Components;
-using KVD.ECS.Entities;
-using KVD.ECS.Performances.Components;
+using KVD.ECS.Benchmarks.Tests.Benchmarks.Components;
+using KVD.ECS.ComponentHelpers;
+using KVD.ECS.Core;
+using KVD.ECS.Core.Entities;
 using KVD.ECS.Serializers;
 using KVD.Utils.Extensions;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
@@ -11,7 +12,7 @@ using UnityEngine;
 
 // ReSharper disable InconsistentNaming
 
-namespace KVD.ECS.Performances
+namespace KVD.ECS.Benchmarks.Tests.Benchmarks
 {
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 	public class ComponentsStorageComponent : MonoBehaviour

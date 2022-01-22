@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.IO;
-using KVD.ECS;
-using KVD.ECS.Components;
-using KVD.ECS.Tests;
+using KVD.ECS.ComponentHelpers;
+using KVD.ECS.Core;
+using KVD.ECS.GeneralTests.Tests.GeneralTests;
 using NUnit.Framework;
 using Unity.Mathematics;
 using UnityEngine;
@@ -12,7 +12,7 @@ using UnityEngine.TestTools;
 
 #nullable disable
 
-namespace KVD
+namespace KVD.ECS.PlayModeTests.Tests.PlayModeTests
 {
 	public class ComponentsStorageSerializationPlayMode
 	{

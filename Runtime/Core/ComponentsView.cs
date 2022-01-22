@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using KVD.ECS.Components;
-using KVD.ECS.Entities;
+using KVD.ECS.Core.Components;
+using KVD.ECS.Core.Entities;
+using KVD.ECS.Core.Helpers;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 using Unity.Profiling;
 
 #nullable enable
 
-namespace KVD.ECS
+namespace KVD.ECS.Core
 {
 	public interface IComponentsView : IDisposable
 	{
@@ -478,7 +479,7 @@ namespace KVD.ECS
 			{
 				return ref _componentsList1.Value(entity);
 			}
-			
+
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T2 Get2()
 			{

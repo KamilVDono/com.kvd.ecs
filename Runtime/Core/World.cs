@@ -4,24 +4,26 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using KVD.ECS.Core.Systems;
 using KVD.ECS.Serializers;
-using KVD.ECS.Systems;
 using UnityEngine.Assertions;
 
 #nullable enable
 
-namespace KVD.ECS
+namespace KVD.ECS.Core
 {
 	public class World
 	{
 		protected const char ControlCharacter = 'w';
 		public readonly ComponentsStorage defaultStorage;
 
+		protected readonly List<ISystem> systems = new();
 		private readonly Dictionary<ComponentsStorageKey, ComponentsStorage> _componentsStorages = new(4, ComponentsStorageKey.ComponentStorageKeyComparer);
 		private readonly List<ComponentsStorage> _componentsStoragesList = new(4);
 		private readonly IBootstrapable[] _bootstrapables;
 		private readonly Dictionary<Type, object> _singletons = new();
-		protected readonly List<ISystem> systems = new();
+
+		private bool _initialized;
 
 		public bool IsRestored{ get; private set; }
 		public IReadOnlyList<ComponentsStorage> AllComponentsStorages => _componentsStoragesList;
@@ -39,6 +41,7 @@ namespace KVD.ECS
 			IsRestored = false;
 			await Bootstrap();
 			await InitInitialSystems();
+			_initialized = true;
 		}
 		
 		public async UniTask Restore(BinaryReader reader)
@@ -47,6 +50,7 @@ namespace KVD.ECS
 			IsRestored = true;
 			await Bootstrap();
 			await RestoreSystems();
+			_initialized = true;
 		}
 
 		public async UniTask Destroy()
@@ -84,13 +88,19 @@ namespace KVD.ECS
 		public async UniTask RegisterSystem(ISystem system)
 		{
 			systems.Add(system);
-			await system.Init(this);
+			if (_initialized)
+			{
+				await system.Init(this);
+			}
 		}
 
 		public async UniTask RemoveSystem(ISystem system)
 		{
 			systems.Remove(system);
-			await system.Destroy();
+			if (_initialized)
+			{
+				await system.Destroy();
+			}
 		}
 		
 		public T System<T>() where T : class, ISystem

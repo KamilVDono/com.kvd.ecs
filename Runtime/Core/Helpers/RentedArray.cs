@@ -4,7 +4,7 @@ using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 
 #nullable enable
 
-namespace KVD.ECS
+namespace KVD.ECS.Core.Helpers
 {
 	// TODO: There is size limit for array length in ArrayPool<T>.Shared, should be resolved via custom array pool
 	public struct RentedArray<T> : IDisposable

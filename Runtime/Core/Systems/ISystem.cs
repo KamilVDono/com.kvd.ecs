@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
-namespace KVD.ECS.Systems
+namespace KVD.ECS.Core.Systems
 {
 	public interface ISystem
 	{

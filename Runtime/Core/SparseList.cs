@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
-using KVD.ECS.Components;
-using KVD.ECS.Entities;
+using KVD.ECS.Core.Components;
+using KVD.ECS.Core.Entities;
+using KVD.ECS.Core.Helpers;
 using KVD.ECS.Serializers;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 using Unity.Profiling;
@@ -11,7 +12,7 @@ using UnityEngine.Assertions;
 
 #nullable enable
 
-namespace KVD.ECS
+namespace KVD.ECS.Core
 {
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 	public abstract class SparseListConstants
@@ -302,7 +303,9 @@ namespace KVD.ECS
 			{
 				return;
 			}
-			
+
+			--sizeRequest;
+			sizeRequest <<= 2;
 			while (sizeRequest < oldSize)
 			{
 				sizeRequest <<= 2;

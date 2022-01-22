@@ -1,4 +1,4 @@
-﻿using KVD.ECS.Components;
+﻿using KVD.ECS.Core.Components;
 using UnityEngine;
 
 #nullable enable

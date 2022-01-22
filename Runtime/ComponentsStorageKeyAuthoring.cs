@@ -1,4 +1,5 @@
 ﻿using System;
+using KVD.ECS.Core;
 using UnityEngine;
 
 namespace KVD.ECS

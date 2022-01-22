@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
+using KVD.ECS.Core;
 using NUnit.Framework;
 
-namespace KVD.ECS.Tests
+namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 {
 	[TestFixture]
 	public abstract class EcsTestsBase

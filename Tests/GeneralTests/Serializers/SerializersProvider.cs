@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using KVD.ECS.GeneralTests.Tests.GeneralTests.Components;
 using KVD.ECS.Serializers;
-using KVD.ECS.Tests.Components;
 using UnityEngine.Scripting;
 
-namespace KVD.ECS.Tests.Serializers
+namespace KVD.ECS.GeneralTests.Tests.GeneralTests.Serializers
 {
 	[Preserve]
 	public class SerializersProvider : ISerializersProvider

@@ -1,4 +1,5 @@
-﻿using KVD.ECS.Systems;
+﻿using KVD.ECS.Core;
+using KVD.ECS.Core.Systems;
 using KVD.ECS.UnityBridges;
 
 namespace KVD.ECS.Generics

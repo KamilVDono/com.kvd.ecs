@@ -1,6 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 
-namespace KVD.ECS
+namespace KVD.ECS.Core
 {
 	public interface IBootstrapable
 	{

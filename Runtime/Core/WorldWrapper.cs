@@ -3,7 +3,7 @@ using System.Linq;
 using KVD.Utils.Attributes;
 using UnityEngine;
 
-namespace KVD.ECS
+namespace KVD.ECS.Core
 {
 	[DefaultExecutionOrder(-1500)]
 	public class WorldWrapper : MonoBehaviour

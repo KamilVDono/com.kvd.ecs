@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using KVD.ECS.Entities;
-using KVD.ECS.Tests.Components;
+using KVD.ECS.Core;
+using KVD.ECS.Core.Entities;
+using KVD.ECS.GeneralTests.Tests.GeneralTests.Components;
 using NUnit.Framework;
-using Position = KVD.ECS.Tests.Components.Position;
+using Position = KVD.ECS.GeneralTests.Tests.GeneralTests.Components.Position;
 
 #nullable disable
 
-namespace KVD.ECS.Tests
+namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 {
 	public class ComponentsViewTests : EcsTestsBase
 	{

@@ -1,10 +1,11 @@
-﻿using KVD.ECS.Entities;
-using KVD.ECS.Tests.Components;
+﻿using KVD.ECS.Core;
+using KVD.ECS.Core.Entities;
+using KVD.ECS.GeneralTests.Tests.GeneralTests.Components;
 using NUnit.Framework;
 
 #nullable disable
 
-namespace KVD.ECS.Tests
+namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 {
 	[TestFixture]
 	public class SparseListGeneral

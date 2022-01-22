@@ -1,10 +1,10 @@
 using System;
 using System.IO;
+using KVD.ECS.GeneralTests.Tests.GeneralTests.Components;
 using KVD.ECS.Serializers;
-using KVD.ECS.Tests.Components;
 using Unity.Mathematics;
 
-namespace KVD.ECS.Tests.Serializers
+namespace KVD.ECS.GeneralTests.Tests.GeneralTests.Serializers
 {
 	public class ComplexComponentSerializer : IComponentSerializer<ComplexComponent>
 	{

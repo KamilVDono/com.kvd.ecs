@@ -1,4 +1,6 @@
-﻿using KVD.ECS.Entities;
+﻿using KVD.ECS.Core;
+using KVD.ECS.Core.Components;
+using KVD.ECS.Core.Entities;
 using KVD.ECS.UnityBridges;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -6,7 +8,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 #nullable enable
 
-namespace KVD.ECS.Components
+namespace KVD.ECS.ComponentHelpers
 {
 	[DefaultExecutionOrder(-1000)]
 	public class RegisterEntity : MonoBehaviour

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using KVD.ECS.Components;
-using KVD.ECS.Entities;
+using KVD.ECS.Core;
+using KVD.ECS.Core.Components;
+using KVD.ECS.Core.Entities;
 using Unity.Collections;
 using static KVD.Utils.Extensions.NativeContainersExt;
 

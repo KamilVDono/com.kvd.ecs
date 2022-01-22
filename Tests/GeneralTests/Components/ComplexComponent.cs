@@ -1,9 +1,9 @@
-﻿using KVD.ECS.Components;
-using KVD.ECS.Entities;
+﻿using KVD.ECS.Core.Components;
+using KVD.ECS.Core.Entities;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace KVD.ECS.Tests.Components
+namespace KVD.ECS.GeneralTests.Tests.GeneralTests.Components
 {
 	public struct ComplexComponent : IComponent
 	{

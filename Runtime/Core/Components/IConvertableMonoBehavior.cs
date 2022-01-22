@@ -2,7 +2,7 @@
 
 #nullable enable
 
-namespace KVD.ECS.Components
+namespace KVD.ECS.Core.Components
 {
 	public interface IConvertableMonoBehavior
 	{

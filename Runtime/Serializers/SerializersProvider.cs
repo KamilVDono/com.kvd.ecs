@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using KVD.ECS.Components;
+using KVD.ECS.ComponentHelpers;
 using UnityEngine.Scripting;
 
 namespace KVD.ECS.Serializers

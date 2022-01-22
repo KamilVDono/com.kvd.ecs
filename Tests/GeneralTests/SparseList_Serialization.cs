@@ -1,13 +1,14 @@
 ﻿using System.IO;
-using KVD.ECS.Entities;
-using KVD.ECS.Tests.Components;
+using KVD.ECS.Core;
+using KVD.ECS.Core.Entities;
+using KVD.ECS.GeneralTests.Tests.GeneralTests.Components;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
 
 #nullable disable
 
-namespace KVD.ECS.Tests
+namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 {
 	public class SparseListSerialization
 	{

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace KVD.ECS.Entities
+namespace KVD.ECS.Core.Entities.Allocators
 {
 	public class CircularBufferEntitiesAllocator : IEntityAllocator
 	{

@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace KVD.ECS.Components
+namespace KVD.ECS.Core.Components
 {
 	public interface IDisplayable
 	{

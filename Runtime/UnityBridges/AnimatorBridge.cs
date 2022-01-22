@@ -1,5 +1,6 @@
-﻿using KVD.ECS.Components;
-using KVD.ECS.Entities;
+﻿using KVD.ECS.Core;
+using KVD.ECS.Core.Components;
+using KVD.ECS.Core.Entities;
 using UnityEngine;
 
 namespace KVD.ECS.UnityBridges

@@ -1,10 +1,11 @@
 ﻿using System;
+using KVD.ECS.Core.Components;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 #nullable enable
 
-namespace KVD.ECS.Components
+namespace KVD.ECS.ComponentHelpers
 {
 	[Serializable]
 	public readonly struct GameObjectWrapper : IEquatable<GameObjectWrapper>, IMonoComponent

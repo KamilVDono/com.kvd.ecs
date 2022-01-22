@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using KVD.ECS.Components;
+using KVD.ECS.Core.Components;
 
 #nullable enable
-namespace KVD.ECS.Entities
+namespace KVD.ECS.Core.Entities
 {
 	public readonly struct Entity : IEquatable<Entity>, IComparable<Entity>
 	{

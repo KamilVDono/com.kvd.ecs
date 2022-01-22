@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using KVD.ECS.Core.Components;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 #nullable enable
 
-namespace KVD.ECS.Components
+namespace KVD.ECS.ComponentHelpers
 {
 	public readonly struct MonoComponentWrapper<T> : IEquatable<MonoComponentWrapper<T>>, IMonoComponent where T : Component
 	{

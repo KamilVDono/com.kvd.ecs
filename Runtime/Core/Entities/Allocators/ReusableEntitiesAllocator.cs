@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Text;
 
-namespace KVD.ECS.Entities
+namespace KVD.ECS.Core.Entities.Allocators
 {
 	public class ReusableEntitiesAllocator : IEntityAllocator
 	{
 		private int _pointer = -1;
 		private Entity _last = Entity.Null;
-		private readonly EntitiesPointer[] _buffer = new EntitiesPointer[512];
+		private EntitiesPointer[] _buffer = new EntitiesPointer[512];
 
 		public Entity Allocate()
 		{
@@ -74,7 +74,7 @@ namespace KVD.ECS.Entities
 				}
 			}
 			
-			InsertEntity(e, 0);
+			InsertEntity(e, _pointer+1);
 		}
 
 		private void Merge(int position)
@@ -91,6 +91,10 @@ namespace KVD.ECS.Entities
 		{
 			if (position > _pointer)
 			{
+				if (position >= _buffer.Length)
+				{
+					Array.Resize(ref _buffer, _buffer.Length << 2);
+				}
 				_buffer[position] = new() { head = e, count = 1, };
 			}
 			else
@@ -103,7 +107,7 @@ namespace KVD.ECS.Entities
 		
 		public void AssertValidity(ComponentsStorage storage)
 		{
-			#if !DEBUG
+			#if DEBUG
 			return;
 			#endif
 			var sb = new StringBuilder();

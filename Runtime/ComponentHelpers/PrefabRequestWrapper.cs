@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using KVD.ECS.Core.Components;
+using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace KVD.ECS.Components
+namespace KVD.ECS.ComponentHelpers
 {
 	public readonly struct PrefabRequestWrapper : IMonoComponent
 	{

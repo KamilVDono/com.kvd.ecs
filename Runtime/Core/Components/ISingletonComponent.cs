@@ -1,4 +1,4 @@
-﻿namespace KVD.ECS.Components
+﻿namespace KVD.ECS.Core.Components
 {
 	public interface ISingletonComponent : IComponent
 	{

@@ -7,8 +7,11 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Cysharp.Threading.Tasks;
-using KVD.ECS.Components;
-using KVD.ECS.Entities;
+using KVD.ECS.ComponentHelpers;
+using KVD.ECS.Core.Components;
+using KVD.ECS.Core.Entities;
+using KVD.ECS.Core.Entities.Allocators;
+using KVD.ECS.Core.Helpers;
 using KVD.ECS.Serializers;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 using Unity.Mathematics;
@@ -18,7 +21,7 @@ using UnityEngine.Assertions;
 
 #nullable enable
 
-namespace KVD.ECS
+namespace KVD.ECS.Core
 {
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 	public class ComponentsStorage
@@ -39,9 +42,9 @@ namespace KVD.ECS
 		private readonly SingletonComponentsStorage _singletons = new(64);
 		private readonly List<int> _singleFrameSingletons = new(4);
 
-		private readonly IEntityAllocator _entityAllocator;
+		private IEntityAllocator _entityAllocator;
 
-		public Entity CurrentEntity{ get; private set; }
+		public Entity CurrentEntity{ get; private set; } = Entity.Null;
 		public IReadOnlyList<ISparseList> AllLists => _lists;
 
 		public ComponentsStorage(ComponentsStorageKey? storageKey = null, IEntityAllocator? entityAllocator = null)
@@ -78,6 +81,17 @@ namespace KVD.ECS
 		}
 
 		#region Entities
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool SetAllocator(IEntityAllocator allocator)
+		{
+			if (CurrentEntity != Entity.Null)
+			{
+				return false;
+			}
+			_entityAllocator = allocator;
+			return true;
+		}
+		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Entity NextEntity()
 		{
@@ -119,6 +133,16 @@ namespace KVD.ECS
 			return isAlive;
 		}
 
+		public RentedArray<Entity> NextEntitiesBulk(int length)
+		{
+			var entities = new RentedArray<Entity>(length);
+			for (var i = 0; i < length; i++)
+			{
+				entities[i] = NextEntity();
+			}
+			return entities;
+		}
+		
 		public RentedArray<Entity> AddToAllBulk(int length)
 		{
 			var entities = new RentedArray<Entity>(length);

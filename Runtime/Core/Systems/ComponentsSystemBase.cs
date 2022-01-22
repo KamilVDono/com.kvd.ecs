@@ -1,4 +1,4 @@
-﻿namespace KVD.ECS.Systems
+﻿namespace KVD.ECS.Core.Systems
 {
 	public abstract class ComponentsSystemBase<TWorld> : SystemBase where TWorld : World
 	{

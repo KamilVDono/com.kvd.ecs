@@ -2,8 +2,10 @@
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using KVD.ECS.Entities;
-using KVD.ECS.Systems;
+using KVD.ECS.Core;
+using KVD.ECS.Core.Entities;
+using KVD.ECS.Core.Helpers;
+using KVD.ECS.Core.Systems;
 using KVD.Utils.DataStructures;
 using KVD.Utils.Extensions;
 using UnityEditor;
@@ -34,7 +36,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		private readonly TableView<SystemWrapper> _systemsTableView = new(new[]
 		{
 			new TableColumn<SystemWrapper>("Name", w => w.DisplayName, 2f/5),
-			new TableColumn<SystemWrapper>("Entities", w => (w.ComponentsViews.FirstOrDefault()?.Size ?? 0).ToString(), 1f/5),
+			new TableColumn<SystemWrapper>("Entities", w => (w.ComponentsViews?.FirstOrDefault()?.Size ?? 0).ToString(), 1f/5),
 			new TableColumn<SystemWrapper>("Time", w => $"{w.Recorder.GetRecorderAverageTime():f4} ms", 2f/5),
 		});
 		
@@ -232,24 +234,19 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		
 		private void DrawSystem(ISystem system)
 		{
+			if (!_wrapperBySystem.TryGetValue(system, out var wrapper))
+			{
+				wrapper                  = new(system);
+				_wrapperBySystem[system] = wrapper;
+			}
+
+			_systemsTableView.DrawRow(wrapper);
+			
 			for (var i = 0; i < system.InternalSystems.Count; i++)
 			{
 				var innerSystem = system.InternalSystems[i];
 				DrawSystem(innerSystem);
 			}
-
-			if (system is not SystemBase systemBase)
-			{
-				return;
-			}
-			
-			if (!_wrapperBySystem.TryGetValue(system, out var wrapper))
-			{
-				wrapper                  = new(systemBase);
-				_wrapperBySystem[system] = wrapper;
-			}
-
-			_systemsTableView.DrawRow(wrapper);
 		}
 		#endregion Systems
 	}

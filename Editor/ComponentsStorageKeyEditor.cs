@@ -1,4 +1,5 @@
 using System;
+using KVD.ECS.Core;
 using UnityEditor;
 using UnityEngine;
 

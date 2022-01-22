@@ -1,4 +1,4 @@
-﻿namespace KVD.ECS.Entities
+﻿namespace KVD.ECS.Core.Entities.Allocators
 {
 	public class ContinuousEntitiesAllocator : IEntityAllocator
 	{
