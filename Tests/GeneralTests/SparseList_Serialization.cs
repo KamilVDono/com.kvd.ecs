@@ -12,18 +12,18 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 {
 	public class SparseListSerialization
 	{
-		private SparseList<Position> _positions;
-		private SparseList<Circle> _circles;
-		private SparseList<ComplexComponent> _complexComponents;
+		private ComponentList<Position> _positions;
+		private ComponentList<Circle> _circles;
+		private ComponentList<ComplexComponent> _complexComponents;
 
-		private ISparseList _deserialized;
+		private IComponentList _deserialized;
 		
 		[SetUp]
 		public void OnSetup()
 		{
-			_positions         = new SparseList<Position>();
-			_circles           = new SparseList<Circle>();
-			_complexComponents = new SparseList<ComplexComponent>();
+			_positions         = new ComponentList<Position>();
+			_circles           = new ComponentList<Circle>();
+			_complexComponents = new ComponentList<ComplexComponent>();
 		}
 
 		[TearDown]
@@ -49,7 +49,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			stream.Position = 0;
 			using var reader = new BinaryReader(stream);
 
-			var deserializedList = SparseList<Position>.Deserialize(reader);
+			var deserializedList = ComponentList<Position>.Deserialize(reader);
 			_deserialized = deserializedList;
 
 			// Assert
@@ -72,7 +72,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			stream.Position = 0;
 			using var reader = new BinaryReader(stream);
 
-			var deserializedList = SparseList<Position>.Deserialize(reader);
+			var deserializedList = ComponentList<Position>.Deserialize(reader);
 			_deserialized = deserializedList;
 
 			// Assert
@@ -103,7 +103,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			stream.Position = 0;
 			using var reader = new BinaryReader(stream);
 
-			var deserializedList = SparseList<Position>.Deserialize(reader);
+			var deserializedList = ComponentList<Position>.Deserialize(reader);
 			_deserialized = deserializedList;
 
 			// Assert
@@ -130,7 +130,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			stream.Position = 0;
 			using var reader = new BinaryReader(stream);
 
-			var deserializedList = SparseList<Circle>.Deserialize(reader);
+			var deserializedList = ComponentList<Circle>.Deserialize(reader);
 			_deserialized = deserializedList;
 
 			// Assert
@@ -158,7 +158,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			stream.Position = 0;
 			using var reader = new BinaryReader(stream);
 
-			var deserializedList = SparseList<Circle>.Deserialize(reader);
+			var deserializedList = ComponentList<Circle>.Deserialize(reader);
 			_deserialized = deserializedList;
 
 			// Assert
@@ -180,7 +180,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			stream.Position = 0;
 			using var reader = new BinaryReader(stream);
 
-			var deserializedList = SparseList<ComplexComponent>.Deserialize(reader);
+			var deserializedList = ComponentList<ComplexComponent>.Deserialize(reader);
 			_deserialized = deserializedList;
 
 			// Assert
@@ -229,7 +229,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			stream.Position = 0;
 			using var reader = new BinaryReader(stream);
 
-			var deserializedList = SparseList<ComplexComponent>.Deserialize(reader);
+			var deserializedList = ComponentList<ComplexComponent>.Deserialize(reader);
 			_deserialized = deserializedList;
 			
 			var expected         = _complexComponents.DenseArray[0];

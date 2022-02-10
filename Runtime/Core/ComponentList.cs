@@ -15,7 +15,7 @@ using UnityEngine.Assertions;
 namespace KVD.ECS.Core
 {
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
-	public abstract class SparseListConstants
+	public abstract class ComponentListConstants
 	{
 		public const int InitialCapacity = 128;
 		
@@ -26,31 +26,48 @@ namespace KVD.ECS.Core
 		public static readonly ProfilerMarker RemoveMarker = new("SparseList.Remove");
 #endif
 	}
-
-	public interface ISparseList
+	
+	public interface IReadonlyComponentList
 	{
 		public BigBitmask EntitiesMask{ get; }
+		public int Length{ get; }
+		public int EntitiesVersion{ get; }
+	}
+	
+	public interface IReadonlyComponentListView<T> : IReadonlyComponentList where T : struct, IComponent
+	{
+		public IReadonlyComponentListView<T> Sync();
+	}
+
+	public interface IComponentList : IReadonlyComponentList
+	{
 		public int[] IndexByEntity{ get; }
 		public int[] EntityByIndex{ get; }
-		public int EntitiesVersion{ get; }
 		public int Capacity{ get; }
-		public int Length{ get; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(Entity e);
+		public bool Has(Entity entity);
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public object ValueAsObject(Entity e);
-		public void AddByObject(Entity e, object value);
-		public void AddOrReplace(Entity e, object value);
+		public object ValueAsObject(Entity entity);
+		public void AddByObject(Entity entity, object value);
+		public void AddOrReplace(Entity entity, object value);
 		public void BulkAdd(RentedArray<Entity> entities);
-		public bool Remove(int e);
+		public bool Remove(int entity);
 		public void ClearSingleFrameEntities();
 		public void Destroy();
 		public void Serialize(BinaryWriter writer);
 	}
-	
+
+	public interface IComponentList<T> : IComponentList, IReadonlyComponentListView<T> where T : struct, IComponent
+	{
+		IReadonlyComponentListView<T> IReadonlyComponentListView<T>.Sync()
+		{
+			return this;
+		}
+	}
+
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
-	public sealed class SparseList<T> : ISparseList where T : struct, IComponent
+	public sealed class ComponentList<T> : IComponentList<T> where T : struct, IComponent
 	{
 		private const char ControlCharacter = 'c';
 		private static T _dummyRefReturn;
@@ -76,7 +93,7 @@ namespace KVD.ECS.Core
 		public T[] DenseArray => _values;
 		public ArraySegment<T> ValidDenseArray => new(_values, 0, _length);
 
-		public SparseList(int capacity = SparseListConstants.InitialCapacity)
+		public ComponentList(int capacity = ComponentListConstants.InitialCapacity)
 		{
 			_capacity      = Math.Max(capacity, 64);
 			_length        = 0;
@@ -89,15 +106,15 @@ namespace KVD.ECS.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(Entity e) => Index(e) >= 0;
+		public bool Has(Entity entity) => Index(entity) >= 0;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Value(int e) => ref _values[_indexByEntity[e]];
+		public ref T Value(int entity) => ref _values[_indexByEntity[entity]];
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T TryValue(int e, out bool has)
+		public ref T TryValue(int entity, out bool has)
 		{
-			var index = Index(e);
+			var index = Index(entity);
 			has = index >= 0;
 			if (has)
 			{
@@ -107,14 +124,14 @@ namespace KVD.ECS.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public object ValueAsObject(Entity e) => _values[_indexByEntity[e]];
+		public object ValueAsObject(Entity entity) => _values[_indexByEntity[entity]];
 
 		public void BulkAdd(RentedArray<Entity> entities) => BulkAdd(entities, default);
 
 		public void BulkAdd(RentedArray<Entity> entities, T value)
 		{
 #if DEBUG
-			using var marker = SparseListConstants.BulkAddMarker.Auto();
+			using var marker = ComponentListConstants.BulkAddMarker.Auto();
 #endif
 			
 			var startSize = _length;
@@ -134,12 +151,12 @@ namespace KVD.ECS.Core
 			_entitiesVersion++;
 		}
 
-		public void AddByObject(Entity e, object value) => Add(e, (T)value);
+		public void AddByObject(Entity entity, object value) => Add(entity, (T)value);
 
 		public void Add(Entity e, T value)
 		{
 #if DEBUG
-			using var marker = SparseListConstants.AddMarker.Auto();
+			using var marker = ComponentListConstants.AddMarker.Auto();
 			if (Has(e))
 			{
 				throw new ArgumentException($"Entity [{e}] already present in SparseList");
@@ -148,16 +165,16 @@ namespace KVD.ECS.Core
 			InternalAddSafe(e, value);
 		}
 
-		public void AddOrReplace(Entity e, object value)
+		public void AddOrReplace(Entity entity, object value)
 		{
-			AddOrReplace(e, (T)value);
+			AddOrReplace(entity, (T)value);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddOrReplace(Entity e, T value)
+		public void AddOrReplace(Entity entity, T value)
 		{
 			// Just replace value
-			var index = Index(e);
+			var index = Index(entity);
 			if (index > -1)
 			{
 				_values[index] = value;
@@ -165,7 +182,7 @@ namespace KVD.ECS.Core
 			// Create new value
 			else
 			{
-				InternalAddSafe(e, value);
+				InternalAddSafe(entity, value);
 			}
 		}
 
@@ -186,12 +203,12 @@ namespace KVD.ECS.Core
 			_singleFrameComponents.Clear();
 		}
 
-		public bool Remove(int e)
+		public bool Remove(int entity)
 		{
 #if DEBUG
-			using var marker = SparseListConstants.RemoveMarker.Auto();
+			using var marker = ComponentListConstants.RemoveMarker.Auto();
 #endif
-			var index = _indexByEntity[e];
+			var index = _indexByEntity[entity];
 			if (index <= -1)
 			{
 				// The entity is not present in array
@@ -204,21 +221,21 @@ namespace KVD.ECS.Core
 			--_length;
 			if (_length <= 0)
 			{
-				_indexByEntity[e] = -1;
-				_entitiesMask.Set(e, false);
+				_indexByEntity[entity] = -1;
+				_entitiesMask.Set(entity, false);
 				return true;
 			}
 			// _length was decreased so it's pointing to last element\
 			// Swap last value with removed one
 			_values[index]   = _values[_length];
 			// Remove entity from list
-			_entitiesMask.Set(e, false);
+			_entitiesMask.Set(entity, false);
 
 			var entityIndexToSwap = _entityByIndex[_length];
 			_indexByEntity[entityIndexToSwap] = index;
 			_entityByIndex[index]       = entityIndexToSwap;
 			
-			_indexByEntity[e] = -1;
+			_indexByEntity[entity] = -1;
 			return true;
 		}
 
@@ -269,7 +286,7 @@ namespace KVD.ECS.Core
 		private void EnsureSize(Entity lastEntity)
 		{
 #if DEBUG
-			using var marker = SparseListConstants.EnsureSizeMarker.Auto();
+			using var marker = ComponentListConstants.EnsureSizeMarker.Auto();
 #endif
 
 			IncreaseSizeDense(_length);
@@ -343,12 +360,12 @@ namespace KVD.ECS.Core
 			writer.Write(ControlCharacter);
 		}
 
-		public static SparseList<T>? Deserialize(BinaryReader reader)
+		public static ComponentList<T>? Deserialize(BinaryReader reader)
 		{
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 			var capacity = reader.ReadInt32();
 			var length   = reader.ReadInt32();
-			var list     = new SparseList<T>(capacity);
+			var list     = new ComponentList<T>(capacity);
 			list.Deserialize(reader, length);
 			return list._serializer != null ? list : null;
 		}

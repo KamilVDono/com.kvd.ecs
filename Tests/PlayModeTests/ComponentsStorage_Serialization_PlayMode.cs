@@ -91,7 +91,7 @@ namespace KVD.ECS.PlayModeTests.Tests.PlayModeTests
 			RegisterEntity.SetupPrefabInstance(worldStub, storage, entity, request, instance, true);
 		}
 
-		private TransformData[] ExtractTransformData(SparseList<MonoComponentWrapper<Transform>> components)
+		private TransformData[] ExtractTransformData(ComponentList<MonoComponentWrapper<Transform>> components)
 		{
 			var data = new TransformData[components.Length];
 			for (var i = 0; i < components.Length; ++i)

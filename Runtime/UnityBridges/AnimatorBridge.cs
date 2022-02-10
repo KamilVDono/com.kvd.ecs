@@ -12,10 +12,10 @@ namespace KVD.ECS.UnityBridges
 
 		private EcsToUnityLink _link;
 		private Entity _entity;
-		private SparseList<SetAnimatorValue<int>> _setInts;
-		private SparseList<SetAnimatorValue<float>> _setFloats;
-		private SparseList<SetAnimatorValue<AnimatorBool>> _setBools;
-		private SparseList<SetAnimatorValue<AnimatorTrigger>> _setTriggers;
+		private ComponentList<SetAnimatorValue<int>> _setInts;
+		private ComponentList<SetAnimatorValue<float>> _setFloats;
+		private ComponentList<SetAnimatorValue<AnimatorBool>> _setBools;
+		private ComponentList<SetAnimatorValue<AnimatorTrigger>> _setTriggers;
 #nullable enable
 
 		public void Init()

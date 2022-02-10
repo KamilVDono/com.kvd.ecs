@@ -12,9 +12,9 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 {
 	public class ComponentsViewTests : EcsTestsBase
 	{
-		private SparseList<Position> _positions;
-		private SparseList<Radius> _radii;
-		private SparseList<Acceleration> _accelerations;
+		private ComponentList<Position> _positions;
+		private ComponentList<Radius> _radii;
+		private ComponentList<Acceleration> _accelerations;
 		
 		protected override Task OnSetup()
 		{

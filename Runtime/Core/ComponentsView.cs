@@ -18,8 +18,8 @@ namespace KVD.ECS.Core
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 	public sealed class ComponentsView : IComponentsView
 	{
-		private readonly ISparseList[] _hasComponents;
-		private readonly ISparseList[] _excludeComponents;
+		private readonly IReadonlyComponentList[] _hasComponents;
+		private readonly IReadonlyComponentList[] _excludeComponents;
 
 		private readonly BigBitmask _validEntities = new(ComponentsViewHelper.PreallocationSize);
 		private readonly BigBitmask _excludedEntities = new(ComponentsViewHelper.PreallocationSize);
@@ -83,13 +83,13 @@ namespace KVD.ECS.Core
 	public sealed class ComponentsView<T0> : IComponentsView 
 		where T0 : struct, IComponent
 	{
-		private readonly ISparseList[] _hasComponents;
-		private readonly ISparseList[] _excludeComponents;
-		
-		private readonly SparseList<T0> _componentsList0;
+		private readonly IReadonlyComponentList[] _hasComponents;
+		private readonly IReadonlyComponentList[] _excludeComponents;
 
 		private readonly BigBitmask _validEntities = new(ComponentsViewHelper.PreallocationSize);
 		private readonly BigBitmask _excludedEntities = new(ComponentsViewHelper.PreallocationSize);
+		
+		private IReadonlyComponentListView<T0> _componentsList0;
 
 		private RentedArray<int> _entities = new(0);
 
@@ -103,15 +103,15 @@ namespace KVD.ECS.Core
 			Type[]? hasComponents = null, Type[]? excludeComponents = null, 
 			bool onlyWhenStructuralChanges = false)
 		{
-			_componentsList0 = storage.List<T0>();
+			_componentsList0 = storage.ReadonlyListView<T0>();
 			
 			if (hasComponents == null)
 			{
-				_hasComponents = new ISparseList[] { _componentsList0, };
+				_hasComponents = new IReadonlyComponentList[] { _componentsList0, };
 			}
 			else
 			{
-				_hasComponents    = new ISparseList[1 + hasComponents.Length];
+				_hasComponents    = new IReadonlyComponentList[1 + hasComponents.Length];
 				_hasComponents[0] = _componentsList0;
 				for (var i = 0; i < hasComponents.Length; i++)
 				{
@@ -121,11 +121,11 @@ namespace KVD.ECS.Core
 			
 			if (excludeComponents == null)
 			{
-				_excludeComponents = Array.Empty<ISparseList>();
+				_excludeComponents = Array.Empty<IReadonlyComponentList>();
 			}
 			else
 			{
-				_excludeComponents = new ISparseList[excludeComponents.Length];
+				_excludeComponents = new IReadonlyComponentList[excludeComponents.Length];
 				for (var i = 0; i < excludeComponents.Length; i++)
 				{
 					_excludeComponents[i] = storage.List(excludeComponents[i]);
@@ -138,7 +138,7 @@ namespace KVD.ECS.Core
 		{
 			ComponentsViewHelper.Zip(_hasComponents, _excludeComponents, _validEntities, _excludedEntities,
 				_onlyWhenStructuralChanges, ref _entities, ref _lastVersion, ref _lastVersionExcluded);
-			return new(_entities, _componentsList0);
+			return new(_entities, _componentsList0 = _componentsList0.Sync());
 		}
 
 		public void Dispose()
@@ -151,11 +151,11 @@ namespace KVD.ECS.Core
 			private readonly int[] _entities;
 			private readonly int _length;
 			
-			private readonly SparseList<T0> _componentsList0;
+			private readonly IReadonlyComponentListView<T0> _componentsList0;
 		
 			private int _iteration;
 
-			public ComponentsIterator(RentedArray<int> entities, SparseList<T0> componentsList0)
+			public ComponentsIterator(RentedArray<int> entities, IReadonlyComponentListView<T0> componentsList0)
 			{
 				_componentsList0 = componentsList0;
 				_entities        = entities.array;
@@ -165,7 +165,7 @@ namespace KVD.ECS.Core
 			}
 		
 			[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
-			public IterationView Current => new(_entities[_iteration], _componentsList0);
+			public IterationView Current => new(_entities[_iteration], (ComponentList<T0>)_componentsList0);
 
 			public bool MoveNext()
 			{
@@ -177,9 +177,9 @@ namespace KVD.ECS.Core
 		{
 			public readonly int entity;
 			
-			private readonly SparseList<T0> _componentsList0;
+			private readonly ComponentList<T0> _componentsList0;
 
-			public IterationView(int entity, SparseList<T0> componentsList0)
+			public IterationView(int entity, ComponentList<T0> componentsList0)
 			{
 				this.entity      = entity;
 				_componentsList0 = componentsList0;
@@ -204,11 +204,11 @@ namespace KVD.ECS.Core
 		where T0 : struct, IComponent
 		where T1 : struct, IComponent
 	{
-		private readonly ISparseList[] _hasComponents;
-		private readonly ISparseList[] _excludeComponents;
+		private readonly IReadonlyComponentList[] _hasComponents;
+		private readonly IReadonlyComponentList[] _excludeComponents;
 
-		private readonly SparseList<T0> _componentsList0;
-		private readonly SparseList<T1> _componentsList1;
+		private IReadonlyComponentListView<T0> _componentsList0;
+		private IReadonlyComponentListView<T1> _componentsList1;
 
 		private readonly BigBitmask _validEntities = new(ComponentsViewHelper.PreallocationSize);
 		private readonly BigBitmask _excludedEntities = new(ComponentsViewHelper.PreallocationSize);
@@ -225,16 +225,16 @@ namespace KVD.ECS.Core
 			Type[]? hasComponents = null, Type[]? excludeComponents = null,
 			bool onlyWhenStructuralChanges = false)
 		{
-			_componentsList0 = storage.List<T0>();
-			_componentsList1 = storage.List<T1>();
+			_componentsList0 = storage.ReadonlyListView<T0>();
+			_componentsList1 = storage.ReadonlyListView<T1>();
 			
 			if (hasComponents == null)
 			{
-				_hasComponents = new ISparseList[] { _componentsList0, _componentsList1, };
+				_hasComponents = new IReadonlyComponentList[] { _componentsList0, _componentsList1, };
 			}
 			else
 			{
-				_hasComponents    = new ISparseList[2 + hasComponents.Length];
+				_hasComponents    = new IReadonlyComponentList[2 + hasComponents.Length];
 				_hasComponents[0] = _componentsList0;
 				_hasComponents[1] = _componentsList1;
 				for (var i = 0; i < hasComponents.Length; i++)
@@ -245,11 +245,11 @@ namespace KVD.ECS.Core
 			
 			if (excludeComponents == null)
 			{
-				_excludeComponents = Array.Empty<ISparseList>();
+				_excludeComponents = Array.Empty<IReadonlyComponentList>();
 			}
 			else
 			{
-				_excludeComponents = new ISparseList[excludeComponents.Length];
+				_excludeComponents = new IReadonlyComponentList[excludeComponents.Length];
 				for (var i = 0; i < excludeComponents.Length; i++)
 				{
 					_excludeComponents[i] = storage.List(excludeComponents[i]);
@@ -263,7 +263,7 @@ namespace KVD.ECS.Core
 		{
 			ComponentsViewHelper.Zip(_hasComponents, _excludeComponents, _validEntities, _excludedEntities,
 				_onlyWhenStructuralChanges, ref _entities, ref _lastVersion, ref _lastVersionExcluded);
-			return new(_entities, _componentsList0, _componentsList1);
+			return new(_entities, _componentsList0 = _componentsList0.Sync(), _componentsList1 = _componentsList1.Sync());
 		}
 
 		public void Dispose()
@@ -276,12 +276,13 @@ namespace KVD.ECS.Core
 			private readonly int[] _entities;
 			private readonly int _length;
 			
-			private readonly SparseList<T0> _componentsList0;
-			private readonly SparseList<T1> _componentsList1;
+			private readonly IReadonlyComponentListView<T0> _componentsList0;
+			private readonly IReadonlyComponentListView<T1> _componentsList1;
 		
 			private int _iteration;
 
-			public ComponentsIterator(RentedArray<int> entities, SparseList<T0> componentsList0, SparseList<T1> componentsList1)
+			public ComponentsIterator(RentedArray<int> entities, 
+				IReadonlyComponentListView<T0> componentsList0, IReadonlyComponentListView<T1> componentsList1)
 			{
 				_componentsList0 = componentsList0;
 				_componentsList1 = componentsList1;
@@ -292,7 +293,9 @@ namespace KVD.ECS.Core
 			}
 		
 			[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
-			public IterationView Current => new(_entities[_iteration], _componentsList0, _componentsList1);
+			public IterationView Current => new(_entities[_iteration], 
+				(ComponentList<T0>)_componentsList0, 
+				(ComponentList<T1>)_componentsList1);
 
 			public bool MoveNext()
 			{
@@ -304,10 +307,10 @@ namespace KVD.ECS.Core
 		{
 			public readonly int entity;
 			
-			private readonly SparseList<T0> _componentsList0;
-			private readonly SparseList<T1> _componentsList1;
+			private readonly ComponentList<T0> _componentsList0;
+			private readonly ComponentList<T1> _componentsList1;
 
-			public IterationView(int entity, SparseList<T0> componentsList0, SparseList<T1> componentsList1)
+			public IterationView(int entity, ComponentList<T0> componentsList0, ComponentList<T1> componentsList1)
 			{
 				this.entity           = entity;
 				_componentsList0      = componentsList0;
@@ -346,13 +349,13 @@ namespace KVD.ECS.Core
 		where T1 : struct, IComponent
 		where T2 : struct, IComponent
 	{
-		private readonly ISparseList[] _hasComponents;
-		private readonly ISparseList[] _excludeComponents;
-
-		private readonly SparseList<T0> _componentsList0;
-		private readonly SparseList<T1> _componentsList1;
-		private readonly SparseList<T2> _componentsList2;
-
+		private readonly IReadonlyComponentList[] _hasComponents;
+		private readonly IReadonlyComponentList[] _excludeComponents;
+		
+		private IReadonlyComponentListView<T0> _componentsList0;
+		private IReadonlyComponentListView<T1> _componentsList1;
+		private IReadonlyComponentListView<T2> _componentsList2;
+		
 		private readonly BigBitmask _validEntities = new(ComponentsViewHelper.PreallocationSize);
 		private readonly BigBitmask _excludedEntities = new(ComponentsViewHelper.PreallocationSize);
 
@@ -368,20 +371,20 @@ namespace KVD.ECS.Core
 			Type[]? hasComponents = null, Type[]? excludeComponents = null,
 			bool onlyWhenStructuralChanges = false)
 		{
-			_componentsList0 = storage.List<T0>();
-			_componentsList1 = storage.List<T1>();
-			_componentsList2 = storage.List<T2>();
+			_componentsList0 = storage.ReadonlyListView<T0>();
+			_componentsList1 = storage.ReadonlyListView<T1>();
+			_componentsList2 = storage.ReadonlyListView<T2>();
 			
 			if (hasComponents == null)
 			{
-				_hasComponents = new ISparseList[]
+				_hasComponents = new IReadonlyComponentList[]
 				{
 					_componentsList0, _componentsList1, _componentsList2,
 				};
 			}
 			else
 			{
-				_hasComponents    = new ISparseList[3 + hasComponents.Length];
+				_hasComponents    = new IReadonlyComponentList[3 + hasComponents.Length];
 				_hasComponents[0] = _componentsList0;
 				_hasComponents[1] = _componentsList1;
 				_hasComponents[2] = _componentsList2;
@@ -393,11 +396,11 @@ namespace KVD.ECS.Core
 			
 			if (excludeComponents == null)
 			{
-				_excludeComponents = Array.Empty<ISparseList>();
+				_excludeComponents = Array.Empty<IReadonlyComponentList>();
 			}
 			else
 			{
-				_excludeComponents = new ISparseList[excludeComponents.Length];
+				_excludeComponents = new IReadonlyComponentList[excludeComponents.Length];
 				for (var i = 0; i < excludeComponents.Length; i++)
 				{
 					_excludeComponents[i] = storage.List(excludeComponents[i]);
@@ -411,7 +414,8 @@ namespace KVD.ECS.Core
 		{
 			ComponentsViewHelper.Zip(_hasComponents, _excludeComponents, _validEntities, _excludedEntities,
 				_onlyWhenStructuralChanges, ref _entities, ref _lastVersion, ref _lastVersionExcluded);
-			return new(_entities, _componentsList0, _componentsList1, _componentsList2);
+			return new(_entities, _componentsList0 = _componentsList0.Sync(), 
+				_componentsList1 = _componentsList1.Sync(), _componentsList2 = _componentsList2.Sync());
 		}
 
 		public void Dispose()
@@ -424,14 +428,15 @@ namespace KVD.ECS.Core
 			private readonly int[] _entities;
 			private readonly int _length;
 			
-			private readonly SparseList<T0> _componentsList0;
-			private readonly SparseList<T1> _componentsList1;
-			private readonly SparseList<T2> _componentsList2;
+			private readonly IReadonlyComponentListView<T0> _componentsList0;
+			private readonly IReadonlyComponentListView<T1> _componentsList1;
+			private readonly IReadonlyComponentListView<T2> _componentsList2;
 		
 			private int _iteration;
 
 			public ComponentsIterator(RentedArray<int> entities, 
-				SparseList<T0> componentsList0, SparseList<T1> componentsList1, SparseList<T2> componentsList2)
+				IReadonlyComponentListView<T0> componentsList0, IReadonlyComponentListView<T1> componentsList1, 
+				IReadonlyComponentListView<T2> componentsList2)
 			{
 				_componentsList0 = componentsList0;
 				_componentsList1 = componentsList1;
@@ -444,7 +449,9 @@ namespace KVD.ECS.Core
 		
 			[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 			public IterationView Current => new(_entities[_iteration], 
-				_componentsList0, _componentsList1, _componentsList2);
+				(ComponentList<T0>)_componentsList0,
+				(ComponentList<T1>)_componentsList1,
+				(ComponentList<T2>)_componentsList2);
 
 			public bool MoveNext()
 			{
@@ -456,11 +463,11 @@ namespace KVD.ECS.Core
 		{
 			public readonly int entity;
 			
-			private readonly SparseList<T0> _componentsList0;
-			private readonly SparseList<T1> _componentsList1;
-			private readonly SparseList<T2> _componentsList2;
+			private readonly ComponentList<T0> _componentsList0;
+			private readonly ComponentList<T1> _componentsList1;
+			private readonly ComponentList<T2> _componentsList2;
 
-			public IterationView(int entity, SparseList<T0> componentsList0, SparseList<T1> componentsList1, SparseList<T2> componentsList2)
+			public IterationView(int entity, ComponentList<T0> componentsList0, ComponentList<T1> componentsList1, ComponentList<T2> componentsList2)
 			{
 				this.entity      = entity;
 				_componentsList0 = componentsList0;
@@ -513,13 +520,13 @@ namespace KVD.ECS.Core
 		where T2 : struct, IComponent
 		where T3 : struct, IComponent
 	{
-		private readonly ISparseList[] _hasComponents;
-		private readonly ISparseList[] _excludeComponents;
+		private readonly IReadonlyComponentList[] _hasComponents;
+		private readonly IReadonlyComponentList[] _excludeComponents;
 
-		private readonly SparseList<T0> _componentsList0;
-		private readonly SparseList<T1> _componentsList1;
-		private readonly SparseList<T2> _componentsList2;
-		private readonly SparseList<T3> _componentsList3;
+		private IReadonlyComponentListView<T0> _componentsList0;
+		private IReadonlyComponentListView<T1> _componentsList1;
+		private IReadonlyComponentListView<T2> _componentsList2;
+		private IReadonlyComponentListView<T3> _componentsList3;
 
 		private readonly BigBitmask _validEntities = new(ComponentsViewHelper.PreallocationSize);
 		private readonly BigBitmask _excludedEntities = new(ComponentsViewHelper.PreallocationSize);
@@ -536,21 +543,21 @@ namespace KVD.ECS.Core
 			Type[]? hasComponents = null, Type[]? excludeComponents = null,
 			bool onlyWhenStructuralChanges = false)
 		{
-			_componentsList0 = storage.List<T0>();
-			_componentsList1 = storage.List<T1>();
-			_componentsList2 = storage.List<T2>();
-			_componentsList3 = storage.List<T3>();
+			_componentsList0 = storage.ReadonlyListView<T0>();
+			_componentsList1 = storage.ReadonlyListView<T1>();
+			_componentsList2 = storage.ReadonlyListView<T2>();
+			_componentsList3 = storage.ReadonlyListView<T3>();
 			
 			if (hasComponents == null)
 			{
-				_hasComponents = new ISparseList[]
+				_hasComponents = new IReadonlyComponentList[]
 				{
 					_componentsList0, _componentsList1, _componentsList2, _componentsList3,
 				};
 			}
 			else
 			{
-				_hasComponents    = new ISparseList[4 + hasComponents.Length];
+				_hasComponents    = new IReadonlyComponentList[4 + hasComponents.Length];
 				_hasComponents[0] = _componentsList0;
 				_hasComponents[1] = _componentsList1;
 				_hasComponents[2] = _componentsList2;
@@ -563,11 +570,11 @@ namespace KVD.ECS.Core
 			
 			if (excludeComponents == null)
 			{
-				_excludeComponents = Array.Empty<ISparseList>();
+				_excludeComponents = Array.Empty<IReadonlyComponentList>();
 			}
 			else
 			{
-				_excludeComponents = new ISparseList[excludeComponents.Length];
+				_excludeComponents = new IReadonlyComponentList[excludeComponents.Length];
 				for (var i = 0; i < excludeComponents.Length; i++)
 				{
 					_excludeComponents[i] = storage.List(excludeComponents[i]);
@@ -581,7 +588,9 @@ namespace KVD.ECS.Core
 		{
 			ComponentsViewHelper.Zip(_hasComponents, _excludeComponents, _validEntities, _excludedEntities,
 				_onlyWhenStructuralChanges, ref _entities, ref _lastVersion, ref _lastVersionExcluded);
-			return new(_entities, _componentsList0, _componentsList1, _componentsList2, _componentsList3);
+			return new(_entities, _componentsList0 = _componentsList0.Sync(),
+				_componentsList1 = _componentsList1.Sync(), _componentsList2 = _componentsList2.Sync(),
+				_componentsList3 = _componentsList3.Sync());
 		}
 
 		public void Dispose()
@@ -594,15 +603,16 @@ namespace KVD.ECS.Core
 			private readonly int[] _entities;
 			private readonly int _length;
 			
-			private readonly SparseList<T0> _componentsList0;
-			private readonly SparseList<T1> _componentsList1;
-			private readonly SparseList<T2> _componentsList2;
-			private readonly SparseList<T3> _componentsList3;
+			private readonly IReadonlyComponentListView<T0> _componentsList0;
+			private readonly IReadonlyComponentListView<T1> _componentsList1;
+			private readonly IReadonlyComponentListView<T2> _componentsList2;
+			private readonly IReadonlyComponentListView<T3> _componentsList3;
 		
 			private int _iteration;
 
-			public ComponentsIterator(RentedArray<int> entities, SparseList<T0> componentsList0, 
-				SparseList<T1> componentsList1, SparseList<T2> componentsList2, SparseList<T3> componentsList3)
+			public ComponentsIterator(RentedArray<int> entities, IReadonlyComponentListView<T0> componentsList0,
+				IReadonlyComponentListView<T1> componentsList1, IReadonlyComponentListView<T2> componentsList2,
+				IReadonlyComponentListView<T3> componentsList3)
 			{
 				_componentsList0 = componentsList0;
 				_componentsList1 = componentsList1;
@@ -616,7 +626,10 @@ namespace KVD.ECS.Core
 		
 			[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 			public IterationView Current => new(_entities[_iteration], 
-				_componentsList0, _componentsList1, _componentsList2, _componentsList3);
+				(ComponentList<T0>)_componentsList0,
+				(ComponentList<T1>)_componentsList1,
+				(ComponentList<T2>)_componentsList2,
+				(ComponentList<T3>)_componentsList3);
 
 			public bool MoveNext()
 			{
@@ -628,13 +641,13 @@ namespace KVD.ECS.Core
 		{
 			public readonly int entity;
 			
-			private readonly SparseList<T0> _componentsList0;
-			private readonly SparseList<T1> _componentsList1;
-			private readonly SparseList<T2> _componentsList2;
-			private readonly SparseList<T3> _componentsList3;
+			private readonly ComponentList<T0> _componentsList0;
+			private readonly ComponentList<T1> _componentsList1;
+			private readonly ComponentList<T2> _componentsList2;
+			private readonly ComponentList<T3> _componentsList3;
 
-			public IterationView(int entity, SparseList<T0> componentsList0, SparseList<T1> componentsList1, 
-				SparseList<T2> componentsList2, SparseList<T3> componentsList3)
+			public IterationView(int entity, ComponentList<T0> componentsList0, ComponentList<T1> componentsList1, 
+				ComponentList<T2> componentsList2, ComponentList<T3> componentsList3)
 			{
 				this.entity      = entity;
 				_componentsList0 = componentsList0;
@@ -700,7 +713,7 @@ namespace KVD.ECS.Core
 		private static readonly ProfilerMarker ZipMarker = new("ComponentsIterator.Zip");
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Zip(ISparseList[] hasComponents, ISparseList[] excludeComponents,
+		public static void Zip(IReadonlyComponentList[] hasComponents, IReadonlyComponentList[] excludeComponents,
 			BigBitmask validEntities, BigBitmask excludedEntities, bool onlyWhenStructuralChanges,
 			ref RentedArray<int> entities, ref int lastVersion, ref int lastVersionExcluded)
 		{
@@ -773,8 +786,8 @@ namespace KVD.ECS.Core
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void CollectExcludes(ISparseList[] excludeComponents, BigBitmask excludedEntities, 
-			ref int lastVersionExcluded)
+		private static void CollectExcludes(IReadonlyComponentList[] excludeComponents, 
+			BigBitmask excludedEntities, ref int lastVersionExcluded)
 		{
 			if (excludeComponents.Length < 1)
 			{

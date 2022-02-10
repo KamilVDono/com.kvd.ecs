@@ -40,11 +40,11 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			new TableColumn<SystemWrapper>("Time", w => $"{w.Recorder.GetRecorderAverageTime():f4} ms", 2f/5),
 		});
 		
-		private readonly TableView<ISparseList> _sparseListTableView = new(new[]
+		private readonly TableView<IComponentList> _sparseListTableView = new(new[]
 		{
-			new TableColumn<ISparseList>("Name", ComponentName, 2f/6),
-			new TableColumn<ISparseList>("Entities", l => $"{l.Length}/{l.Capacity}", 1f/6),
-			new TableColumn<ISparseList>("Size (single/in-use/alloc)", l =>
+			new TableColumn<IComponentList>("Name", ComponentName, 2f/6),
+			new TableColumn<IComponentList>("Entities", l => $"{l.Length}/{l.Capacity}", 1f/6),
+			new TableColumn<IComponentList>("Size (single/in-use/alloc)", l =>
 			{
 				var size = ComponentSize(l);
 				return $"{size}B/{size*l.Length/1024}kB/{size*l.Capacity/1024}kB";
@@ -199,7 +199,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			}
 		}
 		
-		private static string ComponentName(ISparseList list)
+		private static string ComponentName(IComponentList list)
 		{
 			var componentType = list.GetType().GetGenericArguments()[0];
 			var componentName = componentType.Name;
@@ -210,7 +210,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			return componentName;
 		}
 		
-		private static int ComponentSize(ISparseList list)
+		private static int ComponentSize(IComponentList list)
 		{
 			var componentType = list.GetType().GetGenericArguments()[0];
 			return Marshal.SizeOf(componentType);

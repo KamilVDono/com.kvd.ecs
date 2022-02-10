@@ -11,7 +11,9 @@ namespace KVD.ECS.Core.Helpers
 	{
 		private const char ControlCharacter = 'b';
 		
-		public const byte SingleMaskSize = 64; 
+		public const byte SingleMaskSize = 64;
+
+		public static readonly BigBitmask Empty = new();
 		
 		private ulong[] _masks;
 

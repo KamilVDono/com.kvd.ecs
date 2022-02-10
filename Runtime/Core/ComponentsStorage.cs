@@ -24,11 +24,12 @@ using UnityEngine.Assertions;
 namespace KVD.ECS.Core
 {
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
+	// ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
 	public class ComponentsStorage
 	{
 		private const char ControlCharacter = 's';
 		private static readonly Type MonoComponent = typeof(IMonoComponent);
-		private static readonly Type SparseListGenericType = typeof(SparseList<>);
+		private static readonly Type SparseListGenericType = typeof(ComponentList<>);
 
 		#region DEBUG
 		#if DEBUG
@@ -36,8 +37,8 @@ namespace KVD.ECS.Core
 		#endif
 		private readonly ComponentsStorageKey? _storageKey;
 		#endregion Debug
-		private readonly Dictionary<Type, ISparseList> _listsByType = new(16);
-		private readonly List<ISparseList> _lists = new(16);
+		private readonly Dictionary<Type, IComponentList> _listsByType = new(16);
+		private readonly List<IComponentList> _lists = new(16);
 		
 		private readonly SingletonComponentsStorage _singletons = new(64);
 		private readonly List<int> _singleFrameSingletons = new(4);
@@ -45,7 +46,7 @@ namespace KVD.ECS.Core
 		private IEntityAllocator _entityAllocator;
 
 		public Entity CurrentEntity{ get; private set; } = Entity.Null;
-		public IReadOnlyList<ISparseList> AllLists => _lists;
+		public IReadOnlyList<IComponentList> AllLists => _lists;
 
 		public ComponentsStorage(ComponentsStorageKey? storageKey = null, IEntityAllocator? entityAllocator = null)
 		{
@@ -54,30 +55,47 @@ namespace KVD.ECS.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SparseList<T> List<T>(int initialSize = SparseListConstants.InitialCapacity) where T : struct, IComponent
+		public ComponentList<T>? TryList<T>() where T : struct, IComponent
+		{
+			var key = typeof(T);
+			if (_listsByType.TryGetValue(key, out var list))
+			{
+				return (ComponentList<T>)list;
+			}
+			return null;
+		}
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComponentList<T> List<T>(int initialSize = ComponentListConstants.InitialCapacity) where T : struct, IComponent
 		{
 			var key = typeof(T);
 			if (!_listsByType.TryGetValue(key, out var list))
 			{
-				list = new SparseList<T>(initialSize);
+				list = new ComponentList<T>(initialSize);
 				_listsByType.Add(key, list);
 				_lists.Add(list);
 			}
-			return (SparseList<T>)list;
+			return (ComponentList<T>)list;
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ISparseList List(Type componentType, int initialSize = SparseListConstants.InitialCapacity)
+		public IComponentList List(Type componentType, int initialSize = ComponentListConstants.InitialCapacity)
 		{
 			CheckComponentType(componentType);
 			if (!_listsByType.TryGetValue(componentType, out var list))
 			{
-				var storageType = typeof(SparseList<>).MakeGenericType(componentType);
-				list = (ISparseList)Activator.CreateInstance(storageType, initialSize);
+				var storageType = typeof(ComponentList<>).MakeGenericType(componentType);
+				list = (IComponentList)Activator.CreateInstance(storageType, initialSize);
 				_listsByType.Add(componentType, list);
 				_lists.Add(list);
 			}
 			return list;
+		}
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IReadonlyComponentListView<T> ReadonlyListView<T>() where T : struct, IComponent
+		{
+			return new ReadonlyComponentListViewView<T>(this);
 		}
 
 		#region Entities
@@ -320,7 +338,7 @@ namespace KVD.ECS.Core
 					"Deserialize", 
 					BindingFlags.Static | BindingFlags.InvokeMethod | BindingFlags.Public
 					)!;
-				var storage = deserializeMethod.Invoke(null, readerAsParams) as ISparseList;
+				var storage = deserializeMethod.Invoke(null, readerAsParams) as IComponentList;
 				if (storage == null)
 				{
 					continue;
@@ -332,12 +350,12 @@ namespace KVD.ECS.Core
 
 			if (_listsByType.TryGetValue(typeof(PrefabWrapper), out var prefabWrappers))
 			{
-				DeserializePrefabs(world, reader, (SparseList<PrefabWrapper>)prefabWrappers);
+				DeserializePrefabs(world, reader, (ComponentList<PrefabWrapper>)prefabWrappers);
 			}
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 		}
 		
-		private void DeserializePrefabs(World world, BinaryReader reader, SparseList<PrefabWrapper> prefabs)
+		private void DeserializePrefabs(World world, BinaryReader reader, ComponentList<PrefabWrapper> prefabs)
 		{
 			for (var i = 0; i < prefabs.Length; ++i)
 			{

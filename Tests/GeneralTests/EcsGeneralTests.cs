@@ -13,8 +13,8 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 {
 	public class EcsGeneralTests : EcsTestsBase
 	{
-		private SparseList<Position> _positions;
-		private SparseList<Acceleration> _accelerations;
+		private ComponentList<Position> _positions;
+		private ComponentList<Acceleration> _accelerations;
 
 		protected override Task OnSetup()
 		{
@@ -46,8 +46,8 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 		#region Helper data
 		private class MovementSystem : SystemBase
 		{
-			private SparseList<Position> _positionComponents;
-			private SparseList<Acceleration> _accelerationComponents;
+			private ComponentList<Position> _positionComponents;
+			private ComponentList<Acceleration> _accelerationComponents;
 			private ComponentsView _componentsView;
 
 			protected override UniTask InitialSetup()

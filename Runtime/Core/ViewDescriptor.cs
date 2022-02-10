@@ -7,13 +7,13 @@ namespace KVD.ECS.Core
 {
 	public sealed class ViewDescriptor
 	{
-		public ISparseList[] HasComponents{ get; }
-		public ISparseList[] ExcludeComponents{ get; }
+		public IReadonlyComponentList[] HasComponents{ get; }
+		public IReadonlyComponentList[] ExcludeComponents{ get; }
 
 		// === Constructors
 		private ViewDescriptor(ComponentsStorage storage, Type[] hasComponents, Type[]? excludeComponents = null)
 		{
-			HasComponents = new ISparseList[hasComponents.Length];
+			HasComponents = new IReadonlyComponentList[hasComponents.Length];
 			for (var i = 0; i < hasComponents.Length; i++)
 			{
 				HasComponents[i] = storage.List(hasComponents[i]);
@@ -21,11 +21,11 @@ namespace KVD.ECS.Core
 			
 			if (excludeComponents == null)
 			{
-				ExcludeComponents = Array.Empty<ISparseList>();
+				ExcludeComponents = Array.Empty<IReadonlyComponentList>();
 			}
 			else
 			{
-				ExcludeComponents = new ISparseList[excludeComponents.Length];
+				ExcludeComponents = new IReadonlyComponentList[excludeComponents.Length];
 				for (var i = 0; i < excludeComponents.Length; i++)
 				{
 					ExcludeComponents[i] = storage.List(excludeComponents[i]);

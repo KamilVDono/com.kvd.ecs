@@ -10,7 +10,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 	[TestFixture]
 	public class SparseListGeneral
 	{
-		private SparseList<Position> _components;
+		private ComponentList<Position> _components;
 
 		[SetUp]
 		public void SetUp()
