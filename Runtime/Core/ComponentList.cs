@@ -35,11 +35,16 @@ namespace KVD.ECS.Core
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Has(Entity entity);
+		public IReadonlyComponentList Sync();
 	}
 	
 	public interface IReadonlyComponentListView<T> : IReadonlyComponentList where T : struct, IComponent
 	{
-		public IReadonlyComponentListView<T> Sync();
+		public new IReadonlyComponentListView<T> Sync();
+		IReadonlyComponentList IReadonlyComponentList.Sync()
+		{
+			return Sync();
+		}
 	}
 
 	public interface IComponentList : IReadonlyComponentList

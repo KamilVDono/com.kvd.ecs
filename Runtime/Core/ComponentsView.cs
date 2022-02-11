@@ -720,21 +720,23 @@ namespace KVD.ECS.Core
 			using var marker = ZipMarker.Auto();
 
 			var currentVersion = 0;
-			foreach (var list in hasComponents)
+			for (var i = 0; i < hasComponents.Length; i++)
 			{
+				var list = hasComponents[i] = hasComponents[i].Sync();
 				unchecked
 				{
 					currentVersion += list.EntitiesVersion;
 				}
 			}
-			foreach (var list in excludeComponents)
+			for (var i = 0; i < excludeComponents.Length; i++)
 			{
+				var list = excludeComponents[i] = excludeComponents[i].Sync();
 				unchecked
 				{
 					currentVersion += list.EntitiesVersion;
 				}
 			}
-			
+
 			if (lastVersion == currentVersion)
 			{
 				if (onlyWhenStructuralChanges)
