@@ -103,12 +103,18 @@ namespace KVD.ECS.Core.Helpers
 			}
 		}
 		
-		public void Copy(BigBitmask other)
+		public void CopyFrom(BigBitmask other)
 		{
+			var oldSize = _masks.Length;
 			Resize(other._masks.Length);
-			for (var i = 0; i < _masks.Length; i++)
+			var i = 0;
+			for (; i < _masks.Length; i++)
 			{
 				_masks[i] = other._masks[i];
+			}
+			for (; i < oldSize; i++)
+			{
+				_masks[i] = 0;
 			}
 		}
 
@@ -211,6 +217,10 @@ namespace KVD.ECS.Core.Helpers
 
 		private void Resize(int length)
 		{
+			if (_masks.Length >= length)
+			{
+				return;
+			}
 			Array.Resize(ref _masks, length);
 		}
 

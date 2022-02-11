@@ -762,7 +762,7 @@ namespace KVD.ECS.Core
 			CollectExcludes(excludeComponents, excludedEntities, ref lastVersionExcluded);
 
 			// Calculate bit mask
-			validEntities.Copy(hasComponents[0].EntitiesMask);
+			validEntities.CopyFrom(hasComponents[0].EntitiesMask);
 			for (var i = 1; i < hasComponents.Length; ++i)
 			{
 				validEntities.Intersect(hasComponents[i].EntitiesMask, false);
@@ -812,7 +812,7 @@ namespace KVD.ECS.Core
 
 			lastVersionExcluded = currentVersion;
 			
-			excludedEntities.Copy(excludeComponents[0].EntitiesMask);
+			excludedEntities.CopyFrom(excludeComponents[0].EntitiesMask);
 			for (var index = 1; index < excludeComponents.Length; index++)
 			{
 				var excludeComponent = excludeComponents[index];
