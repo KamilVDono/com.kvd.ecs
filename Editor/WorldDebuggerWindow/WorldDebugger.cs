@@ -69,6 +69,11 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		{
 			EditorApplication.playModeStateChanged -= PlayModeChanged;
 			EditorApplication.playModeStateChanged += PlayModeChanged;
+			
+			if (EditorApplication.isPlaying)
+			{
+				PlayModeChanged(PlayModeStateChange.EnteredEditMode);
+			}
 		}
 
 		private void OnDisable()
