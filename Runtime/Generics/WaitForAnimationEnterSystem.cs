@@ -1,9 +1,11 @@
-﻿using KVD.ECS.Core;
+﻿using System;
+using KVD.ECS.Core;
 using KVD.ECS.Core.Systems;
 using KVD.ECS.UnityBridges;
 
 namespace KVD.ECS.Generics
 {
+	[Serializable]
 	public class WaitForAnimationEnterSystem : IterationsSystemBase<World>
 	{
 #nullable disable
