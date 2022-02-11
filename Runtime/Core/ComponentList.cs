@@ -50,7 +50,7 @@ namespace KVD.ECS.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public object ValueAsObject(Entity entity);
 		public void AddByObject(Entity entity, object value);
-		public void AddOrReplace(Entity entity, object value);
+		public void AddOrReplaceAsObject(Entity entity, object value);
 		public void BulkAdd(RentedArray<Entity> entities);
 		public bool Remove(int entity);
 		public void ClearSingleFrameEntities();
@@ -123,7 +123,7 @@ namespace KVD.ECS.Core
 			return ref _dummyRefReturn;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining), Obsolete("Use with care and as last choice", false),]
 		public object ValueAsObject(Entity entity) => _values[_indexByEntity[entity]];
 
 		public void BulkAdd(RentedArray<Entity> entities) => BulkAdd(entities, default);
@@ -151,6 +151,7 @@ namespace KVD.ECS.Core
 			_entitiesVersion++;
 		}
 
+		[Obsolete("Use with care and as last choice", false)]
 		public void AddByObject(Entity entity, object value) => Add(entity, (T)value);
 
 		public void Add(Entity e, T value)
@@ -165,7 +166,8 @@ namespace KVD.ECS.Core
 			InternalAddSafe(e, value);
 		}
 
-		public void AddOrReplace(Entity entity, object value)
+		[Obsolete("Use with care and as last choice", false)]
+		public void AddOrReplaceAsObject(Entity entity, object value)
 		{
 			AddOrReplace(entity, (T)value);
 		}
