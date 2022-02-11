@@ -132,7 +132,10 @@ namespace KVD.ECS.Core
 		{
 			for (var i = 0; i < _lists.Count; i++)
 			{
-				_lists[i].Remove(entity);
+				if (_lists[i].Has(entity))
+				{
+					_lists[i].Remove(entity);
+				}
 			}
 			_entityAllocator.Return(entity);
 		}
