@@ -32,6 +32,9 @@ namespace KVD.ECS.Core
 		public BigBitmask EntitiesMask{ get; }
 		public int Length{ get; }
 		public int EntitiesVersion{ get; }
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Has(Entity entity);
 	}
 	
 	public interface IReadonlyComponentListView<T> : IReadonlyComponentList where T : struct, IComponent
@@ -44,9 +47,7 @@ namespace KVD.ECS.Core
 		public int[] IndexByEntity{ get; }
 		public int[] EntityByIndex{ get; }
 		public int Capacity{ get; }
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(Entity entity);
+		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public object ValueAsObject(Entity entity);
 		public void AddByObject(Entity entity, object value);

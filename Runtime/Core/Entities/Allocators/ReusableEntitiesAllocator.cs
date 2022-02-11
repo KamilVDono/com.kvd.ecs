@@ -107,7 +107,7 @@ namespace KVD.ECS.Core.Entities.Allocators
 		
 		public void AssertValidity(ComponentsStorage storage)
 		{
-			#if DEBUG
+			#if !DEBUG
 			return;
 			#endif
 			var sb = new StringBuilder();
