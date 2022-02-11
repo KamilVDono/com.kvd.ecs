@@ -21,9 +21,9 @@ namespace KVD.ECS.UnityBridges
 		public void Init()
 		{
 			_link   = GetComponentInParent<EcsToUnityLink>();
-			_entity = _link.entity;
+			_entity = _link.Entity;
 
-			var storage = _link.storage;
+			var storage = _link.Storage;
 			_setInts     = storage.List<SetAnimatorValue<int>>();
 			_setFloats   = storage.List<SetAnimatorValue<float>>();
 			_setBools    = storage.List<SetAnimatorValue<AnimatorBool>>();
