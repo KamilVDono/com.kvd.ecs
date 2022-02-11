@@ -196,13 +196,13 @@ namespace KVD.ECS.Core
 
 		#region Singleton components
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Singleton<T>() where T : struct, ISingletonComponent
+		public ref T Singleton<T>() where T : struct, IComponent
 		{
 			return ref _singletons.Value<T>();
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T SingletonOrNew<T>() where T : struct, ISingletonComponent
+		public ref T SingletonOrNew<T>() where T : struct, IComponent
 		{
 			if (!_singletons.Has<T>())
 			{
@@ -212,25 +212,25 @@ namespace KVD.ECS.Core
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T SingletonOrDefault<T>() where T : struct, ISingletonComponent
+		public T SingletonOrDefault<T>() where T : struct, IComponent
 		{
 			return !_singletons.Has<T>() ? default : _singletons.Value<T>();
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T TrySingleton<T>(out bool has) where T : struct, ISingletonComponent
+		public ref T TrySingleton<T>(out bool has) where T : struct, IComponent
 		{
 			return ref _singletons.TryValue<T>(out has);
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool HasSingleton<T>() where T : struct, ISingletonComponent
+		public bool HasSingleton<T>() where T : struct, IComponent
 		{
 			return _singletons.Has<T>();
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Singleton<T>(T singleton, bool singleFrame = false) where T : struct, ISingletonComponent
+		public void Singleton<T>(T singleton, bool singleFrame = false) where T : struct, IComponent
 		{
 			_singletons.Add(singleton);
 			if (singleFrame)
@@ -240,7 +240,7 @@ namespace KVD.ECS.Core
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSingleton<T>() where T : struct, ISingletonComponent
+		public void RemoveSingleton<T>() where T : struct, IComponent
 		{
 			_singletons.Remove<T>();
 		}

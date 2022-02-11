@@ -14,13 +14,13 @@ namespace KVD.ECS.Core.Helpers
 			_buckets = new IBucket[capacity];
 		}
 		
-		public bool Has<T>() where T : struct, ISingletonComponent
+		public bool Has<T>() where T : struct, IComponent
 		{
 			var index = Bucket<T>.Index;
 			return !ReferenceEquals(_buckets[index], null);
 		}
 		
-		public ref T Value<T>() where T : struct, ISingletonComponent
+		public ref T Value<T>() where T : struct, IComponent
 		{
 			var index = Bucket<T>.Index;
 			// By calling this we are certain that value exists so we don't need to handle nulls
@@ -31,7 +31,7 @@ namespace KVD.ECS.Core.Helpers
 #pragma warning restore 8602
 		}
 
-		public ref T TryValue<T>(out bool has) where T : struct, ISingletonComponent
+		public ref T TryValue<T>(out bool has) where T : struct, IComponent
 		{
 			has = false;
 			var index  = Bucket<T>.Index;
@@ -44,7 +44,7 @@ namespace KVD.ECS.Core.Helpers
 			return ref bucket.value;
 		}
 		
-		public void Add<T>(T value) where T : struct, ISingletonComponent
+		public void Add<T>(T value) where T : struct, IComponent
 		{
 			var index = Bucket<T>.Index;
 			if (_buckets[index] is Bucket<T> bucket)
@@ -57,13 +57,13 @@ namespace KVD.ECS.Core.Helpers
 			}
 		}
 		
-		public void Remove<T>() where T : struct, ISingletonComponent
+		public void Remove<T>() where T : struct, IComponent
 		{
 			var index = Bucket<T>.Index;
 			_buckets[index] = null;
 		}
 
-		public static int Index<T>() where T : struct, ISingletonComponent => Bucket<T>.Index;
+		public static int Index<T>() where T : struct, IComponent => Bucket<T>.Index;
 		
 		public void Remove(int index)
 		{
@@ -77,7 +77,7 @@ namespace KVD.ECS.Core.Helpers
 
 		private static int _previousIndex = -1;
 		
-		private sealed class Bucket<T> : IBucket where T : struct, ISingletonComponent
+		private sealed class Bucket<T> : IBucket where T : struct, IComponent
 		{
 			// This is intended
 			// ReSharper disable once StaticMemberInGenericType
