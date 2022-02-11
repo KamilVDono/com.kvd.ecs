@@ -108,7 +108,7 @@ namespace KVD.ECS.Core.Helpers
 			var oldSize = _masks.Length;
 			Resize(other._masks.Length);
 			var i = 0;
-			for (; i < _masks.Length; i++)
+			for (; i < other._masks.Length; i++)
 			{
 				_masks[i] = other._masks[i];
 			}
