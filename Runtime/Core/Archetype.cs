@@ -238,12 +238,13 @@ namespace KVD.ECS.Core
 			return entity;
 		}
 
-		public Entity Create(T0 component0, T1 component1, T2 component2)
+		public Entity Create(T0 component0, T1 component1, T2 component2, T3 component3)
 		{
 			var entity = _storage.NextEntity();
 			_list0.List.Add(entity, component0);
 			_list1.List.Add(entity, component1);
 			_list2.List.Add(entity, component2);
+			_list3.List.Add(entity, component3);
 			return entity;
 		}
 		
