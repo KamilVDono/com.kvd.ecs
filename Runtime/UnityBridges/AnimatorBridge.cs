@@ -1,4 +1,5 @@
-﻿using KVD.ECS.Core;
+﻿using System;
+using KVD.ECS.Core;
 using KVD.ECS.Core.Components;
 using KVD.ECS.Core.Entities;
 using UnityEngine;
@@ -76,6 +77,7 @@ namespace KVD.ECS.UnityBridges
 		public void Dispose() {}
 	}
 
+	[Serializable]
 	public readonly struct AnimatorBool
 	{
 		public readonly byte value;

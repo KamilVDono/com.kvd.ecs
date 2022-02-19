@@ -54,9 +54,8 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			{
 				_positionComponents     = World.defaultStorage.List<Position>();
 				_accelerationComponents = World.defaultStorage.List<Acceleration>();
-				_componentsView         = RegisterComponentsView(
-					ViewDescriptor.New<Position, Acceleration>(World.defaultStorage)
-					);
+				RegisterComponentsView(_componentsView = new(World.defaultStorage,
+					new[] { typeof(Position), typeof(Acceleration) }));
 				
 				return base.InitialSetup();
 			}

@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using KVD.ECS.Core.Components;
 using KVD.ECS.Core.Entities;
 using KVD.ECS.Core.Helpers;
 using KVD.ECS.Serializers;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 using Unity.Profiling;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 #nullable enable
@@ -166,7 +170,7 @@ namespace KVD.ECS.Core
 			using var marker = ComponentListConstants.AddMarker.Auto();
 			if (Has(e))
 			{
-				throw new ArgumentException($"Entity [{e}] already present in SparseList");
+				throw new ArgumentException($"Entity [{e}] already present in ComponentList<{typeof(T).Name}>");
 			}
 #endif
 			InternalAddSafe(e, value);

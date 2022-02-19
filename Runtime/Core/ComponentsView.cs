@@ -32,10 +32,28 @@ namespace KVD.ECS.Core
 
 		public int Size => _entities.Length;
 
-		public ComponentsView(ViewDescriptor viewDescriptor, bool onlyWhenStructuralChanges = false)
+		public ComponentsView(ComponentsStorage storage,
+			Type[] hasComponents, Type[]? excludeComponents = null, 
+			bool onlyWhenStructuralChanges = false)
 		{
-			_hasComponents             = viewDescriptor.HasComponents;
-			_excludeComponents         = viewDescriptor.ExcludeComponents;
+			_hasComponents = new IReadonlyComponentList[hasComponents.Length];
+			for (var i = 0; i < hasComponents.Length; i++)
+			{
+				_hasComponents[i] = storage.ReadonlyListView(hasComponents[i]);
+			}
+			
+			if (excludeComponents == null)
+			{
+				_excludeComponents = Array.Empty<IReadonlyComponentList>();
+			}
+			else
+			{
+				_excludeComponents = new IReadonlyComponentList[excludeComponents.Length];
+				for (var i = 0; i < excludeComponents.Length; i++)
+				{
+					_excludeComponents[i] = storage.ReadonlyListView(excludeComponents[i]);
+				}
+			}
 			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
 		}
 		
@@ -115,7 +133,7 @@ namespace KVD.ECS.Core
 				_hasComponents[0] = _componentsList0;
 				for (var i = 0; i < hasComponents.Length; i++)
 				{
-					_hasComponents[i+1] = storage.List(hasComponents[i]);
+					_hasComponents[i+1] = storage.ReadonlyListView(hasComponents[i]);
 				}
 			}
 			
@@ -128,7 +146,7 @@ namespace KVD.ECS.Core
 				_excludeComponents = new IReadonlyComponentList[excludeComponents.Length];
 				for (var i = 0; i < excludeComponents.Length; i++)
 				{
-					_excludeComponents[i] = storage.List(excludeComponents[i]);
+					_excludeComponents[i] = storage.ReadonlyListView(excludeComponents[i]);
 				}
 			}
 			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
@@ -239,7 +257,7 @@ namespace KVD.ECS.Core
 				_hasComponents[1] = _componentsList1;
 				for (var i = 0; i < hasComponents.Length; i++)
 				{
-					_hasComponents[i+2] = storage.List(hasComponents[i]);
+					_hasComponents[i+2] = storage.ReadonlyListView(hasComponents[i]);
 				}
 			}
 			
@@ -252,7 +270,7 @@ namespace KVD.ECS.Core
 				_excludeComponents = new IReadonlyComponentList[excludeComponents.Length];
 				for (var i = 0; i < excludeComponents.Length; i++)
 				{
-					_excludeComponents[i] = storage.List(excludeComponents[i]);
+					_excludeComponents[i] = storage.ReadonlyListView(excludeComponents[i]);
 				}
 			}
 
@@ -390,7 +408,7 @@ namespace KVD.ECS.Core
 				_hasComponents[2] = _componentsList2;
 				for (var i = 0; i < hasComponents.Length; i++)
 				{
-					_hasComponents[i+3] = storage.List(hasComponents[i]);
+					_hasComponents[i+3] = storage.ReadonlyListView(hasComponents[i]);
 				}
 			}
 			
@@ -403,7 +421,7 @@ namespace KVD.ECS.Core
 				_excludeComponents = new IReadonlyComponentList[excludeComponents.Length];
 				for (var i = 0; i < excludeComponents.Length; i++)
 				{
-					_excludeComponents[i] = storage.List(excludeComponents[i]);
+					_excludeComponents[i] = storage.ReadonlyListView(excludeComponents[i]);
 				}
 			}
 
@@ -564,7 +582,7 @@ namespace KVD.ECS.Core
 				_hasComponents[3] = _componentsList3;
 				for (var i = 0; i < hasComponents.Length; i++)
 				{
-					_hasComponents[i+4] = storage.List(hasComponents[i]);
+					_hasComponents[i+4] = storage.ReadonlyListView(hasComponents[i]);
 				}
 			}
 			
@@ -577,7 +595,7 @@ namespace KVD.ECS.Core
 				_excludeComponents = new IReadonlyComponentList[excludeComponents.Length];
 				for (var i = 0; i < excludeComponents.Length; i++)
 				{
-					_excludeComponents[i] = storage.List(excludeComponents[i]);
+					_excludeComponents[i] = storage.ReadonlyListView(excludeComponents[i]);
 				}
 			}
 

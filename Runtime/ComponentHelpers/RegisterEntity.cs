@@ -105,9 +105,7 @@ namespace KVD.ECS.ComponentHelpers
 			for (var i = convertibles.Length-1; i >= 0; i--)
 			{
 				var convertable        = convertibles[i];
-				var convertableStorage = storage.List(convertable.ComponentType);
-				var component          = convertable.Component(world, storage);
-				convertableStorage.AddByObject(entity, component);
+				convertable.Register(entity, world, storage);
 				if (removeAuthoring)
 				{
 					Destroy((Component)convertable);

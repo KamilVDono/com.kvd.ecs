@@ -54,6 +54,7 @@ namespace KVD.ECS.Core
 			_storageKey      = storageKey;
 		}
 
+		#region Lists
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComponentList<T>? TryList<T>() where T : struct, IComponent
 		{
@@ -93,10 +94,26 @@ namespace KVD.ECS.Core
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IReadonlyComponentList ReadonlyListView(Type componentType)
+		{
+			CheckComponentType(componentType);
+			if (_listsByType.TryGetValue(componentType, out var list))
+			{
+				return list;
+			}
+			var storageType = typeof(ReadonlyComponentListViewView<>).MakeGenericType(componentType);
+			return (IReadonlyComponentList)Activator.CreateInstance(storageType, this);
+		}
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IReadonlyComponentListView<T> ReadonlyListView<T>() where T : struct, IComponent
 		{
-			return new ReadonlyComponentListViewView<T>(this);
+			var key = typeof(T);
+			return _listsByType.TryGetValue(key, out var list) ?
+				(IReadonlyComponentListView<T>)list :
+				new ReadonlyComponentListViewView<T>(this);
 		}
+		#endregion Lists
 
 		#region Entities
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

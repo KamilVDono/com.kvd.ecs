@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 
 #nullable enable
@@ -11,6 +12,7 @@ namespace KVD.ECS.Core.Helpers
 	{
 		public readonly T[] array;
 		public int Length{ get; private set; }
+		public bool IsEmpty => Length < 1;
 
 		public RentedArray(int length)
 		{
@@ -21,6 +23,29 @@ namespace KVD.ECS.Core.Helpers
 		[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 		public ref T this[int index] => ref array[index];
 
+		[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),
+		 MethodImpl(MethodImplOptions.AggressiveInlining),]
+		public void Add(T value)
+		{
+			array[Length] = value;
+			++Length;
+		}
+
+		[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),
+		 MethodImpl(MethodImplOptions.AggressiveInlining),]
+		public void RemoveAt(int i)
+		{
+			array[i] = array[Length-1];
+			--Length;
+		}
+		
+		[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),
+		 MethodImpl(MethodImplOptions.AggressiveInlining),]
+		public void ZeroSize()
+		{
+			Length = 0;
+		}
+		
 		public Iterator GetEnumerator()
 		{
 			return new(array, Length);

@@ -28,7 +28,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 		public void Has_EmptyLists()
 		{
 			// Arrange
-			using ComponentsView view = new(ViewDescriptor.New<Position, Acceleration>(world.defaultStorage));
+			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Position), typeof(Acceleration) });
 
 			// Act
 			ZipForEntities(view);
@@ -63,9 +63,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
 
-			using ComponentsView view = new(
-				ViewDescriptor.New<Radius>(world.defaultStorage)
-				);
+			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Radius) });
 
 			// Act
 			ZipForEntities(view);
@@ -99,7 +97,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			nextEntity = world.defaultStorage.NextEntity();
 			_accelerations.Add(nextEntity, new());
 
-			using ComponentsView view = new(ViewDescriptor.New<Position, Acceleration>(world.defaultStorage));
+			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Position), typeof(Acceleration) });
 
 			// Act
 			ZipForEntities(view);
@@ -133,7 +131,7 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
 
-			using ComponentsView view = new(ViewDescriptor.New<Position, Acceleration>(world.defaultStorage));
+			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Position), typeof(Acceleration) });
 
 			// Act && Assert
 			var entities = ZipForEntities(view);
@@ -172,9 +170,8 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
 
-			using ComponentsView view = new(
-				ViewDescriptor.New<Position, Acceleration, Radius>(world.defaultStorage)
-				);
+			using ComponentsView view = new(world.defaultStorage,
+				new[] { typeof(Position), typeof(Acceleration), typeof(Radius) });
 
 			// Act
 			var entities = ZipForEntities(view);
@@ -212,9 +209,9 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
 
-			using ComponentsView view = new(
-				ViewDescriptor.New<Position, Acceleration>(world.defaultStorage, new[] { typeof(Radius) })
-				);
+			using ComponentsView view = new(world.defaultStorage,
+				new[] { typeof(Position), typeof(Acceleration) },
+				new[] { typeof(Radius) });
 
 			// Act
 			var entities = ZipForEntities(view);
@@ -260,9 +257,9 @@ namespace KVD.ECS.GeneralTests.Tests.GeneralTests
 			_accelerations.Add(nextEntity, new());
 			_radii.Add(nextEntity, new());
 
-			using ComponentsView view = new(
-				ViewDescriptor.New<Position, Acceleration>(world.defaultStorage, new[] { typeof(Radius) })
-				);
+			using ComponentsView view = new(world.defaultStorage,
+				new[] { typeof(Position), typeof(Acceleration) },
+				new[] { typeof(Radius) });
 
 			// Act
 			ZipForEntities(view);
