@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using KVD.ECS.GeneralTests.Tests.GeneralTests.Components;
+using KVD.ECS.GeneralTests.Components;
 using KVD.ECS.Serializers;
 using UnityEngine.Scripting;
 

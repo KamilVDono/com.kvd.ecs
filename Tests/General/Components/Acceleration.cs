@@ -1,6 +1,6 @@
 ﻿using KVD.ECS.Core.Components;
 
-namespace KVD.ECS.GeneralTests.Tests.GeneralTests.Components
+namespace KVD.ECS.GeneralTests.Components
 {
 	public struct Acceleration : IComponent
 	{

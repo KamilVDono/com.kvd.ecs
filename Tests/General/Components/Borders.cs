@@ -1,7 +1,7 @@
 ﻿using KVD.ECS.Core.Components;
 using Unity.Mathematics;
 
-namespace KVD.ECS.GeneralTests.Tests.GeneralTests.Components
+namespace KVD.ECS.GeneralTests.Components
 {
 	public struct Borders : IComponent
 	{

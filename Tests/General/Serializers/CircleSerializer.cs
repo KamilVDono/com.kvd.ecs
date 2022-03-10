@@ -1,5 +1,5 @@
 using System.IO;
-using KVD.ECS.GeneralTests.Tests.GeneralTests.Components;
+using KVD.ECS.GeneralTests.Components;
 using KVD.ECS.Serializers;
 
 namespace KVD.ECS.GeneralTests.Tests.GeneralTests.Serializers

@@ -6,7 +6,6 @@
         "UnityEditor.TestRunner",
         "Unity.Collections",
         "UniTask",
-        "KVD.Core",
         "KVD.Utils",
         "Unity.Mathematics",
         "KVD.ECS"

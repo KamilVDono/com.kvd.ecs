@@ -145,59 +145,10 @@ namespace KVD.ECS.Core
 			return CurrentEntity;
 		}
 		
-		public void RemoveEntity(int entity)
-		{
-			for (var i = 0; i < _lists.Count; i++)
-			{
-				if (_lists[i].Has(entity))
-				{
-					_lists[i].Remove(entity);
-				}
-			}
-			_entityAllocator.Return(entity);
-		}
-		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsAlive(Entity entity)
+		public void ReturnEntity(Entity entity)
 		{
-			var isAlive = false;
-			var i       = 0;
-			while (!isAlive && i < _lists.Count)
-			{
-				var list = _lists[i];
-				isAlive = list.Has(entity);
-				++i;
-			}
-			return isAlive;
-		}
-
-		public RentedArray<Entity> NextEntitiesBulk(int length)
-		{
-			var entities = new RentedArray<Entity>(length);
-			for (var i = 0; i < length; i++)
-			{
-				entities[i] = NextEntity();
-			}
-			return entities;
-		}
-		
-		public RentedArray<Entity> AddToAllBulk(int length)
-		{
-			var entities = new RentedArray<Entity>(length);
-			for (var i = 0; i < length; i++)
-			{
-				entities[i] = NextEntity();
-			}
-			foreach (var components in _listsByType.Values)
-			{
-				components.BulkAdd(entities);
-			}
-			return entities;
-		}
-		
-		public void ReturnBulkAddedEntities(RentedArray<Entity> entities)
-		{
-			entities.Dispose();
+			_entityAllocator.Return(entity);
 		}
 		#endregion Entities
 		
@@ -257,12 +208,17 @@ namespace KVD.ECS.Core
 			{
 				_singleFrameSingletons.Add(SingletonComponentsStorage.Index<T>());
 			}
+			else
+			{
+				_singleFrameSingletons.Remove(SingletonComponentsStorage.Index<T>());
+			}
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveSingleton<T>() where T : struct, IComponent
 		{
 			_singletons.Remove<T>();
+			_singleFrameSingletons.Remove(SingletonComponentsStorage.Index<T>());
 		}
 		#endregion Singleton components
 		
@@ -273,6 +229,11 @@ namespace KVD.ECS.Core
 				components.Destroy();
 			}
 			_listsByType.Clear();
+			_lists.Clear();
+
+			_singletons.Clear();
+			
+			_singleFrameSingletons.Clear();
 		}
 
 		public override string ToString()

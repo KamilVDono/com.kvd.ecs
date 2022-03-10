@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using KVD.ECS.Core.Components;
 using KVD.ECS.Core.Entities;
 using KVD.ECS.Core.Helpers;
 using KVD.ECS.Serializers;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 using Unity.Profiling;
-using UnityEngine;
 using UnityEngine.Assertions;
 
 #nullable enable
@@ -136,31 +132,6 @@ namespace KVD.ECS.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining), Obsolete("Use with care and as last choice", false),]
 		public object ValueAsObject(Entity entity) => _values[_indexByEntity[entity]];
 
-		public void BulkAdd(RentedArray<Entity> entities) => BulkAdd(entities, default);
-
-		public void BulkAdd(RentedArray<Entity> entities, T value)
-		{
-#if DEBUG
-			using var marker = ComponentListConstants.BulkAddMarker.Auto();
-#endif
-			
-			var startSize = _length;
-			_length += entities.Length;
-			EnsureSize(entities[^1]);
-			
-			for (var i = 0; i < entities.Length; i++)
-			{
-				var index  = startSize+i;
-				var entityIndex = entities[i].index;
-				_indexByEntity[entityIndex] = index;
-				_entityByIndex[index] = entities[i];
-				_values[index]   = value;
-				_entitiesMask.Set(entityIndex, true);
-			}
-
-			_entitiesVersion++;
-		}
-
 		[Obsolete("Use with care and as last choice", false)]
 		public void AddByObject(Entity entity, object value) => Add(entity, (T)value);
 
@@ -196,6 +167,31 @@ namespace KVD.ECS.Core
 			{
 				InternalAddSafe(entity, value);
 			}
+		}
+		
+		public void BulkAdd(RentedArray<Entity> entities) => BulkAdd(entities, default);
+
+		public void BulkAdd(RentedArray<Entity> entities, T value)
+		{
+#if DEBUG
+			using var marker = ComponentListConstants.BulkAddMarker.Auto();
+#endif
+			
+			var startSize = _length;
+			_length += entities.Length;
+			EnsureSize(entities[^1]);
+			
+			for (var i = 0; i < entities.Length; i++)
+			{
+				var index       = startSize+i;
+				var entityIndex = entities[i].index;
+				_indexByEntity[entityIndex] = index;
+				_entityByIndex[index]       = entities[i];
+				_values[index]              = value;
+				_entitiesMask.Set(entityIndex, true);
+			}
+
+			_entitiesVersion++;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -256,6 +252,7 @@ namespace KVD.ECS.Core
 			for (var i = 0; i < _length; ++i)
 			{
 				_values[i].Dispose();
+				_values[i] = default;
 			}
 			
 			_length   = 0;

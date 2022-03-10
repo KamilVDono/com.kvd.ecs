@@ -3,7 +3,7 @@ using KVD.ECS.Core.Entities;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace KVD.ECS.GeneralTests.Tests.GeneralTests.Components
+namespace KVD.ECS.GeneralTests.Components
 {
 	public struct ComplexComponent : IComponent
 	{

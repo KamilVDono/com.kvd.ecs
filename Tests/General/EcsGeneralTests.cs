@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using KVD.ECS.Core;
 using KVD.ECS.Core.Systems;
-using KVD.ECS.GeneralTests.Tests.GeneralTests.Components;
+using KVD.ECS.GeneralTests.Components;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 

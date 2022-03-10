@@ -14,6 +14,8 @@ namespace KVD.ECS.Core.Helpers
 			_buckets = new IBucket[capacity];
 		}
 		
+		public static int Index<T>() where T : struct, IComponent => Bucket<T>.Index;
+		
 		public bool Has<T>() where T : struct, IComponent
 		{
 			var index = Bucket<T>.Index;
@@ -63,11 +65,17 @@ namespace KVD.ECS.Core.Helpers
 			_buckets[index] = null;
 		}
 
-		public static int Index<T>() where T : struct, IComponent => Bucket<T>.Index;
-		
 		public void Remove(int index)
 		{
 			_buckets[index] = null;
+		}
+		
+		public void Clear()
+		{
+			for (var i = 0; i < _buckets.Length; i++)
+			{
+				_buckets[i] = null;
+			}
 		}
 
 		public interface IBucket
