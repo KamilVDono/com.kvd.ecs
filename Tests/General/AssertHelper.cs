@@ -2,7 +2,7 @@
 using Unity.Collections;
 using static KVD.Utils.Extensions.NativeContainersExt;
 
-namespace KVD.ECS.GeneralTests.Tests.GeneralTests
+namespace KVD.ECS.GeneralTests
 {
 	public static class AssertHelper
 	{

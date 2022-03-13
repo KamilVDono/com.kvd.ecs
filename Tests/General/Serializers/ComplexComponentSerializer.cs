@@ -4,7 +4,7 @@ using KVD.ECS.GeneralTests.Components;
 using KVD.ECS.Serializers;
 using Unity.Mathematics;
 
-namespace KVD.ECS.GeneralTests.Tests.GeneralTests.Serializers
+namespace KVD.ECS.GeneralTests.Serializers
 {
 	public class ComplexComponentSerializer : IComponentSerializer<ComplexComponent>
 	{

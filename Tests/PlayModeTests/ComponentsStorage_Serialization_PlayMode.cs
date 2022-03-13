@@ -3,7 +3,7 @@ using System.Collections;
 using System.IO;
 using KVD.ECS.ComponentHelpers;
 using KVD.ECS.Core;
-using KVD.ECS.GeneralTests.Tests.GeneralTests;
+using KVD.ECS.GeneralTests;
 using NUnit.Framework;
 using Unity.Mathematics;
 using UnityEngine;

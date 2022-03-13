@@ -4,7 +4,7 @@ using KVD.ECS.GeneralTests.Components;
 using KVD.ECS.Serializers;
 using UnityEngine.Scripting;
 
-namespace KVD.ECS.GeneralTests.Tests.GeneralTests.Serializers
+namespace KVD.ECS.GeneralTests.Serializers
 {
 	[Preserve]
 	public class SerializersProvider : ISerializersProvider

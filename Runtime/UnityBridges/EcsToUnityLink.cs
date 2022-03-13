@@ -7,13 +7,12 @@ namespace KVD.ECS.UnityBridges
 	public class EcsToUnityLink : MonoBehaviour
 	{
 #nullable disable
-		public World World { get; private set; }
-		public Entity Entity { get; private set; } = Entity.Null;
-		public ComponentsStorageKey StorageKey { get; private set; }
-		public ComponentsStorage Storage { get; private set; }
+		public World World{ get; private set; }
+		public Entity Entity{ get; private set; } = Entity.Null;
+		public ComponentsStorageKey StorageKey{ get; private set; }
+		public ComponentsStorage Storage{ get; private set; }
 #nullable enable
 
-		// ReSharper disable ParameterHidesMember
 		public void Init(World world, Entity entity, ComponentsStorageKey storageKey, ComponentsStorage storage)
 		{
 			World      = world;
@@ -21,7 +20,6 @@ namespace KVD.ECS.UnityBridges
 			StorageKey = storageKey;
 			Storage    = storage;
 		}
-		// ReSharper restore ParameterHidesMember
 
 		private void OnDestroy()
 		{

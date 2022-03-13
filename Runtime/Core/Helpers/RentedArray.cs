@@ -10,12 +10,19 @@ namespace KVD.ECS.Core.Helpers
 	// TODO: There is size limit for array length in ArrayPool<T>.Shared, should be resolved via custom array pool
 	public struct RentedArray<T> : IDisposable
 	{
+		private const int InternalPoolSize = 1_048_576;
+		
 		public readonly T[] array;
 		public int Length{ get; private set; }
 		public bool IsEmpty => Length < 1;
 
 		public RentedArray(int length)
 		{
+			if (length is < 0 or > InternalPoolSize)
+			{
+				throw new ArgumentException($"Length must be greater than zero but less than {InternalPoolSize}",
+					nameof(length));
+			}
 			Length = length;
 			array  = length == 0 ? Array.Empty<T>() : ArrayPool<T>.Shared.Rent(length);
 		}

@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 
 #nullable disable
 
-namespace KVD.ECS.GeneralTests.Tests.GeneralTests
+namespace KVD.ECS.GeneralTests
 {
 	public class EcsGeneralTests : EcsTestsBase
 	{

@@ -184,64 +184,10 @@ namespace KVD.ECS.Core.Helpers
 				_masks[i] &= ~other._masks[i];
 			}
 		}
-
+		
 		public Iterator GetEnumerator()
 		{
 			return new(_masks);
-		}
-
-		public void Serialize(BinaryWriter writer)
-		{
-			writer.Write(ControlCharacter);
-			writer.Write(_masks.Length);
-			writer.Write(ControlCharacter);
-			foreach (var mask in _masks)
-			{
-				writer.Write(mask);
-			}
-			writer.Write(ControlCharacter);
-		}
-		
-		public void Deserialize(BinaryReader reader)
-		{
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-			var length = reader.ReadInt32();
-			Resize(length);
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-			for (var i = 0; i < length; i++)
-			{
-				_masks[i] = reader.ReadUInt64();
-			}
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-		}
-
-		private void Resize(int length)
-		{
-			if (_masks.Length >= length)
-			{
-				return;
-			}
-			Array.Resize(ref _masks, length);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int Bucket(int index)
-		{
-			return index/SingleMaskSize;
-		}
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int BucketIndex(int index)
-		{
-			return index%SingleMaskSize;
-		}
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static byte BitCount(ulong value)
-		{
-			var result = value - ((value >> 1) & 0x5555555555555555UL);
-			result = (result & 0x3333333333333333UL) + ((result >> 2) & 0x3333333333333333UL);
-			return (byte)(unchecked(((result + (result >> 4)) & 0xF0F0F0F0F0F0F0FUL) * 0x101010101010101UL) >> 56);
 		}
 
 		public ref struct Iterator
@@ -279,6 +225,60 @@ namespace KVD.ECS.Core.Helpers
 				while (_index < _length && (_masks[_bucket] & (ulong)1 << _bucketIndex) == 0);
 				return _index < _length;
 			}
+		}
+
+		public void Serialize(BinaryWriter writer)
+		{
+			writer.Write(ControlCharacter);
+			writer.Write(_masks.Length);
+			writer.Write(ControlCharacter);
+			foreach (var mask in _masks)
+			{
+				writer.Write(mask);
+			}
+			writer.Write(ControlCharacter);
+		}
+		
+		public void Deserialize(BinaryReader reader)
+		{
+			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
+			var length = reader.ReadInt32();
+			Resize(length);
+			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
+			for (var i = 0; i < length; i++)
+			{
+				_masks[i] = reader.ReadUInt64();
+			}
+			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
+		}
+		
+		private void Resize(int length)
+		{
+			if (_masks.Length >= length)
+			{
+				return;
+			}
+			Array.Resize(ref _masks, length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int Bucket(int index)
+		{
+			return index/SingleMaskSize;
+		}
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int BucketIndex(int index)
+		{
+			return index%SingleMaskSize;
+		}
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static byte BitCount(ulong value)
+		{
+			var result = value - ((value >> 1) & 0x5555555555555555UL);
+			result = (result & 0x3333333333333333UL) + ((result >> 2) & 0x3333333333333333UL);
+			return (byte)(unchecked(((result + (result >> 4)) & 0xF0F0F0F0F0F0F0FUL) * 0x101010101010101UL) >> 56);
 		}
 	}
 }

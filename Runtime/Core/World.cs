@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
 using KVD.ECS.Core.Systems;
 using KVD.ECS.Serializers;
@@ -38,6 +39,10 @@ namespace KVD.ECS.Core
 		#region Lifetime
 		public async UniTask Initialize()
 		{
+			if (_initialized)
+			{
+				throw new ApplicationException("World already initialized");
+			}
 			IsRestored = false;
 			await Bootstrap();
 			await InitInitialSystems();
@@ -46,6 +51,10 @@ namespace KVD.ECS.Core
 		
 		public async UniTask Restore(BinaryReader reader)
 		{
+			if (_initialized)
+			{
+				throw new ApplicationException("World already initialized");
+			}
 			Deserialize(reader);
 			IsRestored = true;
 			await Bootstrap();
@@ -60,13 +69,15 @@ namespace KVD.ECS.Core
 				await system.Destroy();
 			}
 			systems.Clear();
-
-			var values = _componentsStorages.Values.ToArray();
+			
 			_componentsStorages.Clear();
-			foreach (var components in values)
+			foreach (var components in _componentsStoragesList)
 			{
 				components.Destroy();
 			}
+			_componentsStoragesList.Clear();
+
+			_singletons.Clear();
 		}
 
 		public void Update()
@@ -156,17 +167,19 @@ namespace KVD.ECS.Core
 		#endregion Systems
 
 		#region ComponentsStorages
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T Storage<T>(ComponentsStorageKey key) where T : ComponentsStorage
 		{
 			return (T)_componentsStorages[key];
 		}
 		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComponentsStorage Storage(ComponentsStorageKey key)
 		{
 			return _componentsStorages[key];
 		}
 
-		protected T RegisterComponentsStorage<T>(ComponentsStorageKey key, T storage) where T : ComponentsStorage
+		public T RegisterComponentsStorage<T>(ComponentsStorageKey key, T storage) where T : ComponentsStorage
 		{
 			_componentsStorages[key] = storage;
 			_componentsStoragesList.Add(storage);

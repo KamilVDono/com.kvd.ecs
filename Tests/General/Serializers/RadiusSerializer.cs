@@ -2,7 +2,7 @@ using System.IO;
 using KVD.ECS.GeneralTests.Components;
 using KVD.ECS.Serializers;
 
-namespace KVD.ECS.GeneralTests.Tests.GeneralTests.Serializers
+namespace KVD.ECS.GeneralTests.Serializers
 {
 	public class RadiusSerializer : IComponentSerializer<Radius>
 	{
