@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using KVD.Utils.Attributes;
 using UnityEngine;
 
@@ -14,13 +15,16 @@ namespace KVD.ECS.Core
 		
 		public World World{ get; private set; }
 #nullable enable
+		private UniTask _initTask;
+		public UniTask InitTask => _initTask;
 
 		private async void Awake()
 		{
 			try
 			{
-				World = CreateWorld();
-				await World.Initialize();
+				World     = CreateWorld();
+				_initTask = World.Initialize();
+				await _initTask;
 				// TODO: FIX ME
 				// if (!SavesSystem.IsLoading)
 				// {
@@ -52,6 +56,10 @@ namespace KVD.ECS.Core
 
 		private void Update()
 		{
+			if (_initTask.Status != UniTaskStatus.Succeeded)
+			{
+				return;
+			}
 			World.Update();
 		}
 	}

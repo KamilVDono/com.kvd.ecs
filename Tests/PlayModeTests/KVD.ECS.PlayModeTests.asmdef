@@ -10,7 +10,8 @@
         "UniTask",
         "KVD.Utils",
         "KVD.ECS",
-        "KVD.ECS.GeneralTests"
+        "KVD.ECS.GeneralTests",
+        "KVD.Utils.Editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

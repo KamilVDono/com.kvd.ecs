@@ -91,7 +91,7 @@ namespace KVD.ECS.PlayModeTests.Tests.PlayModeTests
 			RegisterEntity.SetupPrefabInstance(worldStub, storage, entity, request, instance, true);
 		}
 
-		private TransformData[] ExtractTransformData(ComponentList<MonoComponentWrapper<Transform>> components)
+		private static TransformData[] ExtractTransformData(ComponentList<MonoComponentWrapper<Transform>> components)
 		{
 			var data = new TransformData[components.Length];
 			for (var i = 0; i < components.Length; ++i)
@@ -99,7 +99,7 @@ namespace KVD.ECS.PlayModeTests.Tests.PlayModeTests
 				var transform = components.DenseArray[i].value;
 				var position  = (float3)transform.position;
 				var rotation  = (quaternion)transform.rotation;
-				data[i] = new TransformData(position, rotation);
+				data[i] = new(position, rotation);
 			}
 			return data;
 		}
@@ -138,7 +138,7 @@ namespace KVD.ECS.PlayModeTests.Tests.PlayModeTests
 				{
 					return true;
 				}
-				if (obj.GetType() != this.GetType())
+				if (obj.GetType() != GetType())
 				{
 					return false;
 				}

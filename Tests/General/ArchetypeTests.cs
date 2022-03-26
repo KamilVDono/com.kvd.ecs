@@ -6,6 +6,7 @@ namespace KVD.ECS.GeneralTests
 {
 	public class ArchetypeTests : EcsGeneralTests
 	{
+		[Test]
 		public void Has_Empty()
 		{
 			// Arrange
@@ -18,6 +19,7 @@ namespace KVD.ECS.GeneralTests
 			Assert.IsFalse(archetype.Has(32));
 		}
 		
+		[Test]
 		public void Add_then_Has()
 		{
 			// Arrange
