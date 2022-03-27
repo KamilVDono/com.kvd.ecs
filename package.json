@@ -1,10 +1,8 @@
 {
   "name": "com.kvd.ecs",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "displayName": "KamilVDono - ECS",
   "description": "This package contains my implementation od ECS.",
-  "unity": "2022.1",
-  "unityRelease": "0b2",
   "keywords": [
     "ecs",
     "data-oriented design"
