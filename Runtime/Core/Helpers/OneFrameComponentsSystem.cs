@@ -1,9 +1,10 @@
-﻿using KVD.ECS.Core.Systems;
+﻿using System;
+using KVD.ECS.Core.Systems;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 
 namespace KVD.ECS.Core.Helpers
 {
-	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
+	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false), Serializable,]
 	public class OneFrameComponentsSystem : SystemBase
 	{
 		protected override void Update()

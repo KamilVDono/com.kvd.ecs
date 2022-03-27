@@ -1,6 +1,4 @@
-﻿using System;
-using KVD.ECS.Core;
-using KVD.ECS.Core.Components;
+﻿using KVD.ECS.Core;
 using KVD.ECS.Core.Entities;
 using UnityEngine;
 
@@ -61,44 +59,5 @@ namespace KVD.ECS.UnityBridges
 				_setTriggers.Remove(_entity);
 			}
 		}
-	}
-	
-	public readonly struct SetAnimatorValue<T> : IComponent where T : unmanaged
-	{
-		public readonly int id;
-		public readonly T value;
-		
-		public SetAnimatorValue(int id, T value)
-		{
-			this.id    = id;
-			this.value = value;
-		}
-
-		public void Dispose() {}
-	}
-
-	[Serializable]
-	public readonly struct AnimatorBool
-	{
-		public readonly byte value;
-		
-		public bool Bool => value != 0;
-
-		public AnimatorBool(byte value)
-		{
-			this.value = value;
-		}
-		
-		public AnimatorBool(bool value)
-		{
-			this.value = (byte)(value ? 1 : 0);
-		}
-
-		public static implicit operator bool(AnimatorBool val) => val.Bool;
-		public static implicit operator AnimatorBool(bool val) => new(val);
-	}
-
-	public struct AnimatorTrigger
-	{
 	}
 }
