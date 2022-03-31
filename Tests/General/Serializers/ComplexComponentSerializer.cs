@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using KVD.ECS.Core.Entities;
 using KVD.ECS.GeneralTests.Components;
 using KVD.ECS.Serializers;
 using Unity.Mathematics;
@@ -15,24 +16,24 @@ namespace KVD.ECS.GeneralTests.Serializers
 		{
 			CircleSerializer.WriteBytes(target.circle, writer);
 SerializersHelper.ToBytesStruct(target.transformation, writer);
-SerializersHelper.ToBytesNativeArrayEntity(target.entities, writer);
-SerializersHelper.ToBytesComponentNativeArrayComponent(target.positions, writer);
+SerializersHelper.ToBytesNativeArray(target.entities, writer);
+SerializersHelper.ToBytesComponentNativeArray(target.positions, writer);
 SerializersHelper.ToBytesNativeArray(target.floats, writer);
 SerializersHelper.ToBytesNativeArray(target.matrices, writer);
-SerializersHelper.ToBytesComponentNativeArrayComponent(target.empty, writer);
+SerializersHelper.ToBytesComponentNativeArray(target.empty, writer);
 
 		}
 
 		
 		public ComplexComponent ReadBytes(BinaryReader reader)
 		{
-			var circle = CircleSerializer.ReadBytes(reader);
-var transformation = SerializersHelper.FromMarshalBytes<float4x4>(reader);
-var entities = SerializersHelper.FromBytesNativeArrayEntity(reader);
-var positions = SerializersHelper.FromBytesNativeArrayComponent<Position>(reader);
-var floats = SerializersHelper.FromBytesNativeArray<Single>(reader);
-var matrices = SerializersHelper.FromBytesNativeArray<float4x4>(reader);
-var empty = SerializersHelper.FromBytesNativeArrayComponent<Circle>(reader);
+			var circle         = CircleSerializer.ReadBytes(reader);
+var             transformation = SerializersHelper.FromMarshalBytes<float4x4>(reader);
+var             entities       = SerializersHelper.FromBytesNativeArray<Entity>(reader);
+var             positions      = SerializersHelper.FromBytesNativeArrayComponent<Position>(reader);
+var             floats         = SerializersHelper.FromBytesNativeArray<Single>(reader);
+var             matrices       = SerializersHelper.FromBytesNativeArray<float4x4>(reader);
+var             empty          = SerializersHelper.FromBytesNativeArrayComponent<Circle>(reader);
 
 
 			var deserializedStruct = new ComplexComponent()

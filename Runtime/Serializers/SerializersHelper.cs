@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.Runtime.InteropServices;
 using KVD.ECS.Core;
 using KVD.ECS.Core.Components;
-using KVD.ECS.Core.Entities;
+using KVD.ECS.Core.Helpers;
 using Unity.Collections;
 using static KVD.Utils.Extensions.NativeContainersExt;
 
@@ -12,17 +13,20 @@ namespace KVD.ECS.Serializers
 	public static class SerializersHelper
 	{
 		#region Write
+		private static readonly ArrayPool<byte> ByteArrayPool = ArrayPool<byte>.Shared;
+		
 		public static void ToBytesStruct<T>(T value, BinaryWriter writer) where T : unmanaged
 		{
 			var size = Marshal.SizeOf(value);
-			// TODO: Use array pool
-			var arr  = new byte[size];
+			var array  = ByteArrayPool.Rent(size);
 
-			var ptr = Marshal.AllocHGlobal(size);
-			Marshal.StructureToPtr(value, ptr, true);
-			Marshal.Copy(ptr, arr, 0, size);
-			Marshal.FreeHGlobal(ptr);
-			writer.Write(arr);
+			var pointer = Marshal.AllocHGlobal(size);
+			Marshal.StructureToPtr(value, pointer, true);
+			Marshal.Copy(pointer, array, 0, size);
+			Marshal.FreeHGlobal(pointer);
+			writer.Write(array, 0, size);
+			
+			ByteArrayPool.Return(array);
 		}
 
 		public static void ToBytesNativeArray<T>(NativeArray<T> values, BinaryWriter writer) where T : unmanaged
@@ -41,8 +45,8 @@ namespace KVD.ECS.Serializers
 				ToBytesStruct(value, writer);
 			}
 		}
-		
-		public static void ToBytesComponentNativeArrayComponent<T>(NativeArray<T> values, BinaryWriter writer) where T : struct, IComponent
+
+		public static void ToBytesComponentNativeArray<T>(NativeArray<T> values, BinaryWriter writer) where T : struct, IComponent
 		{
 			var allocator = ExtractAllocator(values);
 			writer.Write((byte)allocator);
@@ -59,16 +63,9 @@ namespace KVD.ECS.Serializers
 				serializer.WriteBytes(value, writer);
 			}
 		}
-
-		public static void ToBytesNativeArrayEntity(NativeArray<Entity> values, BinaryWriter writer)
+		
+		public static void ToBytesRentedArray<T>(RentedArray<T> values, BinaryWriter writer) where T : unmanaged
 		{
-			var allocator = ExtractAllocator(values);
-			writer.Write((byte)allocator);
-			if (allocator is Allocator.Invalid or Allocator.None)
-			{
-				return;
-			}
-			
 			writer.Write(values.Length);
 
 			foreach (var value in values)
@@ -76,10 +73,42 @@ namespace KVD.ECS.Serializers
 				ToBytesStruct(value, writer);
 			}
 		}
-
-		public static void ToBytesStatelessInstance<T>(T _, BinaryWriter writer)
+		
+		public static void ToBytesComponentRentedArray<T>(RentedArray<T> values, BinaryWriter writer) where T : struct, IComponent
 		{
-			ToBytesStatelessInstance(typeof(T), writer);
+			writer.Write(values.Length);
+
+			var serializer = SerializersLibrary.Serializer<T>();
+			foreach (var value in values)
+			{
+				serializer.WriteBytes(value, writer);
+			}
+		}
+		
+		public static void ToBytesArray<T>(T[] values, BinaryWriter writer) where T : unmanaged
+		{
+			writer.Write(values.Length);
+
+			foreach (var value in values)
+			{
+				ToBytesStruct(value, writer);
+			}
+		}
+		
+		public static void ToBytesComponentArray<T>(T[] values, BinaryWriter writer) where T : struct, IComponent
+		{
+			writer.Write(values.Length);
+
+			var serializer = SerializersLibrary.Serializer<T>();
+			foreach (var value in values)
+			{
+				serializer.WriteBytes(value, writer);
+			}
+		}
+		
+		public static void ToBytesStatelessInstance(object obj, BinaryWriter writer)
+		{
+			ToBytesStatelessInstance(obj.GetType(), writer);
 		}
 		
 		public static void ToBytesStatelessInstance<T>(BinaryWriter writer)
@@ -121,12 +150,11 @@ namespace KVD.ECS.Serializers
 			var allocator = (Allocator)reader.ReadByte();
 			if (allocator is Allocator.Invalid or Allocator.None)
 			{
-				return new NativeArray<T>();
+				return new();
 			}
 			
-			var length    = reader.ReadInt32();
-
-			var array = new NativeArray<T>(length, allocator, NativeArrayOptions.UninitializedMemory);
+			var length = reader.ReadInt32();
+			var array  = new NativeArray<T>(length, allocator, NativeArrayOptions.UninitializedMemory);
 
 			for (var i = 0; i < length; i++)
 			{
@@ -141,7 +169,7 @@ namespace KVD.ECS.Serializers
 			var allocator = (Allocator)reader.ReadByte();
 			if (allocator is Allocator.Invalid or Allocator.None)
 			{
-				return new NativeArray<T>();
+				return new();
 			}
 			
 			var length    = reader.ReadInt32();
@@ -156,27 +184,61 @@ namespace KVD.ECS.Serializers
 
 			return array;
 		}
-		
-		public static NativeArray<Entity> FromBytesNativeArrayEntity(BinaryReader reader)
-		{
-			var allocator = (Allocator)reader.ReadByte();
-			if (allocator is Allocator.Invalid or Allocator.None)
-			{
-				return new NativeArray<Entity>();
-			}
-			
-			var length    = reader.ReadInt32();
 
-			var array = new NativeArray<Entity>(length, allocator, NativeArrayOptions.UninitializedMemory);
+		public static RentedArray<T> FromBytesRentedArray<T>(BinaryReader reader) where T : unmanaged
+		{
+			var length = reader.ReadInt32();
+			var array  = new RentedArray<T>(length);
 
 			for (var i = 0; i < length; i++)
 			{
-				array[i] = FromMarshalBytes<Entity>(reader);
+				array[i] = FromMarshalBytes<T>(reader);
 			}
 
 			return array;
 		}
 		
+		public static RentedArray<T> FromBytesRentedArrayComponent<T>(BinaryReader reader) where T : struct, IComponent
+		{
+			var length = reader.ReadInt32();
+			var array  = new RentedArray<T>(length);
+
+			var serializer = SerializersLibrary.Serializer<T>();
+			for (var i = 0; i < length; i++)
+			{
+				array[i] = serializer.ReadBytes(reader);
+			}
+
+			return array;
+		}
+		
+		public static T[] FromBytesArray<T>(BinaryReader reader) where T : unmanaged
+		{
+			var length = reader.ReadInt32();
+			var array  = new T[length];
+
+			for (var i = 0; i < length; i++)
+			{
+				array[i] = FromMarshalBytes<T>(reader);
+			}
+
+			return array;
+		}
+		
+		public static T[] FromBytesRentedComponent<T>(BinaryReader reader) where T : struct, IComponent
+		{
+			var length = reader.ReadInt32();
+			var array  = new T[length];
+
+			var serializer = SerializersLibrary.Serializer<T>();
+			for (var i = 0; i < length; i++)
+			{
+				array[i] = serializer.ReadBytes(reader);
+			}
+
+			return array;
+		}
+
 		public static Type FromBytesType(BinaryReader reader)
 		{
 			var typeName = reader.ReadString();
