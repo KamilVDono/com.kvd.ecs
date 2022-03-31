@@ -10,7 +10,7 @@ namespace KVD.ECS.Core.Helpers
 	// TODO: There is size limit for array length in ArrayPool<T>.Shared, should be resolved via custom array pool
 	public struct RentedArray<T> : IDisposable
 	{
-		private const int InternalPoolSize = 1_048_576;
+		private const int InternalPoolMaxSize = 1_048_576;
 		
 		public readonly T[] array;
 		public int Length{ get; private set; }
@@ -18,9 +18,9 @@ namespace KVD.ECS.Core.Helpers
 
 		public RentedArray(int length)
 		{
-			if (length is < 0 or > InternalPoolSize)
+			if (length is < 0 or > InternalPoolMaxSize)
 			{
-				throw new ArgumentException($"Length must be greater than zero but less than {InternalPoolSize}",
+				throw new ArgumentException($"Length must be greater or equal zero but less than {InternalPoolMaxSize}",
 					nameof(length));
 			}
 			Length = length;
