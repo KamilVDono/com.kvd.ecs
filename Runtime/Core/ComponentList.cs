@@ -78,7 +78,6 @@ namespace KVD.ECS.Core
 		private const char ControlCharacter = 'c';
 		private static T _dummyRefReturn;
 
-		private readonly IComponentSerializer<T>? _serializer;
 		private readonly BigBitmask _entitiesMask;
 		private readonly List<int> _singleFrameComponents = new(12);
 
@@ -108,7 +107,6 @@ namespace KVD.ECS.Core
 			_entityByIndex = new int[_capacity];
 			_entitiesMask  = new(_capacity);
 			_values        = new T[_capacity];
-			_serializer    = SerializersLibrary.Serializer<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -353,7 +351,8 @@ namespace KVD.ECS.Core
 			writer.Write(_entitiesVersion);
 			writer.Write(ControlCharacter);
 
-			if (_serializer == null)
+			var serializer = SerializersLibrary.Serializer<T>();
+			if (serializer == null)
 			{
 				return;
 			}
@@ -370,7 +369,7 @@ namespace KVD.ECS.Core
 			writer.Write(ControlCharacter);
 			for (var i = 0; i < _length; i++)
 			{
-				_serializer.WriteBytes(_values[i], writer);
+				serializer.WriteBytes(_values[i], writer);
 			}
 			
 			writer.Write(ControlCharacter);
@@ -390,16 +389,16 @@ namespace KVD.ECS.Core
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 
 			var list = new ComponentList<T>(capacity);
-			list.Deserialize(reader, length, entitiesVersion);
-			return list._serializer != null ? list : null;
+			return list.Deserialize(reader, length, entitiesVersion);
 		}
 		
-		private void Deserialize(BinaryReader reader, int length, int entitiesVersion)
+		private ComponentList<T>? Deserialize(BinaryReader reader, int length, int entitiesVersion)
 		{
-			if (_serializer == null)
+			var serializer = SerializersLibrary.Serializer<T>();
+			if (serializer == null)
 			{
 				Destroy();
-				return;
+				return null;
 			}
 			
 			_length          = length;
@@ -418,7 +417,7 @@ namespace KVD.ECS.Core
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 			for (var i = 0; i < _length; i++)
 			{
-				_values[i] = _serializer.ReadBytes(reader);
+				_values[i] = serializer.ReadBytes(reader);
 			}
 			
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
@@ -427,6 +426,7 @@ namespace KVD.ECS.Core
 				_entityByIndex[i] = reader.ReadInt32();
 			}
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
+			return this;
 		}
 		#endregion Serialization
 	}

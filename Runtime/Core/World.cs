@@ -90,6 +90,10 @@ namespace KVD.ECS.Core
 			}
 			for (var i = 0; i < _componentsStoragesList.Count; i++)
 			{
+				_componentsStoragesList[i].ClearSingleFrameEntities();
+			}
+			for (var i = 0; i < _componentsStoragesList.Count; i++)
+			{
 				_componentsStoragesList[i].SafetyCheck();
 			}
 		}

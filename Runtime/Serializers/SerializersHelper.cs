@@ -108,15 +108,15 @@ namespace KVD.ECS.Serializers
 		
 		public static void ToBytesStatelessInstance(object obj, BinaryWriter writer)
 		{
-			ToBytesStatelessInstance(obj.GetType(), writer);
+			ToBytesType(obj.GetType(), writer);
 		}
 		
 		public static void ToBytesStatelessInstance<T>(BinaryWriter writer)
 		{
-			ToBytesStatelessInstance(typeof(T), writer);
+			ToBytesType(typeof(T), writer);
 		}
 		
-		public static void ToBytesStatelessInstance(Type type, BinaryWriter writer)
+		public static void ToBytesType(Type type, BinaryWriter writer)
 		{
 			var typeName = type.FullName!;
 			writer.Write(typeName);
@@ -239,23 +239,23 @@ namespace KVD.ECS.Serializers
 			return array;
 		}
 
+		public static T FromBytesStatelessInstance<T>(BinaryReader reader)
+		{
+			return (T)FromBytesStatelessInstance(reader);
+		}
+
+		public static object FromBytesStatelessInstance(BinaryReader reader)
+		{
+			var type = FromBytesType(reader);
+			return Activator.CreateInstance(type)!;
+		}
+		
 		public static Type FromBytesType(BinaryReader reader)
 		{
 			var typeName = reader.ReadString();
 			return Type.GetType(typeName)!;
 		}
-		
-		public static T FromBytesStatelessInstance<T>(BinaryReader reader)
-		{
-			return (T)FromBytesStatelessInstance(reader);
-		}
-		
-		public static object FromBytesStatelessInstance(BinaryReader reader)
-		{
-			var type     = FromBytesType(reader);
-			return Activator.CreateInstance(type)!;
-		}
-		
+
 		public static ComponentsStorageKey FromBytesStorageKey(BinaryReader reader)
 		{
 			var value = reader.ReadInt32();

@@ -28,6 +28,7 @@ namespace KVD.ECS.Core
 	public class ComponentsStorage
 	{
 		private const char ControlCharacter = 's';
+		private const char HasStorageKeyCharacter = 'S';
 		private static readonly Type MonoComponent = typeof(IMonoComponent);
 		private static readonly Type SparseListGenericType = typeof(ComponentList<>);
 
@@ -35,7 +36,7 @@ namespace KVD.ECS.Core
 		#if DEBUG
 		private readonly Dictionary<Entity, string> _debugNames = new(Entity.IndexComparer);
 		#endif
-		private readonly ComponentsStorageKey? _storageKey;
+		private ComponentsStorageKey? _storageKey;
 		#endregion Debug
 		private readonly Dictionary<Type, IComponentList> _listsByType = new(16);
 		private readonly List<IComponentList> _lists = new(16);
@@ -266,23 +267,33 @@ namespace KVD.ECS.Core
 		public virtual void Serialize(BinaryWriter writer)
 		{
 			var hasMonoComponents = false;
+			
 			writer.Write(ControlCharacter);
-			// TODO: Save allocator
-			//writer.Write(_lastEntity.index);
+			SerializersHelper.ToBytesType(_entityAllocator.GetType(), writer);
+			_entityAllocator.Serialize(writer);
+			
+			writer.Write(ControlCharacter);
+			if (_storageKey.HasValue)
+			{
+				writer.Write(HasStorageKeyCharacter); //Storage key
+				writer.Write(_storageKey.Value.Value);
+			}
+
+			writer.Write(ControlCharacter);
 			writer.Write((byte)_listsByType.Count);
 			foreach (var (type, sparseList) in _listsByType)
 			{
-				SerializersHelper.ToBytesStatelessInstance(type, writer);
+				SerializersHelper.ToBytesType(type, writer);
 				sparseList.Serialize(writer);
 				hasMonoComponents = hasMonoComponents || MonoComponent.IsAssignableFrom(type);
 			}
-			writer.Write(ControlCharacter);
 			
+			writer.Write(ControlCharacter);
 			// Unfortunately we need to serialize transform "manually"
 			if (hasMonoComponents)
 			{
 				var transformStorage = List<MonoComponentWrapper<Transform>>();
-				var entityByIndex          = transformStorage.EntityByIndex;
+				var entityByIndex    = transformStorage.EntityByIndex;
 				var values           = transformStorage.DenseArray;
 
 				for (var i = 0; i < transformStorage.Length; i++)
@@ -298,6 +309,12 @@ namespace KVD.ECS.Core
 					SerializersHelper.ToBytesStruct(rotation, writer);
 				}
 			}
+			
+			writer.Write(ControlCharacter);
+			_singletons.Serialize(writer);
+			
+			writer.Write(ControlCharacter);
+			writer.Write(CurrentEntity.index);
 			writer.Write(ControlCharacter);
 		}
 		
@@ -305,10 +322,17 @@ namespace KVD.ECS.Core
 		{
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 
-			// TODO: Load allocator
-			//var currentEntityIndex = reader.ReadInt32();
-			//_lastEntity = new(currentEntityIndex);
-			
+			_entityAllocator = SerializersHelper.FromBytesStatelessInstance<IEntityAllocator>(reader);
+			_entityAllocator.Deserialize(reader);
+
+			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
+			if (reader.PeekChar() == HasStorageKeyCharacter)
+			{
+				reader.ReadChar();
+				_storageKey = new ComponentsStorageKey(reader.ReadInt32());
+			}
+
+			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 			int count          = reader.ReadByte();
 			var readerAsParams = new object[] { reader, };
 			for (var i = 0; i < count; i++)
@@ -326,13 +350,20 @@ namespace KVD.ECS.Core
 				}
 
 				_listsByType[componentType] = storage;
+				_lists.Add(storage);
 			}
+			
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-
 			if (_listsByType.TryGetValue(typeof(PrefabWrapper), out var prefabWrappers))
 			{
 				DeserializePrefabs(world, reader, (ComponentList<PrefabWrapper>)prefabWrappers);
 			}
+			
+			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
+			_singletons.Deserialize(reader);
+			
+			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
+			CurrentEntity = reader.ReadInt32();
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 		}
 		

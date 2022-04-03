@@ -1,6 +1,8 @@
-﻿namespace KVD.ECS.Core.Entities.Allocators
+﻿using System.IO;
+
+namespace KVD.ECS.Core.Entities.Allocators
 {
-	public class ContinuousEntitiesAllocator : IEntityAllocator
+	public sealed class ContinuousEntitiesAllocator : IEntityAllocator
 	{
 		private Entity _lastEntity = Entity.Null;
 		
@@ -11,5 +13,15 @@
 		}
 
 		public void Return(Entity _) {}
+		
+		public void Serialize(BinaryWriter writer)
+		{
+			writer.Write(_lastEntity.index);
+		}
+		
+		public void Deserialize(BinaryReader reader)
+		{
+			_lastEntity = reader.ReadInt32();
+		}
 	}
 }

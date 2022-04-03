@@ -1,36 +1,45 @@
 ﻿using System;
+using System.IO;
 
 namespace KVD.ECS.Core.Entities.Allocators
 {
-	public class CircularBufferEntitiesAllocator : IEntityAllocator
+	public sealed class CircularBufferEntitiesAllocator : IEntityAllocator
 	{
-		private readonly Entity[] _buffer;
+		private int _size;
 		private int _nextEntity;
 
 		public CircularBufferEntitiesAllocator(int size = 128)
 		{
-			_buffer = new Entity[size];
-			for (var i = 0; i < size; i++)
-			{
-				_buffer[i] = i;
-			}
+			_size = size;
 		}
 
 		public Entity Allocate()
 		{
-			var entity = _buffer[_nextEntity];
-			_nextEntity = (_nextEntity+1)%_buffer.Length;
+			var entity = _nextEntity;
+			_nextEntity = (_nextEntity+1)%_size;
 			return entity;
 		}
 		
 		public void Return(Entity _) {}
 		
+		public void Serialize(BinaryWriter writer)
+		{
+			writer.Write(_size);
+			writer.Write(_nextEntity);
+		}
+		
+		public void Deserialize(BinaryReader reader)
+		{
+			_size       = reader.ReadInt32();
+			_nextEntity = reader.ReadInt32();
+		}
+
 		public void AssertValidity(ComponentsStorage storage)
 		{
 			#if !DEBUG
 			return;
 			#endif
-			var nextEntity = _buffer[_nextEntity];
+			var nextEntity = _nextEntity;
 			if (storage.IsAlive(nextEntity))
 			{
 				throw new ApplicationException($"Next entity in {nameof(CircularBufferEntitiesAllocator)} for {storage} is still in usage");

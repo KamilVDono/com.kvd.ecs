@@ -1,13 +1,20 @@
 ﻿using System;
+using System.IO;
 using KVD.ECS.Core.Components;
+using KVD.ECS.Serializers;
+using KVD.Utils.Extensions;
+using UnityEngine.Assertions;
 
 #nullable enable
 
 namespace KVD.ECS.Core.Helpers
 {
-	public class SingletonComponentsStorage
+	public sealed class SingletonComponentsStorage
 	{
-		private readonly IBucket?[] _buckets;
+		private const char ControlCharacter = 'S';
+		private static readonly Type BucketGenericType = typeof(Bucket<>);
+		
+		private IBucket?[] _buckets;
 		
 		public SingletonComponentsStorage(int capacity)
 		{
@@ -78,18 +85,76 @@ namespace KVD.ECS.Core.Helpers
 			}
 		}
 
+		#region Serialization
+		public void Serialize(BinaryWriter writer)
+		{
+			writer.Write(ControlCharacter);
+			writer.Write(_buckets.Length);
+
+			for (var i = 0; i < _buckets.Length; i++)
+			{
+				var bucket = _buckets[i];
+				if (bucket == null)
+				{
+					continue;
+				}
+				writer.Write(i);
+				SerializersHelper.ToBytesType(bucket.TargetType, writer);
+				bucket.Serialize(writer);
+			}
+
+			writer.Write(_nextIndex);
+			writer.Write(ControlCharacter);
+		}
+
+		public void Deserialize(BinaryReader reader)
+		{
+			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
+			var length = reader.ReadInt32();
+			if (_buckets.Length != length)
+			{
+				Array.Resize(ref _buckets, length);
+			}
+			
+			var nextImplemented = reader.ReadInt32();
+			for (var i = 0; i < length; i++)
+			{
+				if (i == nextImplemented)
+				{
+					var type       = SerializersHelper.FromBytesType(reader);
+					var bucketType = BucketGenericType.MakeGenericType(type);
+					var bucket     = (IBucket)Activator.CreateInstance(bucketType);
+					_buckets[i] = bucket;
+					bucket.Deserialize(i, reader);
+					nextImplemented = reader.ReadInt32();
+				}
+				else
+				{
+					_buckets[i] = null;
+				}
+			}
+
+			_nextIndex = nextImplemented;
+			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
+		}
+		#endregion Serialization
+
 		public interface IBucket
 		{
 			public Type TargetType{ get; }
+
+			public void Serialize(BinaryWriter writer);
+			void Deserialize(int index, BinaryReader reader);
 		}
 
-		private static int _previousIndex = -1;
-		
+		// ReSharper disable MissingBlankLines
+		private static int _nextIndex;
 		private sealed class Bucket<T> : IBucket where T : struct, IComponent
 		{
 			// This is intended
 			// ReSharper disable once StaticMemberInGenericType
-			public static readonly int Index = ++_previousIndex;
+			// ReSharper disable once InconsistentNaming
+			public static int Index = _nextIndex++;
 			public static T dummyRefReturn;
 
 			public T value;
@@ -100,6 +165,20 @@ namespace KVD.ECS.Core.Helpers
 			{
 				this.value = value;
 			}
+
+			public void Serialize(BinaryWriter writer)
+			{
+				var serializer = SerializersLibrary.Serializer<T>();
+				serializer.WriteBytes(value, writer);
+			}
+			
+			public void Deserialize(int index, BinaryReader reader)
+			{
+				Index = index;
+				var serializer = SerializersLibrary.Serializer<T>();
+				value = serializer.ReadBytes(reader);
+			}
 		}
+		// ReSharper restore MissingBlankLines
 	}
 }

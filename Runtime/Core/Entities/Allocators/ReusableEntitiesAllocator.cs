@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 
 namespace KVD.ECS.Core.Entities.Allocators
@@ -7,7 +8,7 @@ namespace KVD.ECS.Core.Entities.Allocators
 	{
 		private int _pointer = -1;
 		private Entity _last = Entity.Null;
-		private EntitiesPointer[] _buffer = new EntitiesPointer[512];
+		private EntitiesPointer[] _buffer = new EntitiesPointer[256];
 
 		public Entity Allocate()
 		{
@@ -75,6 +76,35 @@ namespace KVD.ECS.Core.Entities.Allocators
 			}
 			
 			InsertEntity(e, _pointer+1);
+		}
+		
+		public void Serialize(BinaryWriter writer)
+		{
+			writer.Write(_pointer);
+			writer.Write(_last.index);
+			writer.Write(_buffer.Length);
+			for (var i = 0; i < _buffer.Length; i++)
+			{
+				writer.Write(_buffer[i].head.index);
+				writer.Write(_buffer[i].count);
+			}
+		}
+		
+		public void Deserialize(BinaryReader reader)
+		{
+			_pointer = reader.ReadInt32();
+			_last    = reader.ReadInt32();
+			
+			var bufferSize = reader.ReadInt32();
+			if (_buffer.Length != bufferSize)
+			{
+				Array.Resize(ref _buffer, bufferSize);
+			}
+			for (var i = 0; i < _buffer.Length; i++)
+			{
+				_buffer[i].head = reader.ReadInt32();
+				_buffer[i].count = reader.ReadInt32();
+			}
 		}
 
 		private void Merge(int position)
