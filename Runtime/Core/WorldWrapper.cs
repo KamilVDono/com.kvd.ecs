@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using KVD.ECS.Core.Systems;
 using KVD.Utils.Attributes;
 using UnityEngine;
 
@@ -18,24 +20,58 @@ namespace KVD.ECS.Core
 		private UniTask _initTask;
 		public UniTask InitTask => _initTask;
 
-		private async void Awake()
+		private void Start()
+		{
+			var loadRequest = FindObjectOfType<LoadRequest>();
+			if (loadRequest)
+			{
+				var reader = loadRequest.Consume();
+				var restoreWorld = RestoreWorld(reader);
+				restoreWorld.ContinueWith(() => reader.Close()).Forget(Debug.LogException);
+			}
+			else
+			{
+				StartWorld();
+			}
+		}
+		
+		private async void OnDestroy()
+		{
+			await World.Destroy();
+			_initTask = default;
+		}
+
+		private void Update()
+		{
+			if (_initTask.Status != UniTaskStatus.Succeeded)
+			{
+				return;
+			}
+			World.Update();
+		}
+
+		public UniTask StartWorld()
 		{
 			try
 			{
 				World     = CreateWorld();
 				_initTask = World.Initialize();
-				await _initTask;
-				// TODO: FIX ME
-				// if (!SavesSystem.IsLoading)
-				// {
-				// 	await World.Initialize();
-				// }
-				// else
-				// {
-				// 	SavesSystem.IsLoading = false;
-				// 	using var reader = SavesSystem.CurrentSaveReader();
-				// 	await World.Restore(reader);
-				// }
+				return _initTask;
+			}
+			catch (Exception e)
+			{
+				Debug.LogException(e, this);
+				throw;
+			}
+		}
+		
+		public UniTask RestoreWorld(BinaryReader reader)
+		{
+			try
+			{
+				World     = CreateWorld();
+				_initTask = World.Restore(reader);
+				return _initTask;
 			}
 			catch (Exception e)
 			{
@@ -47,20 +83,6 @@ namespace KVD.ECS.Core
 		protected virtual World CreateWorld()
 		{
 			return new(_bootstrapables.OfType<IBootstrapable>().ToArray());
-		}
-
-		private async void OnDestroy()
-		{
-			await World.Destroy();
-		}
-
-		private void Update()
-		{
-			if (_initTask.Status != UniTaskStatus.Succeeded)
-			{
-				return;
-			}
-			World.Update();
 		}
 	}
 }

@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
 using KVD.ECS.Core.Systems;
 using KVD.ECS.Serializers;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 #nullable enable
@@ -19,12 +19,14 @@ namespace KVD.ECS.Core
 		public readonly ComponentsStorage defaultStorage;
 
 		protected readonly List<ISystem> systems = new();
-		private readonly Dictionary<ComponentsStorageKey, ComponentsStorage> _componentsStorages = new(4, ComponentsStorageKey.ComponentStorageKeyComparer);
+		private readonly Dictionary<ComponentsStorageKey, ComponentsStorage> _componentsStorages =
+			new(4, ComponentsStorageKey.ComponentStorageKeyComparer);
 		private readonly List<ComponentsStorage> _componentsStoragesList = new(4);
 		private readonly IBootstrapable[] _bootstrapables;
 		private readonly Dictionary<Type, object> _singletons = new();
 
 		private bool _initialized;
+		private bool _inUpdatePhase;
 
 		public bool IsRestored{ get; private set; }
 		public IReadOnlyList<ComponentsStorage> AllComponentsStorages => _componentsStoragesList;
@@ -82,6 +84,7 @@ namespace KVD.ECS.Core
 
 		public void Update()
 		{
+			_inUpdatePhase = true;
 			var count = systems.Count;
 			for (var i = 0; i < count; i++)
 			{
@@ -96,6 +99,17 @@ namespace KVD.ECS.Core
 			{
 				_componentsStoragesList[i].SafetyCheck();
 			}
+			_inUpdatePhase = false;
+		}
+
+		public void Save(BinaryWriter writer)
+		{
+			if (_inUpdatePhase)
+			{
+				Debug.LogError("Cannot save in update phase");
+				return;
+			}
+			Serialize(writer);
 		}
 		#endregion Lifetime
 
@@ -218,61 +232,28 @@ namespace KVD.ECS.Core
 		#endregion Singletons
 
 		#region Serialization
-		public void Serialize(BinaryWriter writer)
+		protected virtual void Serialize(BinaryWriter writer)
 		{
 			writer.Write(ControlCharacter);
-			
-			writer.Write(systems.Count);
-			foreach (var system in systems)
-			{
-				SerializersHelper.ToBytesStatelessInstance(system, writer);
-			}
-			writer.Write(ControlCharacter);
-
-			foreach (var key in _componentsStorages.Keys)
+			writer.Write(_componentsStoragesList.Count);
+			foreach (var (key, storage) in _componentsStorages)
 			{
 				SerializersHelper.ToBytesStorageKey(key, writer);
+				storage.Serialize(writer);
 			}
-			
 			writer.Write(ControlCharacter);
 		}
 		
-		public void Deserialize(BinaryReader reader)
+		protected virtual void Deserialize(BinaryReader reader)
 		{
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-			
-			var systemsCount = reader.ReadInt32();
-			if (systems.Count == systemsCount)
-			{
-				for (var i = 0; i < systemsCount; i++)
-				{
-					SerializersHelper.FromBytesType(reader);
-				}
-			}
-			else
-			{
-				var systemTypes = systems.Select(s => s.GetType()).ToHashSet();
-				for (var i = 0; i < systemsCount; i++)
-				{
-					var systemType = SerializersHelper.FromBytesType(reader);
-					if (systemTypes.Contains(systemType))
-					{
-						continue;
-					}
-					var system = (SystemBase)Activator.CreateInstance(systemType);
-					systems.Add(system);
-				}
-			}
-			
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-			
-			for (var i = 0; i < _componentsStorages.Count; i++)
+			var count = reader.ReadInt32();
+			for (var i = 0; i < count; i++)
 			{
 				var key = SerializersHelper.FromBytesStorageKey(reader);
 				var storage = _componentsStorages[key];
 				storage.Deserialize(this, reader);
 			}
-
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 		}
 		#endregion Serialization

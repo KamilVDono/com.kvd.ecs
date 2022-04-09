@@ -25,21 +25,26 @@ namespace KVD.ECS.Editor.Serialization
 		{
 			var componentsTypes = CollectComponentsTypes();
 
-			var playerSettings = new BakingSettings(
-				componentsTypes.PlayerComponents,
-				"KVD.DeusVult.ECS.Serializers",
-				Path.Combine(Application.dataPath, "Scripts/DeusVult/ECS/Serializers")
-				);
+			foreach (var o in Selection.objects)
+			{
+				Debug.Log(o.GetType());
+			}
 
-			BakeSerializers(playerSettings);
-			
-			var editorSettings = new BakingSettings(
-				componentsTypes.EditorComponents,
-				"KVD.Core.ECS.Tests.Serializers",
-				Path.Combine(Application.dataPath, "Scripts/Core/ECS/Tests/Serializers")
-				);
-
-			BakeSerializers(editorSettings);
+			// var playerSettings = new BakingSettings(
+			// 	componentsTypes.PlayerComponents,
+			// 	"KVD.DeusVult.ECS.Serializers",
+			// 	Path.Combine(Application.dataPath, "Scripts/DeusVult/ECS/Serializers")
+			// 	);
+			//
+			// BakeSerializers(playerSettings);
+			//
+			// var editorSettings = new BakingSettings(
+			// 	componentsTypes.EditorComponents,
+			// 	"KVD.Core.ECS.Tests.Serializers",
+			// 	Path.Combine(Application.dataPath, "Scripts/Core/ECS/Tests/Serializers")
+			// 	);
+			//
+			// BakeSerializers(editorSettings);
 		}
 		
 		private static void BakeSerializers(BakingSettings bakingSettings)
@@ -258,49 +263,17 @@ namespace KVD.ECS.Editor.Serialization
 			AssetDatabase.ImportAsset(relativePath);
 		}
 
-		private static ComponentsTypes CollectComponentsTypes()
+		private static IEnumerable<Type> CollectComponentsTypes()
 		{
-			var editorUnityAssemblies = CompilationPipeline.GetAssemblies(AssembliesType.Editor);
-			var playerUnityAssemblies = CompilationPipeline.GetAssemblies(AssembliesType.PlayerWithoutTestAssemblies);
-
-			var playerAssemblyNames = playerUnityAssemblies.Select(a => a.name).ToHashSet();
-			var editorAssemblyNames = editorUnityAssemblies.Select(a => a.name).Where(n => !playerAssemblyNames.Contains(n)).ToHashSet();
-
 			var allAssemblies   = AppDomain.CurrentDomain.GetAssemblies();
-			var validAssemblies = new List<Assembly>(allAssemblies.Length-editorAssemblyNames.Count);
-			var editorAssemblies = new List<Assembly>(editorAssemblyNames.Count);
-			
-			foreach (var assembly in allAssemblies)
-			{
-				if (editorAssemblyNames.Contains(assembly.GetName().Name))
-				{
-					editorAssemblies.Add(assembly);
-				}
-				else
-				{
-					validAssemblies.Add(assembly);
-				}
-			}
 
-			var componentsTypes = new ComponentsTypes(
-				validAssemblies
-					.SelectMany(a => a.GetTypes())
-					.Where(t => IsComponentType(t) && IsValuesBased(t) && t.IsPublic),
-				editorAssemblies
-					.SelectMany(a => a.GetTypes())
-					.Where(t => IsComponentType(t) && IsValuesBased(t) && t.IsPublic)
-				);
-
-			return componentsTypes;
+			return allAssemblies
+				.SelectMany(a => a.GetTypes())
+				.Where(t => IsComponentType(t) && t.IsPublic);
 
 			static bool IsComponentType(Type type)
 			{
-				return type.IsValueType && ComponentInterface.IsAssignableFrom(type);
-			}
-			
-			static bool IsValuesBased(Type type)
-			{
-				return !MonoComponentInterface.IsAssignableFrom(type) && type.GetFields().All(f => f.FieldType.IsValueType);
+				return ComponentInterface.IsAssignableFrom(type);
 			}
 		}
 
@@ -322,18 +295,6 @@ namespace KVD.ECS.Editor.Serialization
 				return type.GetGenericTypeDefinition() == typeof(NativeArray<>);
 			}
 			return false;
-		}
-
-		private class ComponentsTypes
-		{
-			public IEnumerable<Type> PlayerComponents{ get; set; }
-			public IEnumerable<Type> EditorComponents{ get; set; }
-			
-			public ComponentsTypes(IEnumerable<Type> playerComponents, IEnumerable<Type> editorComponents)
-			{
-				PlayerComponents = playerComponents;
-				EditorComponents = editorComponents;
-			}
 		}
 
 		private class BakingSettings

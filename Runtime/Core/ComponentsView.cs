@@ -167,10 +167,9 @@ namespace KVD.ECS.Core
 		public ref struct ComponentsIterator
 		{
 			private readonly int[] _entities;
-			private readonly int _length;
-			
 			private readonly IReadonlyComponentListView<T0> _componentsList0;
-		
+			
+			private readonly int _length;
 			private int _iteration;
 
 			public ComponentsIterator(RentedArray<int> entities, IReadonlyComponentListView<T0> componentsList0)
@@ -292,11 +291,11 @@ namespace KVD.ECS.Core
 		public ref struct ComponentsIterator
 		{
 			private readonly int[] _entities;
-			private readonly int _length;
-			
 			private readonly IReadonlyComponentListView<T0> _componentsList0;
 			private readonly IReadonlyComponentListView<T1> _componentsList1;
-		
+			
+			private readonly int _length;
+
 			private int _iteration;
 
 			public ComponentsIterator(RentedArray<int> entities, 
@@ -444,11 +443,12 @@ namespace KVD.ECS.Core
 		public ref struct ComponentsIterator
 		{
 			private readonly int[] _entities;
-			private readonly int _length;
-			
+
 			private readonly IReadonlyComponentListView<T0> _componentsList0;
 			private readonly IReadonlyComponentListView<T1> _componentsList1;
 			private readonly IReadonlyComponentListView<T2> _componentsList2;
+			
+			private readonly int _length;
 		
 			private int _iteration;
 
@@ -619,12 +619,13 @@ namespace KVD.ECS.Core
 		public ref struct ComponentsIterator
 		{
 			private readonly int[] _entities;
-			private readonly int _length;
-			
+
 			private readonly IReadonlyComponentListView<T0> _componentsList0;
 			private readonly IReadonlyComponentListView<T1> _componentsList1;
 			private readonly IReadonlyComponentListView<T2> _componentsList2;
 			private readonly IReadonlyComponentListView<T3> _componentsList3;
+			
+			private readonly int _length;
 		
 			private int _iteration;
 
