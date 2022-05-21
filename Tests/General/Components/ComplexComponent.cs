@@ -1,5 +1,6 @@
 ﻿using KVD.ECS.Core.Components;
 using KVD.ECS.Core.Entities;
+using KVD.ECS.Core.Helpers;
 using Unity.Collections;
 using Unity.Mathematics;
 
@@ -9,34 +10,19 @@ namespace KVD.ECS.GeneralTests.Components
 	{
 		public Circle circle;
 		public float4x4 transformation;
-		public NativeArray<Entity> entities;
-		public NativeArray<Position> positions;
-		public NativeArray<float> floats;
-		public NativeArray<float4x4> matrices;
-		public NativeArray<Circle> empty;
+		public RentedArray<Entity> entities;
+		public RentedArray<Position> positions;
+		public RentedArray<float> floats;
+		public RentedArray<float4x4> matrices;
+		public RentedArray<Circle> empty;
 		
 		public void Dispose()
 		{
-			if (entities.IsCreated)
-			{
-				entities.Dispose();
-			}
-			if (positions.IsCreated)
-			{
-				positions.Dispose();
-			}
-			if (floats.IsCreated)
-			{
-				floats.Dispose();
-			}
-			if (matrices.IsCreated)
-			{
-				matrices.Dispose();
-			}
-			if (empty.IsCreated)
-			{
-				empty.Dispose();
-			}
+			entities.Dispose();
+			positions.Dispose();
+			floats.Dispose();
+			matrices.Dispose();
+			empty.Dispose();
 		}
 	}
 }

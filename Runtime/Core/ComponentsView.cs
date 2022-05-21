@@ -20,18 +20,18 @@ namespace KVD.ECS.Core
 	{
 		private readonly IReadonlyComponentList[] _hasComponents;
 		private readonly IReadonlyComponentList[] _excludeComponents;
-
+	
 		private readonly BigBitmask _validEntities = new(ComponentsViewHelper.PreallocationSize);
 		private readonly BigBitmask _excludedEntities = new(ComponentsViewHelper.PreallocationSize);
-
+	
 		private RentedArray<int> _entities = new(0);
-
+	
 		private readonly bool _onlyWhenStructuralChanges;
 		private int _lastVersion;
 		private int _lastVersionExcluded;
-
+	
 		public int Size => _entities.Length;
-
+	
 		public ComponentsView(ComponentsStorage storage,
 			Type[] hasComponents, Type[]? excludeComponents = null, 
 			bool onlyWhenStructuralChanges = false)
@@ -63,30 +63,30 @@ namespace KVD.ECS.Core
 				_onlyWhenStructuralChanges, ref _entities, ref _lastVersion, ref _lastVersionExcluded);
 			return new(_entities);
 		}
-
+	
 		public void Dispose()
 		{
 			_entities.Dispose();
 		}
-
+	
 		public ref struct ComponentsIterator
 		{
 			private readonly int[] _entities;
 			private readonly int _length;
 		
 			private int _iteration;
-
+	
 			public ComponentsIterator(RentedArray<int> entities)
 			{
 				_entities = entities.array;
 				_length   = entities.Length;
-
+	
 				_iteration = -1;
 			}
 		
 			[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 			public int Current => _entities[_iteration];
-
+	
 			public bool MoveNext()
 			{
 				return ++_iteration < _length;
@@ -103,18 +103,18 @@ namespace KVD.ECS.Core
 	{
 		private readonly IReadonlyComponentList[] _hasComponents;
 		private readonly IReadonlyComponentList[] _excludeComponents;
-
+	
 		private readonly BigBitmask _validEntities = new(ComponentsViewHelper.PreallocationSize);
 		private readonly BigBitmask _excludedEntities = new(ComponentsViewHelper.PreallocationSize);
 		
 		private IReadonlyComponentListView<T0> _componentsList0;
-
+	
 		private RentedArray<int> _entities = new(0);
-
+	
 		private readonly bool _onlyWhenStructuralChanges;
 		private int _lastVersion;
 		private int _lastVersionExcluded;
-
+	
 		public int Size => _entities.Length;
 		
 		public ComponentsView(ComponentsStorage storage,
@@ -151,19 +151,19 @@ namespace KVD.ECS.Core
 			}
 			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
 		}
-
+	
 		public ComponentsIterator GetEnumerator()
 		{
 			ComponentsViewHelper.Zip(_hasComponents, _excludeComponents, _validEntities, _excludedEntities,
 				_onlyWhenStructuralChanges, ref _entities, ref _lastVersion, ref _lastVersionExcluded);
 			return new(_entities, _componentsList0 = _componentsList0.Sync());
 		}
-
+	
 		public void Dispose()
 		{
 			_entities.Dispose();
 		}
-
+	
 		public ref struct ComponentsIterator
 		{
 			private readonly int[] _entities;
@@ -171,19 +171,19 @@ namespace KVD.ECS.Core
 			
 			private readonly int _length;
 			private int _iteration;
-
+	
 			public ComponentsIterator(RentedArray<int> entities, IReadonlyComponentListView<T0> componentsList0)
 			{
 				_componentsList0 = componentsList0;
 				_entities        = entities.array;
 				_length          = entities.Length;
-
+	
 				_iteration = -1;
 			}
 		
 			[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 			public IterationView Current => new(_entities[_iteration], (ComponentList<T0>)_componentsList0);
-
+	
 			public bool MoveNext()
 			{
 				return ++_iteration < _length;
@@ -195,13 +195,13 @@ namespace KVD.ECS.Core
 			public readonly int entity;
 			
 			private readonly ComponentList<T0> _componentsList0;
-
+	
 			public IterationView(int entity, ComponentList<T0> componentsList0)
 			{
 				this.entity      = entity;
 				_componentsList0 = componentsList0;
 			}
-
+	
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T0 Get0()
 			{
@@ -223,19 +223,19 @@ namespace KVD.ECS.Core
 	{
 		private readonly IReadonlyComponentList[] _hasComponents;
 		private readonly IReadonlyComponentList[] _excludeComponents;
-
+	
 		private IReadonlyComponentListView<T0> _componentsList0;
 		private IReadonlyComponentListView<T1> _componentsList1;
-
+	
 		private readonly BigBitmask _validEntities = new(ComponentsViewHelper.PreallocationSize);
 		private readonly BigBitmask _excludedEntities = new(ComponentsViewHelper.PreallocationSize);
-
+	
 		private RentedArray<int> _entities = new(0);
-
+	
 		private readonly bool _onlyWhenStructuralChanges;
 		private int _lastVersion;
 		private int _lastVersionExcluded;
-
+	
 		public int Size => _entities.Length;
 		
 		public ComponentsView(ComponentsStorage storage,
@@ -272,7 +272,7 @@ namespace KVD.ECS.Core
 					_excludeComponents[i] = storage.ReadonlyListView(excludeComponents[i]);
 				}
 			}
-
+	
 			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
 		}
 		
@@ -282,12 +282,12 @@ namespace KVD.ECS.Core
 				_onlyWhenStructuralChanges, ref _entities, ref _lastVersion, ref _lastVersionExcluded);
 			return new(_entities, _componentsList0 = _componentsList0.Sync(), _componentsList1 = _componentsList1.Sync());
 		}
-
+	
 		public void Dispose()
 		{
 			_entities.Dispose();
 		}
-
+	
 		public ref struct ComponentsIterator
 		{
 			private readonly int[] _entities;
@@ -295,9 +295,9 @@ namespace KVD.ECS.Core
 			private readonly IReadonlyComponentListView<T1> _componentsList1;
 			
 			private readonly int _length;
-
+	
 			private int _iteration;
-
+	
 			public ComponentsIterator(RentedArray<int> entities, 
 				IReadonlyComponentListView<T0> componentsList0, IReadonlyComponentListView<T1> componentsList1)
 			{
@@ -305,7 +305,7 @@ namespace KVD.ECS.Core
 				_componentsList1 = componentsList1;
 				_entities        = entities.array;
 				_length          = entities.Length;
-
+	
 				_iteration = -1;
 			}
 		
@@ -313,7 +313,7 @@ namespace KVD.ECS.Core
 			public IterationView Current => new(_entities[_iteration], 
 				(ComponentList<T0>)_componentsList0, 
 				(ComponentList<T1>)_componentsList1);
-
+	
 			public bool MoveNext()
 			{
 				return ++_iteration < _length;
@@ -326,14 +326,14 @@ namespace KVD.ECS.Core
 			
 			private readonly ComponentList<T0> _componentsList0;
 			private readonly ComponentList<T1> _componentsList1;
-
+	
 			public IterationView(int entity, ComponentList<T0> componentsList0, ComponentList<T1> componentsList1)
 			{
 				this.entity           = entity;
 				_componentsList0      = componentsList0;
 				_componentsList1 = componentsList1;
 			}
-
+	
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T0 Get0()
 			{
@@ -375,13 +375,13 @@ namespace KVD.ECS.Core
 		
 		private readonly BigBitmask _validEntities = new(ComponentsViewHelper.PreallocationSize);
 		private readonly BigBitmask _excludedEntities = new(ComponentsViewHelper.PreallocationSize);
-
+	
 		private RentedArray<int> _entities = new(0);
-
+	
 		private readonly bool _onlyWhenStructuralChanges;
 		private int _lastVersion;
 		private int _lastVersionExcluded;
-
+	
 		public int Size => _entities.Length;
 		
 		public ComponentsView(ComponentsStorage storage,
@@ -423,10 +423,10 @@ namespace KVD.ECS.Core
 					_excludeComponents[i] = storage.ReadonlyListView(excludeComponents[i]);
 				}
 			}
-
+	
 			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
 		}
-
+	
 		public ComponentsIterator GetEnumerator()
 		{
 			ComponentsViewHelper.Zip(_hasComponents, _excludeComponents, _validEntities, _excludedEntities,
@@ -434,16 +434,16 @@ namespace KVD.ECS.Core
 			return new(_entities, _componentsList0 = _componentsList0.Sync(), 
 				_componentsList1 = _componentsList1.Sync(), _componentsList2 = _componentsList2.Sync());
 		}
-
+	
 		public void Dispose()
 		{
 			_entities.Dispose();
 		}
-
+	
 		public ref struct ComponentsIterator
 		{
 			private readonly int[] _entities;
-
+	
 			private readonly IReadonlyComponentListView<T0> _componentsList0;
 			private readonly IReadonlyComponentListView<T1> _componentsList1;
 			private readonly IReadonlyComponentListView<T2> _componentsList2;
@@ -451,7 +451,7 @@ namespace KVD.ECS.Core
 			private readonly int _length;
 		
 			private int _iteration;
-
+	
 			public ComponentsIterator(RentedArray<int> entities, 
 				IReadonlyComponentListView<T0> componentsList0, IReadonlyComponentListView<T1> componentsList1, 
 				IReadonlyComponentListView<T2> componentsList2)
@@ -461,7 +461,7 @@ namespace KVD.ECS.Core
 				_componentsList2 = componentsList2;
 				_entities        = entities.array;
 				_length          = entities.Length;
-
+	
 				_iteration = -1;
 			}
 		
@@ -470,7 +470,7 @@ namespace KVD.ECS.Core
 				(ComponentList<T0>)_componentsList0,
 				(ComponentList<T1>)_componentsList1,
 				(ComponentList<T2>)_componentsList2);
-
+	
 			public bool MoveNext()
 			{
 				return ++_iteration < _length;
@@ -484,7 +484,7 @@ namespace KVD.ECS.Core
 			private readonly ComponentList<T0> _componentsList0;
 			private readonly ComponentList<T1> _componentsList1;
 			private readonly ComponentList<T2> _componentsList2;
-
+	
 			public IterationView(int entity, ComponentList<T0> componentsList0, ComponentList<T1> componentsList1, ComponentList<T2> componentsList2)
 			{
 				this.entity      = entity;
@@ -492,7 +492,7 @@ namespace KVD.ECS.Core
 				_componentsList1 = componentsList1;
 				_componentsList2 = componentsList2;
 			}
-
+	
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T0 Get0()
 			{
@@ -504,7 +504,7 @@ namespace KVD.ECS.Core
 			{
 				return ref _componentsList1.Value(entity);
 			}
-
+	
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T2 Get2()
 			{
@@ -540,21 +540,21 @@ namespace KVD.ECS.Core
 	{
 		private readonly IReadonlyComponentList[] _hasComponents;
 		private readonly IReadonlyComponentList[] _excludeComponents;
-
+	
 		private IReadonlyComponentListView<T0> _componentsList0;
 		private IReadonlyComponentListView<T1> _componentsList1;
 		private IReadonlyComponentListView<T2> _componentsList2;
 		private IReadonlyComponentListView<T3> _componentsList3;
-
+	
 		private readonly BigBitmask _validEntities = new(ComponentsViewHelper.PreallocationSize);
 		private readonly BigBitmask _excludedEntities = new(ComponentsViewHelper.PreallocationSize);
-
+	
 		private RentedArray<int> _entities = new(0);
-
+	
 		private readonly bool _onlyWhenStructuralChanges;
 		private int _lastVersion;
 		private int _lastVersionExcluded;
-
+	
 		public int Size => _entities.Length;
 		
 		public ComponentsView(ComponentsStorage storage,
@@ -598,10 +598,10 @@ namespace KVD.ECS.Core
 					_excludeComponents[i] = storage.ReadonlyListView(excludeComponents[i]);
 				}
 			}
-
+	
 			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
 		}
-
+	
 		public ComponentsIterator GetEnumerator()
 		{
 			ComponentsViewHelper.Zip(_hasComponents, _excludeComponents, _validEntities, _excludedEntities,
@@ -610,16 +610,16 @@ namespace KVD.ECS.Core
 				_componentsList1 = _componentsList1.Sync(), _componentsList2 = _componentsList2.Sync(),
 				_componentsList3 = _componentsList3.Sync());
 		}
-
+	
 		public void Dispose()
 		{
 			_entities.Dispose();
 		}
-
+	
 		public ref struct ComponentsIterator
 		{
 			private readonly int[] _entities;
-
+	
 			private readonly IReadonlyComponentListView<T0> _componentsList0;
 			private readonly IReadonlyComponentListView<T1> _componentsList1;
 			private readonly IReadonlyComponentListView<T2> _componentsList2;
@@ -628,7 +628,7 @@ namespace KVD.ECS.Core
 			private readonly int _length;
 		
 			private int _iteration;
-
+	
 			public ComponentsIterator(RentedArray<int> entities, IReadonlyComponentListView<T0> componentsList0,
 				IReadonlyComponentListView<T1> componentsList1, IReadonlyComponentListView<T2> componentsList2,
 				IReadonlyComponentListView<T3> componentsList3)
@@ -639,7 +639,7 @@ namespace KVD.ECS.Core
 				_componentsList3 = componentsList3;
 				_entities        = entities.array;
 				_length          = entities.Length;
-
+	
 				_iteration = -1;
 			}
 		
@@ -649,7 +649,7 @@ namespace KVD.ECS.Core
 				(ComponentList<T1>)_componentsList1,
 				(ComponentList<T2>)_componentsList2,
 				(ComponentList<T3>)_componentsList3);
-
+	
 			public bool MoveNext()
 			{
 				return ++_iteration < _length;
@@ -664,7 +664,7 @@ namespace KVD.ECS.Core
 			private readonly ComponentList<T1> _componentsList1;
 			private readonly ComponentList<T2> _componentsList2;
 			private readonly ComponentList<T3> _componentsList3;
-
+	
 			public IterationView(int entity, ComponentList<T0> componentsList0, ComponentList<T1> componentsList1, 
 				ComponentList<T2> componentsList2, ComponentList<T3> componentsList3)
 			{
@@ -674,7 +674,7 @@ namespace KVD.ECS.Core
 				_componentsList2 = componentsList2;
 				_componentsList3 = componentsList3;
 			}
-
+	
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T0 Get0()
 			{
@@ -737,7 +737,7 @@ namespace KVD.ECS.Core
 			ref RentedArray<int> entities, ref int lastVersion, ref int lastVersionExcluded)
 		{
 			using var marker = ZipMarker.Auto();
-
+	
 			var currentVersion = 0;
 			for (var i = 0; i < hasComponents.Length; i++)
 			{
@@ -755,7 +755,7 @@ namespace KVD.ECS.Core
 					currentVersion += list.EntitiesVersion;
 				}
 			}
-
+	
 			if (lastVersion == currentVersion)
 			{
 				if (onlyWhenStructuralChanges)
@@ -764,7 +764,7 @@ namespace KVD.ECS.Core
 				}
 				return;
 			}
-
+	
 			lastVersion = currentVersion;
 			
 			// TODO: Try reuse
@@ -777,9 +777,9 @@ namespace KVD.ECS.Core
 					return;
 				}
 			}
-
+	
 			CollectExcludes(excludeComponents, excludedEntities, ref lastVersionExcluded);
-
+	
 			// Calculate bit mask
 			validEntities.CopyFrom(hasComponents[0].EntitiesMask);
 			for (var i = 1; i < hasComponents.Length; ++i)
@@ -787,13 +787,13 @@ namespace KVD.ECS.Core
 				validEntities.Intersect(hasComponents[i].EntitiesMask, false);
 			}
 			validEntities.Exclude(excludedEntities, false);
-
+	
 			var validEntitiesCount = validEntities.Count();
 			if (validEntitiesCount < 1)
 			{
 				return;
 			}
-
+	
 			entities = new(validEntitiesCount);
 			var entitiesArray = entities.array;
 			
@@ -828,7 +828,7 @@ namespace KVD.ECS.Core
 			{
 				return;
 			}
-
+	
 			lastVersionExcluded = currentVersion;
 			
 			excludedEntities.CopyFrom(excludeComponents[0].EntitiesMask);

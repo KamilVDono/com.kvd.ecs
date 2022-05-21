@@ -6,6 +6,5 @@ namespace KVD.ECS.Generics
 {
 	public struct WaitSignal : IComponent
 	{
-		public void Dispose() {}
 	}
 }

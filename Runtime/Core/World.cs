@@ -196,7 +196,7 @@ namespace KVD.ECS.Core
 		{
 			return _componentsStorages[key];
 		}
-
+		
 		public T RegisterComponentsStorage<T>(ComponentsStorageKey key, T storage) where T : ComponentsStorage
 		{
 			_componentsStorages[key] = storage;
@@ -250,7 +250,8 @@ namespace KVD.ECS.Core
 			var count = reader.ReadInt32();
 			for (var i = 0; i < count; i++)
 			{
-				var key = SerializersHelper.FromBytesStorageKey(reader);
+				ComponentsStorageKey key = new();
+				SerializersHelper.FromBytesStorageKey(ref key, reader);
 				var storage = _componentsStorages[key];
 				storage.Deserialize(this, reader);
 			}

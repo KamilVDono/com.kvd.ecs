@@ -43,7 +43,5 @@ namespace KVD.ECS.Generics
 		{
 			return animationName;
 		}
-
-		public void Dispose() {}
 	}
 }

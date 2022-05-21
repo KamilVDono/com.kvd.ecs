@@ -15,18 +15,18 @@ namespace KVD.ECS.Core
 		private readonly LazyComponentList<T0> _list;
 		
 		public int Length => _list.Length;
-
+	
 		public Archetype(ComponentsStorage storage)
 		{
 			_storage = storage;
 			_list    = new(_storage);
 		}
-
+	
 		public bool Has(Entity entity)
 		{
 			return _list.ReadonlyList.Has(entity);
 		}
-
+	
 		public Entity Create(T0 component)
 		{
 			var entity = _storage.NextEntity();
@@ -50,7 +50,7 @@ namespace KVD.ECS.Core
 		private readonly LazyComponentList<T1> _list1;
 		
 		public int Length => math.max(_list0.Length, _list1.Length);
-
+	
 		public Archetype(ComponentsStorage storage)
 		{
 			_storage = storage;
@@ -76,7 +76,7 @@ namespace KVD.ECS.Core
 			_list1.List.Add(entity, component1);
 			return entity;
 		}
-
+	
 		public Entity Create(T0 component0, T1 component1)
 		{
 			var entity = _storage.NextEntity();
@@ -114,7 +114,7 @@ namespace KVD.ECS.Core
 		private readonly LazyComponentList<T2> _list2;
 		
 		public int Length => math.max(_list0.Length, math.max(_list1.Length, _list2.Length));
-
+	
 		public Archetype(ComponentsStorage storage)
 		{
 			_storage = storage;
@@ -148,7 +148,7 @@ namespace KVD.ECS.Core
 			_list2.List.Add(entity, component2);
 			return entity;
 		}
-
+	
 		public Entity Create(T0 component0, T1 component1, T2 component2)
 		{
 			var entity = _storage.NextEntity();
@@ -195,7 +195,7 @@ namespace KVD.ECS.Core
 		private readonly LazyComponentList<T3> _list3;
 		
 		public int Length => math.max(_list0.Length, math.max(_list1.Length, math.max(_list2.Length, _list3.Length)));
-
+	
 		public Archetype(ComponentsStorage storage)
 		{
 			_storage = storage;
@@ -237,7 +237,7 @@ namespace KVD.ECS.Core
 			_list3.List.Add(entity, component3);
 			return entity;
 		}
-
+	
 		public Entity Create(T0 component0, T1 component1, T2 component2, T3 component3)
 		{
 			var entity = _storage.NextEntity();
@@ -291,10 +291,10 @@ namespace KVD.ECS.Core
 		private readonly LazyComponentList<T2> _list2;
 		private readonly LazyComponentList<T3> _list3;
 		private readonly LazyComponentList<T4> _list4;
-
+	
 		public int Length => math.max(_list0.Length,
 			math.max(_list1.Length, math.max(_list2.Length, math.max(_list3.Length, _list4.Length))));
-
+	
 		public Archetype(ComponentsStorage storage)
 		{
 			_storage = storage;
@@ -348,7 +348,7 @@ namespace KVD.ECS.Core
 			_list4.List.Add(entity, component4);
 			return entity;
 		}
-
+	
 		public Entity Create(T0 component0, T1 component1, T2 component2, T3 component3, T4 component4)
 		{
 			var entity = _storage.NextEntity();
@@ -359,7 +359,7 @@ namespace KVD.ECS.Core
 			_list4.List.Add(entity, component4);
 			return entity;
 		}
-
+	
 		public void Update(Entity entity, T0 component)
 		{
 			_list0.List.AddOrReplace(entity, component);
@@ -394,19 +394,19 @@ namespace KVD.ECS.Core
 			_list4.List.AddOrReplace(entity, component4);
 		}
 	}
-
+	
 	internal class LazyComponentList<T> where T : struct, IComponent
 	{
 		private readonly ComponentsStorage _storage;
-
+	
 		private ComponentList<T>? _list;
 		private IReadonlyComponentListView<T> _readonlyList;
 		
 		public ComponentList<T> List => _list ??= _storage.List<T>();
 		public IReadonlyComponentListView<T> ReadonlyList => _list ?? (_readonlyList = _readonlyList.Sync());
-
+	
 		public int Length => ReadonlyList.Length;
-
+	
 		public LazyComponentList(ComponentsStorage storage)
 		{
 			_storage      = storage;

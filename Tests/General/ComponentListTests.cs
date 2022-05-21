@@ -36,13 +36,13 @@ namespace KVD.ECS.GeneralTests
 			// Act
 			_components.Add(new(0), new());
 			_components.Add(new(1), new());
-
+		
 			// Assert
 			Assert.IsTrue(_components.Has(new(0)));
 			Assert.IsTrue(_components.Has(new(1)));
 			Assert.IsFalse(_components.Has(new(2)));
 		}
-
+		
 		[Test]
 		public void Add_OverCapacity()
 		{
@@ -52,7 +52,7 @@ namespace KVD.ECS.GeneralTests
 			_components.Add(new(5), new());
 			_components.Add(new(6), new());
 			_components.Add(new(3), new());
-
+		
 			// Assert
 			Assert.IsTrue(_components.Has(new(0)));
 			Assert.IsTrue(_components.Has(new(1)));
@@ -69,7 +69,7 @@ namespace KVD.ECS.GeneralTests
 			_components.AddOrReplace(new(0), new());
 			_components.AddOrReplace(new(1), new());
 			_components.AddOrReplace(new(0), new());
-
+		
 			// Assert
 			Assert.IsTrue(_components.Has(new(0)));
 			Assert.IsTrue(_components.Has(new(1)));
@@ -85,13 +85,13 @@ namespace KVD.ECS.GeneralTests
 			// Act
 			_components.AddByObject(new(0), pos);
 			_components.AddByObject(new(1), pos);
-
+		
 			// Assert
 			Assert.IsTrue(_components.Has(new(0)));
 			Assert.IsTrue(_components.Has(new(1)));
 			Assert.IsFalse(_components.Has(new(2)));
 		}
-
+		
 		[Test]
 		public void AddOrReplaceAsObject()
 		{
@@ -102,13 +102,13 @@ namespace KVD.ECS.GeneralTests
 			_components.AddOrReplaceAsObject(new(0), pos);
 			_components.AddOrReplaceAsObject(new(1), pos);
 			_components.AddOrReplaceAsObject(new(0), pos);
-
+		
 			// Assert
 			Assert.IsTrue(_components.Has(new(0)));
 			Assert.IsTrue(_components.Has(new(1)));
 			Assert.IsFalse(_components.Has(new(2)));
 		}
-
+		
 		[Test]
 		public void BulkAdd_DefaultValue()
 		{
@@ -153,7 +153,7 @@ namespace KVD.ECS.GeneralTests
 			entities[5] = 7;
 			entities[6] = 8;
 			entities[7] = 9;
-
+		
 			var pos = new Position { x = 15, y = 0, z = -10, };
 			
 			// Act
@@ -177,7 +177,7 @@ namespace KVD.ECS.GeneralTests
 			Assert.AreEqual(_components.Value(9), pos);
 		}
 		#endregion Add
-
+		
 		#region Remove
 		// Remove
 		
@@ -187,7 +187,7 @@ namespace KVD.ECS.GeneralTests
 			// Act
 			_components.Add(0, new());
 			var removed = _components.Remove(0);
-
+		
 			// Assert
 			Assert.IsFalse(_components.Has(new(0)));
 			Assert.IsTrue(removed);
@@ -198,7 +198,7 @@ namespace KVD.ECS.GeneralTests
 		{
 			// Act
 			var removed = _components.Remove(0);
-
+		
 			// Assert
 			Assert.IsFalse(_components.Has(new(0)));
 			Assert.IsFalse(removed);
@@ -211,11 +211,11 @@ namespace KVD.ECS.GeneralTests
 			_components.Add(0, new());
 			Assert.AreEqual(1, _components.Length);
 			Assert.AreEqual(1, _components.EntitiesMask.Count());
-
+		
 			_components.Add(2, new());
 			Assert.AreEqual(2, _components.Length);
 			Assert.AreEqual(2, _components.EntitiesMask.Count());
-
+		
 			_components.Add(10, new());
 			Assert.AreEqual(3, _components.Length);
 			Assert.AreEqual(3, _components.EntitiesMask.Count());
@@ -227,7 +227,7 @@ namespace KVD.ECS.GeneralTests
 			_components.Add(15, new());
 			Assert.AreEqual(5, _components.Length);
 			Assert.AreEqual(5, _components.EntitiesMask.Count());
-
+		
 			_components.Remove(2);
 			Assert.AreEqual(4, _components.Length);
 			Assert.AreEqual(4, _components.EntitiesMask.Count());
@@ -249,7 +249,7 @@ namespace KVD.ECS.GeneralTests
 			Assert.False(_components.EntitiesMask.Has(16));
 		}
 		#endregion Remove
-
+		
 		#region Value
 		[Test]
 		public void Value_Present()
@@ -288,7 +288,7 @@ namespace KVD.ECS.GeneralTests
 			// Act & Assert
 			ref var posFromList = ref _components.Value(5);
 			Assert.AreEqual(pos, posFromList);
-
+		
 			posFromList.x = 18;
 			pos.x         = 18;
 			posFromList = ref _components.Value(5);
@@ -337,13 +337,13 @@ namespace KVD.ECS.GeneralTests
 			ref var posFromList = ref _components.TryValue(5, out var present);
 			Assert.IsTrue(present);
 			Assert.AreEqual(pos, posFromList);
-
+		
 			posFromList.x = 15;
 			pos.x         = 15;
 			posFromList   = ref _components.Value(5);
 			Assert.AreEqual(pos, posFromList);
 		}
-
+		
 		[Test]
 		public void RefTryValue_NotPresent()
 		{
@@ -397,7 +397,7 @@ namespace KVD.ECS.GeneralTests
 			Assert.IsFalse(_components.Has(2));
 			Assert.IsTrue(_components.Has(5));
 			Assert.IsTrue(_components.Has(15));
-
+		
 			_components.AddOrReplace(5, new() { x = 15 });
 			var pos = _components.Value(5);
 			Assert.AreEqual(new Position { x = 15 }, pos);
@@ -438,7 +438,7 @@ namespace KVD.ECS.GeneralTests
 			_components.Remove(15);
 			_components.Remove(12);
 			var entities = _components.EntitiesMask;
-
+		
 			// Assert
 			Assert.AreEqual(3, entities.Count());
 			Assert.True(_components.EntitiesMask.Has(0));

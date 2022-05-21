@@ -29,10 +29,10 @@ namespace KVD.ECS.GeneralTests
 		{
 			// Arrange
 			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Position), typeof(Acceleration) });
-
+		
 			// Act
 			CollectEntities(view);
-
+		
 			// Assert
 			Assert.AreEqual(0, view.Size);
 		}
@@ -62,12 +62,12 @@ namespace KVD.ECS.GeneralTests
 			nextEntity = world.defaultStorage.NextEntity();
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
-
+		
 			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Radius) });
-
+		
 			// Act
 			CollectEntities(view);
-
+		
 			// Assert
 			Assert.AreEqual(0, view.Size);
 		}
@@ -96,16 +96,16 @@ namespace KVD.ECS.GeneralTests
 			// 5
 			nextEntity = world.defaultStorage.NextEntity();
 			_accelerations.Add(nextEntity, new());
-
+		
 			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Position), typeof(Acceleration) });
-
+		
 			// Act
 			CollectEntities(view);
-
+		
 			// Assert
 			Assert.AreEqual(0, view.Size);
 		}
-
+		
 		[Test]
 		public void Has_AllStoragesFill_TwoStorages()
 		{
@@ -130,9 +130,9 @@ namespace KVD.ECS.GeneralTests
 			nextEntity = world.defaultStorage.NextEntity();
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
-
+		
 			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Position), typeof(Acceleration) });
-
+		
 			// Act && Assert
 			var entities = CollectEntities(view);
 			Assert.AreEqual(3, view.Size);
@@ -169,18 +169,18 @@ namespace KVD.ECS.GeneralTests
 			nextEntity = world.defaultStorage.NextEntity();
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
-
+		
 			using ComponentsView view = new(world.defaultStorage,
 				new[] { typeof(Position), typeof(Acceleration), typeof(Radius) });
-
+		
 			// Act
 			var entities = CollectEntities(view);
-
+		
 			// Assert
 			Assert.AreEqual(1, view.Size);
 			Assert.AreEqual(1, entities[0].index);
 		}
-
+		
 		[Test]
 		public void HasAndExclude_SomeOverlap()
 		{
@@ -208,14 +208,14 @@ namespace KVD.ECS.GeneralTests
 			nextEntity = world.defaultStorage.NextEntity();
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
-
+		
 			using ComponentsView view = new(world.defaultStorage,
 				new[] { typeof(Position), typeof(Acceleration) },
 				new[] { typeof(Radius) });
-
+		
 			// Act
 			var entities = CollectEntities(view);
-
+		
 			// Assert
 			Assert.AreEqual(2, view.Size);
 			Assert.AreEqual(0, entities[0].index);
@@ -256,18 +256,18 @@ namespace KVD.ECS.GeneralTests
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
 			_radii.Add(nextEntity, new());
-
+		
 			using ComponentsView view = new(world.defaultStorage,
 				new[] { typeof(Position), typeof(Acceleration) },
 				new[] { typeof(Radius) });
-
+		
 			// Act
 			CollectEntities(view);
-
+		
 			// Assert
 			Assert.AreEqual(0, view.Size);
 		}
-
+		
 		[Test]
 		public void OneGet_TypeCheck()
 		{
@@ -320,7 +320,7 @@ namespace KVD.ECS.GeneralTests
 				// ReSharper restore SuggestVarOrType_SimpleTypes
 			}
 		}
-
+		
 		[Test]
 		public void OneGet_WithHasAndExclude_Update_Updated()
 		{
@@ -328,7 +328,7 @@ namespace KVD.ECS.GeneralTests
 			var nextEntity = world.defaultStorage.NextEntity();
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
-
+		
 			var acceleration = new Acceleration{ x = 5, y = -5, z = 10, };
 			
 			using var view = new ComponentsView<Acceleration>(
@@ -336,7 +336,7 @@ namespace KVD.ECS.GeneralTests
 				hasComponents: new[] { typeof(Position) },
 				excludeComponents: new[] { typeof(Circle) }
 				);
-
+		
 			// Act
 			foreach (var iter in view)
 			{
@@ -363,9 +363,9 @@ namespace KVD.ECS.GeneralTests
 			nextEntity = world.defaultStorage.NextEntity();
 			_radii.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
-
+		
 			using var view = new ComponentsView<Acceleration>(world.defaultStorage);
-
+		
 			// Act
 			foreach (var iter in view)
 			{
@@ -380,7 +380,7 @@ namespace KVD.ECS.GeneralTests
 			// Assert
 			Assert.AreEqual(0, entities.Count);
 		}
-
+		
 		private static List<Entity> CollectEntities(ComponentsView view)
 		{
 			var entities = new List<Entity>();

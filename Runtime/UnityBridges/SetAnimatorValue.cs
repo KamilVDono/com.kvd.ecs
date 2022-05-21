@@ -12,7 +12,5 @@ namespace KVD.ECS.UnityBridges
 			this.id    = id;
 			this.value = value;
 		}
-
-		public void Dispose() {}
 	}
 }

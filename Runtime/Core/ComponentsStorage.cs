@@ -1,4 +1,8 @@
-﻿using System;
+﻿
+
+#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -19,8 +23,6 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Assertions;
 
-#nullable enable
-
 namespace KVD.ECS.Core
 {
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
@@ -31,7 +33,7 @@ namespace KVD.ECS.Core
 		private const char HasStorageKeyCharacter = 'S';
 		private static readonly Type MonoComponent = typeof(IMonoComponent);
 		private static readonly Type SparseListGenericType = typeof(ComponentList<>);
-
+	
 		#region DEBUG
 		#if DEBUG
 		private readonly Dictionary<Entity, string> _debugNames = new(Entity.IndexComparer);
@@ -43,18 +45,18 @@ namespace KVD.ECS.Core
 		
 		private readonly SingletonComponentsStorage _singletons = new(64);
 		private readonly List<int> _singleFrameSingletons = new(4);
-
+	
 		private IEntityAllocator _entityAllocator;
-
+	
 		public Entity CurrentEntity{ get; private set; } = Entity.Null;
 		public IReadOnlyList<IComponentList> AllLists => _lists;
-
+	
 		public ComponentsStorage(ComponentsStorageKey? storageKey = null, IEntityAllocator? entityAllocator = null)
 		{
 			_entityAllocator = entityAllocator ?? new ContinuousEntitiesAllocator();
 			_storageKey      = storageKey;
 		}
-
+	
 		#region Lists
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComponentList<T>? TryList<T>() where T : struct, IComponent
@@ -115,7 +117,7 @@ namespace KVD.ECS.Core
 				new ReadonlyComponentListViewView<T>(this);
 		}
 		#endregion Lists
-
+	
 		#region Entities
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool SetAllocator(IEntityAllocator allocator)
@@ -165,7 +167,7 @@ namespace KVD.ECS.Core
 			}
 			_singleFrameSingletons.Clear();
 		}
-
+	
 		#region Singleton components
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Singleton<T>() where T : struct, IComponent
@@ -231,12 +233,12 @@ namespace KVD.ECS.Core
 			}
 			_listsByType.Clear();
 			_lists.Clear();
-
+	
 			_singletons.Clear();
 			
 			_singleFrameSingletons.Clear();
 		}
-
+	
 		public override string ToString()
 		{
 			var estimatedSize = _listsByType.Count*32;
@@ -262,12 +264,10 @@ namespace KVD.ECS.Core
 			}
 			return stringBuilder.ToString();
 		}
-
+	
 		#region Serialization
 		public virtual void Serialize(BinaryWriter writer)
 		{
-			var hasMonoComponents = false;
-			
 			writer.Write(ControlCharacter);
 			SerializersHelper.ToBytesType(_entityAllocator.GetType(), writer);
 			_entityAllocator.Serialize(writer);
@@ -278,32 +278,43 @@ namespace KVD.ECS.Core
 				writer.Write(HasStorageKeyCharacter); //Storage key
 				writer.Write(_storageKey.Value.Value);
 			}
-
+	
 			writer.Write(ControlCharacter);
-			writer.Write((byte)_listsByType.Count);
+			byte monoCount = 0;
+			foreach (var (type, _) in _listsByType)
+			{
+				if (MonoComponent.IsAssignableFrom(type))
+				{
+					monoCount++;
+				}
+			}
+			writer.Write((byte)(_listsByType.Count-monoCount));
 			foreach (var (type, sparseList) in _listsByType)
 			{
+				if (MonoComponent.IsAssignableFrom(type))
+				{
+					continue;
+				}
 				SerializersHelper.ToBytesType(type, writer);
 				sparseList.Serialize(writer);
-				hasMonoComponents = hasMonoComponents || MonoComponent.IsAssignableFrom(type);
 			}
 			
 			writer.Write(ControlCharacter);
 			// Unfortunately we need to serialize transform "manually"
-			if (hasMonoComponents)
+			if (monoCount > 0)
 			{
 				var transformStorage = List<MonoComponentWrapper<Transform>>();
 				var entityByIndex    = transformStorage.EntityByIndex;
 				var values           = transformStorage.DenseArray;
-
+	
 				for (var i = 0; i < transformStorage.Length; i++)
 				{
 					var entity     = entityByIndex[i];
 					var transform = values[i].value;
-
+	
 					var position = (float3)transform.position;
 					var rotation = (quaternion)transform.rotation;
-
+	
 					writer.Write(entity);
 					SerializersHelper.ToBytesStruct(position, writer);
 					SerializersHelper.ToBytesStruct(rotation, writer);
@@ -321,17 +332,17 @@ namespace KVD.ECS.Core
 		public virtual void Deserialize(World world, BinaryReader reader)
 		{
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-
-			_entityAllocator = SerializersHelper.FromBytesStatelessInstance<IEntityAllocator>(reader);
+	
+			SerializersHelper.FromBytesStatelessInstance(ref _entityAllocator, reader);
 			_entityAllocator.Deserialize(reader);
-
+	
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 			if (reader.PeekChar() == HasStorageKeyCharacter)
 			{
 				reader.ReadChar();
 				_storageKey = new ComponentsStorageKey(reader.ReadInt32());
 			}
-
+	
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 			int count          = reader.ReadByte();
 			var readerAsParams = new object[] { reader, };
@@ -348,7 +359,7 @@ namespace KVD.ECS.Core
 				{
 					continue;
 				}
-
+	
 				_listsByType[componentType] = storage;
 				_lists.Add(storage);
 			}
@@ -371,11 +382,13 @@ namespace KVD.ECS.Core
 		{
 			for (var i = 0; i < prefabs.Length; ++i)
 			{
-				var entityIndex = reader.ReadInt32();
-				var position    = SerializersHelper.FromMarshalBytes<float3>(reader);
-				var rotation    = SerializersHelper.FromMarshalBytes<quaternion>(reader);
-				var prefab = prefabs.Value(entityIndex);
-
+				var        entityIndex = reader.ReadInt32();
+				float3     position    = new();
+				quaternion rotation    = new();
+				SerializersHelper.FromBytesStruct(ref position, reader);
+				SerializersHelper.FromBytesStruct(ref rotation, reader);
+				var    prefab   = prefabs.Value(entityIndex);
+	
 				SetupPrefabInstance(world, new(entityIndex), prefab, position, rotation).Forget();
 			}
 		}
@@ -385,11 +398,11 @@ namespace KVD.ECS.Core
 		{
 			var request  = Addressables.InstantiateAsync(prefabWrapper.prefabKey, position, rotation);
 			var instance = await request.Task;
-
+	
 			RegisterEntity.SetupPrefabInstance(world, this, entity, request, instance, false);
 		}
 		#endregion Serialization
-
+	
 		#region DEBUG
 		[Conditional("UNITY_EDITOR")]
 		private void CheckComponentType(Type type)
@@ -399,13 +412,13 @@ namespace KVD.ECS.Core
 			{
 				throw new ConstraintException($"Type {type} is not value type, that violate the contract");
 			}
-
+	
 			if (!componentInterface.IsAssignableFrom(type))
 			{
 				throw new ConstraintException($"Type {type} is not implement {nameof(IComponent)} interface");
 			}
 		}
-
+	
 		[Conditional("DEBUG")]
 		// ReSharper disable once RedundantAssignment
 		public void Name(Entity entity, ref string name)

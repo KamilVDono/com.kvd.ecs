@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using KVD.ECS.Core.Helpers;
+using NUnit.Framework;
 using Unity.Collections;
 using static KVD.Utils.Extensions.NativeContainersExt;
 
@@ -28,6 +29,19 @@ namespace KVD.ECS.GeneralTests
 		}
 		
 		public static void AreEqual<T>(T[] expected, T[] actual)
+		{
+			if (expected.Length != actual.Length)
+			{
+				throw new AssertionException($"Expected length: {expected.Length} but actual: {actual.Length}");
+			}
+
+			for (var i = 0; i < expected.Length; i++)
+			{
+				Assert.AreEqual(expected[i], actual[i]);
+			}
+		}
+		
+		public static void AreEqual<T>(RentedArray<T> expected, RentedArray<T> actual) where T : struct
 		{
 			if (expected.Length != actual.Length)
 			{

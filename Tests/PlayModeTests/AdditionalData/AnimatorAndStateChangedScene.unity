@@ -104,7 +104,7 @@ NavMeshSettings:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_BuildSettings:
-    serializedVersion: 2
+    serializedVersion: 3
     agentTypeID: 0
     agentRadius: 0.5
     agentHeight: 2
@@ -117,7 +117,7 @@ NavMeshSettings:
     cellSize: 0.16666667
     manualTileSize: 0
     tileSize: 256
-    accuratePlacement: 0
+    buildHeightMesh: 0
     maxJobWorkers: 0
     preserveTilesOutsideBounds: 0
     debug:
@@ -133,6 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 385017529}
   - component: {fileID: 385017528}
+  - component: {fileID: 385017530}
   m_Layer: 0
   m_Name: WorldWrapper
   m_TagString: Untagged
@@ -152,7 +153,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 643ec774a6594c15b020cf7c2d8e800e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _bootstrapables: []
+  _bootstrapables:
+  - {fileID: 385017530}
 --- !u!4 &385017529
 Transform:
   m_ObjectHideFlags: 0
@@ -168,6 +170,29 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &385017530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 385017527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: beffb5f4ac204fda8e88d7f50bf20144, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _systemReferences:
+  - rid: 6602778917118410761
+  - rid: 6602778917118410762
+  _systemMonoBehaviourReferences: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 6602778917118410761
+      type: {class: WaitForAnimationEnterSystem, ns: KVD.ECS.Generics, asm: KVD.ECS}
+    - rid: 6602778917118410762
+      type: {class: WaitForAnimationExitSystem, ns: KVD.ECS.Generics, asm: KVD.ECS}
 --- !u!1 &909787142
 GameObject:
   m_ObjectHideFlags: 0

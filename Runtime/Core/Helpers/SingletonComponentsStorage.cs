@@ -102,6 +102,7 @@ namespace KVD.ECS.Core.Helpers
 				SerializersHelper.ToBytesType(bucket.TargetType, writer);
 				bucket.Serialize(writer);
 			}
+			writer.Write(-1);
 
 			writer.Write(_nextIndex);
 			writer.Write(ControlCharacter);
@@ -134,7 +135,7 @@ namespace KVD.ECS.Core.Helpers
 				}
 			}
 
-			_nextIndex = nextImplemented;
+			_nextIndex = reader.ReadInt32();
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 		}
 		#endregion Serialization
@@ -161,6 +162,10 @@ namespace KVD.ECS.Core.Helpers
 			
 			public Type TargetType => typeof(T);
 
+			public Bucket()
+			{
+			}
+			
 			public Bucket(T value)
 			{
 				this.value = value;
@@ -168,15 +173,13 @@ namespace KVD.ECS.Core.Helpers
 
 			public void Serialize(BinaryWriter writer)
 			{
-				var serializer = SerializersLibrary.Serializer<T>();
-				serializer.WriteBytes(value, writer);
+				value.Serialize(writer);
 			}
 			
 			public void Deserialize(int index, BinaryReader reader)
 			{
 				Index = index;
-				var serializer = SerializersLibrary.Serializer<T>();
-				value = serializer.ReadBytes(reader);
+				value = (T)value.Deserialize(reader);
 			}
 		}
 		// ReSharper restore MissingBlankLines

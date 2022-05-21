@@ -7,9 +7,5 @@ namespace KVD.ECS.GeneralTests.Components
 	{
 		public float2 xs;
 		public float2 ys;
-		
-		public void Dispose()
-		{
-		}
 	}
 }

@@ -10,11 +10,11 @@ namespace KVD.ECS.Core
 		where T : struct, IComponent
 	{
 		private readonly ComponentsStorage _storage;
-
+	
 		public BigBitmask EntitiesMask => BigBitmask.Empty; 
 		public int Length => 0;
 		public int EntitiesVersion => 0;
-
+	
 		public ReadonlyComponentListViewView(ComponentsStorage storage)
 		{
 			_storage = storage;
@@ -24,7 +24,7 @@ namespace KVD.ECS.Core
 		{
 			return false;
 		}
-
+	
 		public IReadonlyComponentListView<T> Sync()
 		{
 			return _storage.TryList<T>() ?? (IReadonlyComponentListView<T>)this;

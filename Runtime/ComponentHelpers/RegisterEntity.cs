@@ -19,10 +19,9 @@ namespace KVD.ECS.ComponentHelpers
 		[SerializeField] private ComponentsStorageKeyAuthoring _key;
 		[SerializeField] private string _name;
 #nullable enable
-		
-		private void Awake()
+		private void Start()
 		{
-			var world   = _worldWrapper.World;
+			var world = _worldWrapper.World;
 			if (world.IsRestored)
 			{
 				return;
@@ -34,10 +33,7 @@ namespace KVD.ECS.ComponentHelpers
 			var entityName  = string.IsNullOrWhiteSpace(_name) ? name : _name;
 			
 			Spawn(world, _key, _assetReference, position, rotation, entityName);
-		}
-
-		private void Start()
-		{
+			
 			Destroy(gameObject);
 		}
 		

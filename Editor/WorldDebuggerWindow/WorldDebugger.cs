@@ -22,10 +22,10 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		private static readonly FieldInfo ComponentsFieldInfo = typeof(World).GetField("_componentsStorages", FieldInfoFlag)!;
 		private static readonly FieldInfo SingletonsFieldInfo = typeof(ComponentsStorage).GetField("_singletons", FieldInfoFlag)!;
 		private static readonly FieldInfo BucketsFieldInfo = typeof(SingletonComponentsStorage).GetField("_buckets", FieldInfoFlag)!;
-
+	
 		private World? _world;
 		private World? World => _world ??= FindObjectOfType<WorldWrapper>()?.World;
-
+	
 		private Vector2 _storagesScroll;
 		private Vector2 _systemsScroll;
 		private readonly OnDemandDictionary<ComponentsStorageKey, bool> _foldoutByKey = new();
@@ -56,7 +56,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			new TableColumn<SingletonComponentsStorage.IBucket>("Type", s => s.TargetType.Name, 1),
 		});
 		#endregion Tables definitions
-
+	
 		[MenuItem("KVD/ECS/World debugger")]
 		private static void Init()
 		{
@@ -64,7 +64,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			window.titleContent = new("World debug");
 			window.Show();
 		}
-
+	
 		private void OnEnable()
 		{
 			EditorApplication.playModeStateChanged -= PlayModeChanged;
@@ -75,13 +75,13 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				PlayModeChanged(PlayModeStateChange.EnteredEditMode);
 			}
 		}
-
+	
 		private void OnDisable()
 		{
 			EditorApplication.playModeStateChanged -= PlayModeChanged;
 			Clean();
 		}
-
+	
 		private void PlayModeChanged(PlayModeStateChange change)
 		{
 			_world = null;
@@ -96,7 +96,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				Clean();
 			}
 		}
-
+	
 		private void OnGUI()
 		{
 			if (!Application.isPlaying)
@@ -109,7 +109,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				GUILayout.Label("Cannot find World", EditorStyles.boldLabel);
 				return;
 			}
-
+	
 			_storagesScroll = EditorGUILayout.BeginScrollView(_storagesScroll, GUILayout.Height(position.height / 3 * 2));
 			DrawStorages();
 			EditorGUILayout.EndScrollView();
@@ -118,7 +118,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			DrawSystems();
 			EditorGUILayout.EndScrollView();
 		}
-
+	
 		private void Clean()
 		{
 			foreach (var wrapper in _wrapperBySystem.Values)
@@ -128,7 +128,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			_wrapperBySystem.Clear();
 			_entitiesCache.Clear();
 		}
-
+	
 		#region Storages
 		private void DrawStorages()
 		{
@@ -150,9 +150,9 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				EditorGUI.EndFoldoutHeaderGroup();
 				return;
 			}
-
+	
 			var currentVersion = 0;
-
+	
 			GUILayout.Label($"Current entity: {storage.CurrentEntity}");
 			GUILayout.Label($"Components:", EditorStyles.boldLabel);
 			_sparseListTableView.Begin(position.width);
@@ -164,7 +164,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			}
 			_sparseListTableView.End();
 			GUILayout.Space(12);
-
+	
 			var singletonsStorage = (SingletonComponentsStorage)SingletonsFieldInfo.GetValue(storage);
 			var singletons        = (SingletonComponentsStorage.IBucket?[])BucketsFieldInfo.GetValue(singletonsStorage);
 			_singletonTableView.DrawFull(singletons, position.width);
@@ -182,7 +182,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			{
 				entitiesData.entities.Clear();
 				_uniqueEntitiesCollector.Zero();
-
+	
 				entitiesData.version = currentVersion;
 				foreach (var list in storage.AllLists)
 				{
@@ -244,7 +244,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				wrapper                  = new(system);
 				_wrapperBySystem[system] = wrapper;
 			}
-
+	
 			_systemsTableView.DrawRow(wrapper);
 			
 			for (var i = 0; i < system.InternalSystems.Count; i++)

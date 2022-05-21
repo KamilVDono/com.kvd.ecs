@@ -29,6 +29,20 @@ namespace KVD.ECS.Core.Helpers
 
 		[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 		public ref T this[int index] => ref array[index];
+		
+		[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),
+		 MethodImpl(MethodImplOptions.AggressiveInlining),]
+		public ref T Get(int index)
+		{
+			return ref this[index];
+		}
+		
+		[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),
+		 MethodImpl(MethodImplOptions.AggressiveInlining),]
+		public void Set(T value, int index)
+		{
+			array[index] = value;
+		}
 
 		[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),
 		 MethodImpl(MethodImplOptions.AggressiveInlining),]

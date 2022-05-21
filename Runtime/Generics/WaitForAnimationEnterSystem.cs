@@ -39,7 +39,7 @@ namespace KVD.ECS.Generics
 					var storageKey   = wait.storageKey;
 					
 					iter.Remove0();
-
+			
 					World.Storage(storageKey).List<WaitSignal>().Remove(signalEntity);
 				}
 			}

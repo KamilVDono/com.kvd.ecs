@@ -16,7 +16,7 @@ namespace KVD.ECS.Core
 			storage.List<T>().Add(entity, component);
 			return entity;
 		}
-
+	
 		public static Entity Add<T0, T1>(this ComponentsStorage storage, T0 component0, T1 component1)
 			where T0 : struct, IComponent
 			where T1 : struct, IComponent
@@ -26,7 +26,7 @@ namespace KVD.ECS.Core
 			storage.List<T1>().Add(entity, component1);
 			return entity;
 		}
-
+	
 		public static Entity Add<T0, T1, T2>(
 			this ComponentsStorage storage, T0 component0, T1 component1, T2 component2)
 			where T0 : struct, IComponent
@@ -39,14 +39,14 @@ namespace KVD.ECS.Core
 			storage.List<T2>().Add(entity, component2);
 			return entity;
 		}
-
+	
 		public static Entity Add<T>(this ComponentsStorage storage, Entity entity, T component)
 			where T : struct, IComponent
 		{
 			storage.List<T>().Add(entity, component);
 			return entity;
 		}
-
+	
 		public static Entity Add<T0, T1>(this ComponentsStorage storage, Entity entity, T0 component0, T1 component1)
 			where T0 : struct, IComponent
 			where T1 : struct, IComponent
@@ -55,7 +55,7 @@ namespace KVD.ECS.Core
 			storage.List<T1>().Add(entity, component1);
 			return entity;
 		}
-
+	
 		public static Entity Add<T0, T1, T2>(
 			this ComponentsStorage storage, Entity entity, T0 component0, T1 component1, T2 component2)
 			where T0 : struct, IComponent
@@ -97,7 +97,7 @@ namespace KVD.ECS.Core
 			}
 			return isAlive;
 		}
-
+	
 		public static RentedArray<Entity> NextEntitiesBulk(this ComponentsStorage storage, int length)
 		{
 			var entities = new RentedArray<Entity>(length);
@@ -126,7 +126,7 @@ namespace KVD.ECS.Core
 		{
 			entities.Dispose();
 		}
-
+	
 		public static void Remove<T>(this ComponentsStorage storage, Entity entity) where T : struct, IComponent
 		{
 			storage.List<T>().Remove(entity);

@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using KVD.ECS.Core.Components;
 using KVD.ECS.Core.Entities;
 using KVD.ECS.Core.Helpers;
-using KVD.ECS.Serializers;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 using Unity.Profiling;
 using UnityEngine.Assertions;
@@ -351,12 +350,6 @@ namespace KVD.ECS.Core
 			writer.Write(_entitiesVersion);
 			writer.Write(ControlCharacter);
 
-			var serializer = SerializersLibrary.Serializer<T>();
-			if (serializer == null)
-			{
-				return;
-			}
-
 			_entitiesMask.Serialize(writer);
 			
 			writer.Write(ControlCharacter);
@@ -369,7 +362,7 @@ namespace KVD.ECS.Core
 			writer.Write(ControlCharacter);
 			for (var i = 0; i < _length; i++)
 			{
-				serializer.WriteBytes(_values[i], writer);
+				_values[i].Serialize(writer);
 			}
 			
 			writer.Write(ControlCharacter);
@@ -380,7 +373,7 @@ namespace KVD.ECS.Core
 			writer.Write(ControlCharacter);
 		}
 
-		public static ComponentList<T>? Deserialize(BinaryReader reader)
+		public static ComponentList<T> Deserialize(BinaryReader reader)
 		{
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 			var capacity        = reader.ReadInt32();
@@ -392,15 +385,8 @@ namespace KVD.ECS.Core
 			return list.Deserialize(reader, length, entitiesVersion);
 		}
 		
-		private ComponentList<T>? Deserialize(BinaryReader reader, int length, int entitiesVersion)
+		private ComponentList<T> Deserialize(BinaryReader reader, int length, int entitiesVersion)
 		{
-			var serializer = SerializersLibrary.Serializer<T>();
-			if (serializer == null)
-			{
-				Destroy();
-				return null;
-			}
-			
 			_length          = length;
 			_entitiesVersion = entitiesVersion;
 
@@ -417,7 +403,9 @@ namespace KVD.ECS.Core
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
 			for (var i = 0; i < _length; i++)
 			{
-				_values[i] = serializer.ReadBytes(reader);
+				var val = _values[i];
+				val = (T)val.Deserialize(reader);
+				_values[i] = val;
 			}
 			
 			Assert.AreEqual(reader.ReadChar(), ControlCharacter);

@@ -19,6 +19,7 @@ namespace KVD.ECS.GeneralTests
 		{
 			_storage.Destroy();
 		}
+		
 		[Test]
 		public void List_MultipleOperations()
 		{
@@ -45,7 +46,7 @@ namespace KVD.ECS.GeneralTests
 			Assert.IsNotNull(l1);
 			Assert.IsNotNull(l2);
 		}
-
+		
 		#region IsAlive
 		[Test]
 		public void IsAlive_NotInserted_NotAlive()
@@ -53,7 +54,7 @@ namespace KVD.ECS.GeneralTests
 			// Arrange
 			InitializeStandard();
 			var nextEntity = _storage.NextEntity();
-
+		
 			// Assert
 			Assert.IsFalse(_storage.IsAlive(nextEntity));
 			Assert.IsFalse(_storage.IsAlive(0));
@@ -67,7 +68,7 @@ namespace KVD.ECS.GeneralTests
 			// Arrange
 			InitializeStandard();
 			var nextEntity = _storage.Add<Acceleration, Circle>(new(), new());
-
+		
 			// Assert
 			Assert.IsTrue(_storage.IsAlive(nextEntity));
 			Assert.IsTrue(_storage.IsAlive(0));
@@ -82,7 +83,7 @@ namespace KVD.ECS.GeneralTests
 			InitializeStandard();
 			var nextEntity = _storage.Add<Acceleration, Circle>(new(), new());
 			_storage.RemoveEntity(nextEntity);
-
+		
 			// Assert
 			Assert.IsFalse(_storage.IsAlive(nextEntity));
 			Assert.IsFalse(_storage.IsAlive(0));
@@ -96,7 +97,7 @@ namespace KVD.ECS.GeneralTests
 			// Arrange
 			InitializeStandard();
 			var nextEntity = _storage.Add<Acceleration, Circle>(new(), new());
-
+		
 			// Act&Assert
 			Assert.IsTrue(_storage.IsAlive(nextEntity));
 			Assert.IsTrue(_storage.IsAlive(0));
@@ -131,7 +132,7 @@ namespace KVD.ECS.GeneralTests
 			Assert.IsFalse(_storage.HasSingleton<Circle>());
 			_storage.Singleton<Circle>(new(), singleFrame);
 			Assert.IsTrue(_storage.HasSingleton<Circle>());
-
+		
 		}
 		// Get singleton
 		[Test]
@@ -139,7 +140,7 @@ namespace KVD.ECS.GeneralTests
 		{
 			// Act&Assert
 			Assert.Catch(() => _storage.Singleton<Circle>());
-
+		
 		}
 		[Test, TestCase(true), TestCase(false),]
 		public void Singleton_GetSingleton_Present(bool singleFrame)
@@ -335,7 +336,7 @@ namespace KVD.ECS.GeneralTests
 			Assert.AreEqual(!secondFrame, _storage.HasSingleton<Circle>());
 		}
 		#endregion Singleton
-
+		
 		#region Helpers
 		private void InitializeStandard()
 		{

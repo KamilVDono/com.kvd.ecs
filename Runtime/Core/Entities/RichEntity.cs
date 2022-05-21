@@ -2,7 +2,7 @@
 
 namespace KVD.ECS.Core.Entities
 {
-	public struct RichEntity : IComponent
+	public struct RichEntity : IComponent 
 	{
 		public Entity entity;
 		public ComponentsStorageKey key;
@@ -12,7 +12,5 @@ namespace KVD.ECS.Core.Entities
 			this.entity = entity;
 			this.key    = key;
 		}
-
-		public void Dispose() {}
 	}
 }

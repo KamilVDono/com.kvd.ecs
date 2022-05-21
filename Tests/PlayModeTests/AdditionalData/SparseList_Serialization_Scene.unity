@@ -104,7 +104,7 @@ NavMeshSettings:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_BuildSettings:
-    serializedVersion: 2
+    serializedVersion: 3
     agentTypeID: 0
     agentRadius: 0.5
     agentHeight: 2
@@ -117,7 +117,7 @@ NavMeshSettings:
     cellSize: 0.16666667
     manualTileSize: 0
     tileSize: 256
-    accuratePlacement: 0
+    buildHeightMesh: 0
     maxJobWorkers: 0
     preserveTilesOutsideBounds: 0
     debug:
@@ -205,6 +205,7 @@ MonoBehaviour:
   _worldWrapper: {fileID: 435853243}
   _key:
     _hash: -728703673
+  _name: 
 --- !u!4 &687891856
 Transform:
   m_ObjectHideFlags: 0
@@ -257,6 +258,7 @@ MonoBehaviour:
   _worldWrapper: {fileID: 435853243}
   _key:
     _hash: -728703673
+  _name: 
 --- !u!4 &1198682169
 Transform:
   m_ObjectHideFlags: 0

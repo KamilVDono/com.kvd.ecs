@@ -34,12 +34,12 @@ namespace KVD.ECS.Generics
 					{
 						continue;
 					}
-
+			
 					var signalEntity = wait.entity;
 					var storageKey   = wait.storageKey;
 					
 					iter.Remove0();
-
+			
 					World.Storage(storageKey).List<WaitSignal>().Remove(signalEntity);
 				}
 			}

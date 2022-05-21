@@ -11,7 +11,5 @@ namespace KVD.ECS.UnityBridges
 		{
 			this.stateInfo = stateInfo;
 		}
-		
-		public void Dispose() {}
 	}
 }

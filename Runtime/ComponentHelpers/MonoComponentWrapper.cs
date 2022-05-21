@@ -8,7 +8,8 @@ using Object = UnityEngine.Object;
 
 namespace KVD.ECS.ComponentHelpers
 {
-	public readonly struct MonoComponentWrapper<T> : IEquatable<MonoComponentWrapper<T>>, IMonoComponent where T : Component
+	public readonly struct MonoComponentWrapper<T> : IEquatable<MonoComponentWrapper<T>>, IMonoComponent
+		where T : Component
 	{
 		private static readonly bool CallDestroy = typeof(T) != typeof(Transform);
 		

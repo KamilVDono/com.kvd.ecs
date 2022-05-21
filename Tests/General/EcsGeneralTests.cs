@@ -15,14 +15,14 @@ namespace KVD.ECS.GeneralTests
 	{
 		private ComponentList<Position> _positions;
 		private ComponentList<Acceleration> _accelerations;
-
+		
 		protected override Task OnSetup()
 		{
 			_positions         = world.defaultStorage.List<Position>();
 			_accelerations     = world.defaultStorage.List<Acceleration>();
 			return base.OnSetup();
 		}
-
+		
 		[UnityTest]
 		public IEnumerator Systems_WorldUpdate_SystemsUpdate()
 		{
@@ -42,14 +42,14 @@ namespace KVD.ECS.GeneralTests
 				Assert.AreEqual(i+1, _positions.Value(nextEntity).z);
 			}
 		}
-
+		
 		#region Helper data
 		private class MovementSystem : SystemBase
 		{
 			private ComponentList<Position> _positionComponents;
 			private ComponentList<Acceleration> _accelerationComponents;
 			private ComponentsView _componentsView;
-
+		
 			protected override UniTask InitialSetup()
 			{
 				_positionComponents     = World.defaultStorage.List<Position>();
@@ -59,14 +59,14 @@ namespace KVD.ECS.GeneralTests
 				
 				return base.InitialSetup();
 			}
-
+		
 			protected override void Update()
 			{
 				foreach (var entity in _componentsView)
 				{
 					ref var position     = ref _positionComponents.Value(entity);
 					var acceleration = _accelerationComponents.Value(entity);
-
+		
 					position.x += acceleration.x;
 					position.y += acceleration.y;
 					position.z += acceleration.z;

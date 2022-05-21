@@ -7,9 +7,5 @@ namespace KVD.ECS.GeneralTests.Components
 		public byte id;
 		public Radius radius;
 		public Position position;
-		
-		public void Dispose()
-		{
-		}
 	}
 }
