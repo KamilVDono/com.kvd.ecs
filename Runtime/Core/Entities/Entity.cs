@@ -29,9 +29,11 @@ namespace KVD.ECS.Core.Entities
 
 		public void ToString(StringBuilder stringBuilder, ComponentsStorage storage)
 		{
-			var name = index.ToString();
-			storage.Name(this, ref name);
 			stringBuilder.Append("Entity ");
+			var name = index.ToString();
+			#if ENTITIES_NAMES
+			storage.Name(this, ref name);
+			#endif
 			stringBuilder.Append(name);
 			foreach (var sparseList in storage.AllLists)
 			{

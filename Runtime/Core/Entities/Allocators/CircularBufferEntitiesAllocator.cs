@@ -36,7 +36,7 @@ namespace KVD.ECS.Core.Entities.Allocators
 
 		public void AssertValidity(ComponentsStorage storage)
 		{
-			#if !DEBUG
+			#if !ALLOCATORS_CHECKS
 			return;
 			#endif
 			var nextEntity = _nextEntity;

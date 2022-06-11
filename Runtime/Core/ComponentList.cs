@@ -6,7 +6,9 @@ using KVD.ECS.Core.Components;
 using KVD.ECS.Core.Entities;
 using KVD.ECS.Core.Helpers;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
+#if LIST_PROFILER_MARKERS
 using Unity.Profiling;
+#endif
 using UnityEngine.Assertions;
 
 #nullable enable
@@ -18,7 +20,7 @@ namespace KVD.ECS.Core
 	{
 		public const int InitialCapacity = 128;
 		
-#if DEBUG
+#if LIST_PROFILER_MARKERS
 		public static readonly ProfilerMarker EnsureSizeMarker = new("SparseList.EnsureSize");
 		public static readonly ProfilerMarker AddMarker = new("SparseList.Add");
 		public static readonly ProfilerMarker BulkAddMarker = new("SparseList.BulkAdd");
@@ -134,13 +136,16 @@ namespace KVD.ECS.Core
 
 		public void Add(Entity e, T value)
 		{
-#if DEBUG
+#if LIST_PROFILER_MARKERS
 			using var marker = ComponentListConstants.AddMarker.Auto();
+#endif
+#if LIST_CHECKS
 			if (Has(e))
 			{
 				throw new ArgumentException($"Entity [{e}] already present in ComponentList<{typeof(T).Name}>");
 			}
 #endif
+
 			InternalAddSafe(e, value);
 		}
 
@@ -170,7 +175,7 @@ namespace KVD.ECS.Core
 
 		public void BulkAdd(RentedArray<Entity> entities, T value)
 		{
-#if DEBUG
+#if LIST_PROFILER_MARKERS
 			using var marker = ComponentListConstants.BulkAddMarker.Auto();
 #endif
 			
@@ -210,7 +215,7 @@ namespace KVD.ECS.Core
 
 		public bool Remove(int entity)
 		{
-#if DEBUG
+#if LIST_PROFILER_MARKERS
 			using var marker = ComponentListConstants.RemoveMarker.Auto();
 #endif
 			var index = _indexByEntity[entity];
@@ -292,7 +297,7 @@ namespace KVD.ECS.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void EnsureSize(Entity lastEntity)
 		{
-#if DEBUG
+#if LIST_PROFILER_MARKERS
 			using var marker = ComponentListConstants.EnsureSizeMarker.Auto();
 #endif
 

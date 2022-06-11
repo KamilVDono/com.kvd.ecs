@@ -54,7 +54,7 @@ namespace KVD.ECS.ComponentHelpers
 
 			var instanceRequest = assetReference.InstantiateAsync(position, rotation);
 			var instance        = instanceRequest.WaitForCompletion();
-			#if DEBUG
+			#if ENTITIES_NAMES
 			instance.name = $"{name} - Entity {entity.index}";
 			#endif
 			instance.AddComponent<EcsToUnityLink>().Init(world, entity, key, storage);

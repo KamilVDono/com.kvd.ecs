@@ -35,7 +35,7 @@ namespace KVD.ECS.Core
 		private static readonly Type SparseListGenericType = typeof(ComponentList<>);
 	
 		#region DEBUG
-		#if DEBUG
+		#if ENTITIES_NAMES
 		private readonly Dictionary<Entity, string> _debugNames = new(Entity.IndexComparer);
 		#endif
 		private ComponentsStorageKey? _storageKey;
@@ -141,7 +141,7 @@ namespace KVD.ECS.Core
 		public Entity NextEntity(string name)
 		{
 			CurrentEntity = _entityAllocator.Allocate();
-			#if DEBUG
+			#if ENTITIES_NAMES
 			name                       = string.IsNullOrWhiteSpace(name) ? CurrentEntity.index.ToString() : name;
 			_debugNames[CurrentEntity] = name;
 			#endif
@@ -419,19 +419,19 @@ namespace KVD.ECS.Core
 			}
 		}
 	
-		[Conditional("DEBUG")]
+		[Conditional("ENTITIES_NAMES")]
 		// ReSharper disable once RedundantAssignment
 		public void Name(Entity entity, ref string name)
 		{
-			#if DEBUG
+			#if ENTITIES_NAMES
 			var _ = _debugNames.TryGetValue(entity, out name) || (name = entity.index.ToString()) != null;
 			#endif
 		}
 		
-		[Conditional("DEBUG")]
+		[Conditional("STORAGES_CHECKS")]
 		public void SafetyCheck()
 		{
-			#if DEBUG
+			#if ALLOCATORS_CHECKS
 			_entityAllocator.AssertValidity(this);
 			#endif
 		}
