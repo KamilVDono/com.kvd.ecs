@@ -209,6 +209,10 @@ namespace KVD.ECS.GeneralTests
 			public bool Restored{ get; private set; }
 			public bool Destroyed{ get; private set; }
 			public int UpdatesCount{ get; private set; }
+
+			public void Prepare()
+			{
+			}
 			
 			public UniTask Init(World world)
 			{
@@ -244,6 +248,10 @@ namespace KVD.ECS.GeneralTests
 			public bool Restored{ get; private set; }
 			public bool Destroyed{ get; private set; }
 			public int UpdatesCount{ get; private set; }
+
+			public void Prepare()
+			{
+			}
 			
 			public UniTask Init(World world)
 			{

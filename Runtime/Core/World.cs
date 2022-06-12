@@ -119,6 +119,7 @@ namespace KVD.ECS.Core
 		public async UniTask RegisterSystem(ISystem system)
 		{
 			systems.Add(system);
+			system.Prepare();
 			if (_initialized)
 			{
 				await system.Init(this);

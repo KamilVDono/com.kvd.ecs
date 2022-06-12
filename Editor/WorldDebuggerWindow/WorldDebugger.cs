@@ -7,7 +7,9 @@ using KVD.ECS.Core.Entities;
 using KVD.ECS.Core.Helpers;
 using KVD.ECS.Core.Systems;
 using KVD.Utils.DataStructures;
+#if SYSTEM_PROFILER_MARKERS
 using KVD.Utils.Extensions;
+#endif
 using UnityEditor;
 using UnityEngine;
 
@@ -37,7 +39,9 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		{
 			new TableColumn<SystemWrapper>("Name", w => w.DisplayName, 2f/5),
 			new TableColumn<SystemWrapper>("Entities", w => (w.ComponentsViews?.FirstOrDefault()?.Size ?? 0).ToString(), 1f/5),
+#if SYSTEM_PROFILER_MARKERS
 			new TableColumn<SystemWrapper>("Time", w => $"{w.Recorder.GetRecorderAverageTime():f4} ms", 2f/5),
+#endif
 		});
 		
 		private readonly TableView<IComponentList> _sparseListTableView = new(new[]

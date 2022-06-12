@@ -13,10 +13,13 @@ namespace KVD.ECS.SystemHelpers
 {
 	public class RegisterSystems : MonoBehaviour, IBootstrapable, ISystem
 	{
+#nullable disable
+		[SerializeField] private string _name;
 		[SerializeReference, SubclassSelector,]
 		private ISystem[] _systemReferences = Array.Empty<ISystem>();
 		[SerializeField, SerializableInterface(typeof(ISystem)),]
 		private MonoBehaviour[] _systemMonoBehaviourReferences = Array.Empty<MonoBehaviour>();
+#nullable restore
 
 		private SystemsGroup? _myGroup;
 
@@ -34,7 +37,8 @@ namespace KVD.ECS.SystemHelpers
 		private UniTask Register(World world)
 		{
 			CheckState();
-			_myGroup = new(name, MergeSystemsReferences());
+			var systemName = string.IsNullOrWhiteSpace(_name) ? name : _name;
+			_myGroup = new(systemName, MergeSystemsReferences());
 			return world.RegisterSystem(_myGroup!);
 		}
 		#endregion IBootstrapable
@@ -43,19 +47,22 @@ namespace KVD.ECS.SystemHelpers
 		public World World => _myGroup!.World;
 		public string Name => _myGroup!.Name;
 		public IReadOnlyList<ISystem> InternalSystems => _myGroup!.InternalSystems;
-		
-		UniTask ISystem.Init(World world)
+
+		public void Prepare()
 		{
 			CheckState();
 			_myGroup = new(name, MergeSystemsReferences());
-			return _myGroup.Init(world);
+			_myGroup.Prepare();
 		}
 		
+		public UniTask Init(World world)
+		{
+			return _myGroup!.Init(world);
+		}
+
 		UniTask ISystem.Restore(World world)
 		{
-			CheckState();
-			_myGroup = new(name, MergeSystemsReferences());
-			return _myGroup.Restore(world);
+			return _myGroup!.Restore(world);
 		}
 		
 		public void DoUpdate()

@@ -3,34 +3,54 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
+#if SYSTEM_PROFILER_MARKERS
 using Unity.Profiling;
 using Unity.Profiling.LowLevel;
+#endif
+using UnityEngine;
 
 namespace KVD.ECS.Core.Systems
 {
+	[Serializable]
 	public class SystemsGroup : ISystem
 	{
-		private ProfilerMarker _updateMarker;
+		[SerializeField] private string _name;
+		[SerializeReference, SubclassSelector,]
+		private List<ISystem> _children = new();
 		
+#if SYSTEM_PROFILER_MARKERS
+		private ProfilerMarker _updateMarker;
+#endif
 		private bool _executing;
-		private readonly List<ISystem> _children = new();
 
 #nullable disable
 		public World World{ get; private set; }
-		public string Name{ get; }
+		public string Name => _name;
 #nullable enable
 
 		public IReadOnlyList<ISystem> InternalSystems => _children;
-
-		public SystemsGroup(string name)
-		{
-			_updateMarker = new(ProfilerCategory.Scripts, $"Update {name}", MarkerFlags.Script);
-			Name          = name;
-		}
 		
-		public SystemsGroup(string name, params ISystem[] systems) : this(name)
+		public SystemsGroup()
 		{
+			_name = nameof(SystemsGroup);
+		}
+
+		public SystemsGroup(string name, params ISystem[] systems)
+		{
+			_name = name;
 			_children.AddRange(systems);
+		}
+
+		public void Prepare()
+		{
+#if SYSTEM_PROFILER_MARKERS
+			_updateMarker = new(ProfilerCategory.Scripts, $"Update {Name}", MarkerFlags.Script);
+#endif
+			for (var i = 0; i < _children.Count; i++)
+			{
+				var child = _children[i];
+				child.Prepare();
+			}
 		}
 
 		public UniTask Init(World world)
@@ -59,14 +79,19 @@ namespace KVD.ECS.Core.Systems
 		
 		public void DoUpdate()
 		{
+#if SYSTEM_PROFILER_MARKERS
 			_updateMarker.Begin();
+#endif
 			_executing = true;
-			foreach (var child in _children)
+			for (var i = 0; i < _children.Count; i++)
 			{
+				var child = _children[i];
 				child.DoUpdate();
 			}
 			_executing = false;
+#if SYSTEM_PROFILER_MARKERS
 			_updateMarker.End();
+#endif
 		}
 		
 		public UniTask Destroy()

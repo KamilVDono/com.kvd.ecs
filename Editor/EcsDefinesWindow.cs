@@ -12,6 +12,7 @@ namespace KVD.ECS.Editor
 		private static readonly string[] Defines =
 		{
 			"ALLOCATORS_CHECKS", "ENTITIES_NAMES", "STORAGES_CHECKS", "LIST_PROFILER_MARKERS", "LIST_CHECKS",
+			"SYSTEM_PROFILER_MARKERS",
 		};
 
 		private static readonly List<string> OtherDefines = new();

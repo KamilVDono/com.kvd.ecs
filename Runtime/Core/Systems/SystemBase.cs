@@ -9,7 +9,9 @@ namespace KVD.ECS.Core.Systems
 {
 	public abstract class SystemBase : ISystem
 	{
+#if SYSTEM_PROFILER_MARKERS
 		private ProfilerMarker _updateMarker;
+#endif
 		private readonly List<IComponentsView> _componentsViews = new(1);
 
 #nullable disable
@@ -22,7 +24,13 @@ namespace KVD.ECS.Core.Systems
 		protected SystemBase()
 		{
 			Name          = GetType().Name;
+#if SYSTEM_PROFILER_MARKERS
 			_updateMarker = new(ProfilerCategory.Scripts, $"Update {Name}", MarkerFlags.Script);
+#endif
+		}
+
+		public void Prepare()
+		{
 		}
 
 		public async UniTask Init(World world)
@@ -39,9 +47,13 @@ namespace KVD.ECS.Core.Systems
 
 		public void DoUpdate()
 		{
+#if SYSTEM_PROFILER_MARKERS
 			_updateMarker.Begin();
+#endif
 			Update();
+#if SYSTEM_PROFILER_MARKERS
 			_updateMarker.End();
+#endif
 		}
 
 		public async UniTask Destroy()

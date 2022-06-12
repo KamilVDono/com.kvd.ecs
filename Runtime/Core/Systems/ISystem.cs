@@ -9,6 +9,8 @@ namespace KVD.ECS.Core.Systems
 		string Name{ get; }
 		IReadOnlyList<ISystem> InternalSystems{ get; }
 
+		void Prepare();
+
 		UniTask Init(World world);
 		UniTask Restore(World world);
 		void DoUpdate();
