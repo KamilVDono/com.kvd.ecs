@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using Cysharp.Threading.Tasks;
 using KVD.ECS.Core;
 using KVD.ECS.Core.Systems;
 using KVD.Utils.Attributes;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 #nullable enable
 
 namespace KVD.ECS.SystemHelpers
 {
-	public class RegisterSystems : MonoBehaviour, IBootstrapable, ISystem
+	public class RegisterSystems : MonoBehaviour, IBootstrapable
 	{
 #nullable disable
 		[SerializeField] private string _name;
@@ -19,11 +18,19 @@ namespace KVD.ECS.SystemHelpers
 		private ISystem[] _systemReferences = Array.Empty<ISystem>();
 		[SerializeField, SerializableInterface(typeof(ISystem)),]
 		private MonoBehaviour[] _systemMonoBehaviourReferences = Array.Empty<MonoBehaviour>();
-#nullable restore
+#nullable enable
 
 		private SystemsGroup? _myGroup;
 
-		#region IBootstrapable
+		public void OnDestroy()
+		{
+			if (_myGroup != null)
+			{
+				_myGroup!.Destroy().Forget(Debug.LogException);
+			}
+			_myGroup = null;
+		}
+		
 		UniTask IBootstrapable.Init(World world)
 		{
 			return Register(world);
@@ -36,45 +43,10 @@ namespace KVD.ECS.SystemHelpers
 		
 		private UniTask Register(World world)
 		{
-			CheckState();
 			var systemName = string.IsNullOrWhiteSpace(_name) ? name : _name;
 			_myGroup = new(systemName, MergeSystemsReferences());
 			return world.RegisterSystem(_myGroup!);
 		}
-		#endregion IBootstrapable
-		
-		#region ISystem
-		public World World => _myGroup!.World;
-		public string Name => _myGroup!.Name;
-		public IReadOnlyList<ISystem> InternalSystems => _myGroup!.InternalSystems;
-
-		public void Prepare()
-		{
-			CheckState();
-			_myGroup = new(name, MergeSystemsReferences());
-			_myGroup.Prepare();
-		}
-		
-		public UniTask Init(World world)
-		{
-			return _myGroup!.Init(world);
-		}
-
-		UniTask ISystem.Restore(World world)
-		{
-			return _myGroup!.Restore(world);
-		}
-		
-		public void DoUpdate()
-		{
-			_myGroup!.DoUpdate();
-		}
-		
-		public UniTask Destroy()
-		{
-			return _myGroup!.Destroy();
-		}
-		#endregion ISystem
 
 		private ISystem[] MergeSystemsReferences()
 		{
@@ -85,15 +57,6 @@ namespace KVD.ECS.SystemHelpers
 				systems[i+_systemReferences.Length] = (ISystem)_systemMonoBehaviourReferences[i];
 			}
 			return systems;
-		}
-		
-		[Conditional("DEBUG")]
-		private void CheckState()
-		{
-			if (_myGroup != null)
-			{
-				throw new ApplicationException($"RegisterSystems [{name}] acts as IBootstrapable and ISystem the same time ");
-			}
 		}
 	}
 }

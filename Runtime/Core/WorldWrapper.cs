@@ -31,7 +31,7 @@ namespace KVD.ECS.Core
 			}
 			else
 			{
-				StartWorld();
+				StartWorld().Forget(Debug.LogException);
 			}
 		}
 		
