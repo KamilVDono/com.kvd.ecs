@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Unity.Profiling;
 using Unity.Profiling.LowLevel;
-using UnityEngine;
 
 namespace KVD.ECS.Core.Systems
 {
@@ -88,10 +87,14 @@ namespace KVD.ECS.Core.Systems
 			World = world;
 		}
 
-		protected IComponentsView RegisterComponentsView(IComponentsView view)
+		protected void RegisterComponentsView(IComponentsView view)
 		{
 			_componentsViews.Add(view);
-			return view;
 		}
+	}
+	
+	public abstract class SystemBase<TWorld> : SystemBase where TWorld : World
+	{
+		public new TWorld World => (TWorld)base.World;
 	}
 }

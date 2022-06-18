@@ -50,7 +50,7 @@ namespace KVD.ECS.ComponentHelpers
 			Vector3 position, Quaternion rotation, string name, ComponentsStorage storage, Entity entity)
 		{
 			var prefabStorage = storage.List<PrefabWrapper>();
-			prefabStorage.Add(entity, new() { prefabKey = (string)assetReference.RuntimeKey, });
+			prefabStorage.Add(entity, new() { prefabKey = assetReference.AssetGUID, });
 
 			var instanceRequest = assetReference.InstantiateAsync(position, rotation);
 			var instance        = instanceRequest.WaitForCompletion();

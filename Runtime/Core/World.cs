@@ -208,23 +208,7 @@ namespace KVD.ECS.Core
 		}
 		#endregion ComponentsStorages
 
-		#region Singletons
-		// TODO: Remove singletons in favour of setup systems thru editor
-		public T RegisterSingleton<T>(T value)
-		{
-			_singletons[typeof(T)] = value!;
-			return value;
-		}
-
-		public T Singleton<T>() 
-		{
-			if (_singletons.TryGetValue(typeof(T), out var value) && value is T casted)
-			{
-				return casted;
-			}
-			throw new DataException($"There is no {typeof(T).Name} in World");
-		}
-		
+		#region Bootstrap
 		private async UniTask Bootstrap()
 		{
 			foreach (var bootstrapable in _bootstrapables)
@@ -232,7 +216,7 @@ namespace KVD.ECS.Core
 				await bootstrapable.Init(this);
 			}
 		}
-		#endregion Singletons
+		#endregion Bootstrap
 
 		#region Serialization
 		protected virtual void Serialize(BinaryWriter writer)
