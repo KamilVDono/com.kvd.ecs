@@ -34,13 +34,17 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		private readonly Dictionary<ISystem, SystemWrapper> _wrapperBySystem = new();
 		private readonly Dictionary<ComponentsStorageKey, (int version, List<(Entity entity, string displayData)> entities)> _entitiesCache = new(ComponentsStorageKey.ComponentStorageKeyComparer);
 		private readonly BigBitmask _uniqueEntitiesCollector = new();
+
+		private bool _systemsExpanded;
+		private bool _storageExpanded;
+		
 		#region Tables definitions
 		private readonly TableView<SystemWrapper> _systemsTableView = new(new[]
 		{
-			new TableColumn<SystemWrapper>("Name", w => w.DisplayName, 2f/5),
-			new TableColumn<SystemWrapper>("Entities", w => (w.ComponentsViews?.FirstOrDefault()?.Size ?? 0).ToString(), 1f/5),
+			new TableColumn<SystemWrapper>("Name", w => w.DisplayName, 7f/10),
+			new TableColumn<SystemWrapper>("Entities", w => (w.ComponentsViews?.FirstOrDefault()?.Size ?? 0).ToString(), 1f/10),
 #if SYSTEM_PROFILER_MARKERS
-			new TableColumn<SystemWrapper>("Time", w => $"{w.Recorder.GetRecorderAverageTime():f4} ms", 2f/5),
+			new TableColumn<SystemWrapper>("Time", w => $"{w.Recorder.GetRecorderAverageTime():f4} ms", 2f/10),
 #endif
 		});
 		
@@ -114,13 +118,10 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				return;
 			}
 	
-			_storagesScroll = EditorGUILayout.BeginScrollView(_storagesScroll, GUILayout.Height(position.height / 3 * 2));
-			DrawStorages();
-			EditorGUILayout.EndScrollView();
 			
-			_systemsScroll = EditorGUILayout.BeginScrollView(_systemsScroll, GUILayout.Height(position.height / 3));
+			DrawStorages();
+			EditorGUILayout.Separator();
 			DrawSystems();
-			EditorGUILayout.EndScrollView();
 		}
 	
 		private void Clean()
@@ -137,12 +138,19 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		private void DrawStorages()
 		{
 			var storagesDictionary  = (Dictionary<ComponentsStorageKey, ComponentsStorage>)ComponentsFieldInfo.GetValue(World);
-			
-			GUILayout.Label("Storages:", EditorStyles.boldLabel);
+
+			_storageExpanded = EditorGUILayout.Foldout(_storageExpanded, "Storages:");
+			if (!_storageExpanded)
+			{
+				return;
+			}
+
+			_storagesScroll = EditorGUILayout.BeginScrollView(_storagesScroll, GUILayout.ExpandHeight(false));
 			foreach (var (key, storage) in storagesDictionary)
 			{
 				DrawStorage(key, storage);
 			}
+			EditorGUILayout.EndScrollView();
 		}
 		
 		private void DrawStorage(ComponentsStorageKey key, ComponentsStorage storage)
@@ -229,33 +237,56 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		#region Systems
 		private void DrawSystems()
 		{
-			var systems      = (List<ISystem>)SystemsField.GetValue(World);
+			var systems = (List<ISystem>)SystemsField.GetValue(World);
 			
-			GUILayout.Label("Systems:", EditorStyles.boldLabel);
+			_systemsExpanded = EditorGUILayout.Foldout(_systemsExpanded, "Systems:");
+			
+			if (!_systemsExpanded)
+			{
+				return;
+			}
+			
+			_systemsScroll = EditorGUILayout.BeginScrollView(_systemsScroll, GUILayout.ExpandHeight(false));
 			_systemsTableView.Begin(position.width);
 			_systemsTableView.DrawHeader();
 			foreach (var system in systems)
 			{
-				DrawSystem(system);
+				DrawSystem(system, 0);
 			}
 			_systemsTableView.End();
+			
+			EditorGUILayout.EndScrollView();
 		}
 		
-		private void DrawSystem(ISystem system)
+		private void DrawSystem(ISystem system, int depth)
 		{
 			if (!_wrapperBySystem.TryGetValue(system, out var wrapper))
 			{
-				wrapper                  = new(system);
+				wrapper                  = new(system, depth);
 				_wrapperBySystem[system] = wrapper;
 			}
-	
-			_systemsTableView.DrawRow(wrapper);
-			
+
+			if (system.InternalSystems.Count > 0)
+			{
+				_systemsTableView.DrawRow(wrapper, ref wrapper.expanded);
+			}
+			else
+			{
+				_systemsTableView.DrawRow(wrapper);
+			}
+
+			if (!wrapper.expanded)
+			{
+				return;
+			}
+
+			EditorGUI.indentLevel++;
 			for (var i = 0; i < system.InternalSystems.Count; i++)
 			{
 				var innerSystem = system.InternalSystems[i];
-				DrawSystem(innerSystem);
+				DrawSystem(innerSystem, depth+1);
 			}
+			EditorGUI.indentLevel--;
 		}
 		#endregion Systems
 	}

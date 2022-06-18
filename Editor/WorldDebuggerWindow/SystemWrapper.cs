@@ -19,34 +19,38 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		private static readonly FieldInfo UpdateMarkerFieldSystemBase = typeof(SystemBase).GetField("_updateMarker", BindingFlags.Instance | BindingFlags.GetField | BindingFlags.NonPublic)!;
 		private static readonly FieldInfo UpdateMarkerFieldSystemGroup = typeof(SystemsGroup).GetField("_updateMarker", BindingFlags.Instance | BindingFlags.GetField | BindingFlags.NonPublic)!;
 #endif
+		public bool expanded = true;
 
-		private ISystem BackingSystem{ get; }
-		
 		public string DisplayName{ get; }
 		public IReadOnlyCollection<IComponentsView>? ComponentsViews{ get; }
 #if SYSTEM_PROFILER_MARKERS
 		public ProfilerMarker UpdateMarker{ get; }
 		public ProfilerRecorder Recorder{ get; }
 #endif
+		public int Depth{ get; }
+		
+		private ISystem BackingSystem{ get; }
 
-		public SystemWrapper(ISystem backingSystem)
+		public SystemWrapper(ISystem backingSystem, int depth)
 		{
+			Depth         = depth;
 			BackingSystem = backingSystem;
+			
 			if (BackingSystem is SystemBase)
 			{
 				DisplayName     = BackingSystem.GetType().Name;
 				ComponentsViews = (IReadOnlyCollection<IComponentsView>)ComponentsViewsField.GetValue(BackingSystem);
 #if SYSTEM_PROFILER_MARKERS
 				UpdateMarker    = (ProfilerMarker)UpdateMarkerFieldSystemBase.GetValue(BackingSystem);
-				Recorder        = ProfilerRecorder.StartNew(UpdateMarker, 5);
+				Recorder        = ProfilerRecorder.StartNew(UpdateMarker, 50);
 #endif
 			}
 			else if (BackingSystem is SystemsGroup systemsGroup)
 			{
-				DisplayName  = systemsGroup.Name;
+				DisplayName = systemsGroup.Name;
 #if SYSTEM_PROFILER_MARKERS
 				UpdateMarker = (ProfilerMarker)UpdateMarkerFieldSystemGroup.GetValue(BackingSystem);
-				Recorder     = ProfilerRecorder.StartNew(UpdateMarker, 5);
+				Recorder     = ProfilerRecorder.StartNew(UpdateMarker, 50);
 #endif
 			}
 			else
