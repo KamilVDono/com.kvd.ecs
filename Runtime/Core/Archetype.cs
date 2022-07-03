@@ -38,6 +38,11 @@ namespace KVD.ECS.Core
 		{
 			_list.List.AddOrReplace(entity, component);
 		}
+
+		public void Remove(Entity entity)
+		{
+			_list.List.Remove(entity);
+		}
 	}
 	
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
@@ -99,6 +104,12 @@ namespace KVD.ECS.Core
 		{
 			_list0.List.AddOrReplace(entity, component0);
 			_list1.List.AddOrReplace(entity, component1);
+		}
+		
+		public void Remove(Entity entity)
+		{
+			_list0.List.Remove(entity);
+			_list1.List.Remove(entity);
 		}
 	}
 	
@@ -178,6 +189,13 @@ namespace KVD.ECS.Core
 			_list0.List.AddOrReplace(entity, component0);
 			_list1.List.AddOrReplace(entity, component1);
 			_list2.List.AddOrReplace(entity, component2);
+		}
+		
+		public void Remove(Entity entity)
+		{
+			_list0.List.Remove(entity);
+			_list1.List.Remove(entity);
+			_list2.List.Remove(entity);
 		}
 	}
 	
@@ -274,6 +292,14 @@ namespace KVD.ECS.Core
 			_list1.List.AddOrReplace(entity, component1);
 			_list2.List.AddOrReplace(entity, component2);
 			_list3.List.AddOrReplace(entity, component3);
+		}
+		
+		public void Remove(Entity entity)
+		{
+			_list0.List.Remove(entity);
+			_list1.List.Remove(entity);
+			_list2.List.Remove(entity);
+			_list3.List.Remove(entity);
 		}
 	}
 	
@@ -392,6 +418,15 @@ namespace KVD.ECS.Core
 			_list2.List.AddOrReplace(entity, component2);
 			_list3.List.AddOrReplace(entity, component3);
 			_list4.List.AddOrReplace(entity, component4);
+		}
+		
+		public void Remove(Entity entity)
+		{
+			_list0.List.Remove(entity);
+			_list1.List.Remove(entity);
+			_list2.List.Remove(entity);
+			_list3.List.Remove(entity);
+			_list4.List.Remove(entity);
 		}
 	}
 	
