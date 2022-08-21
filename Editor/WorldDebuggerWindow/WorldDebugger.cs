@@ -30,6 +30,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 	
 		private Vector2 _storagesScroll;
 		private Vector2 _systemsScroll;
+		private string _systemsFilter = string.Empty;
 		private readonly OnDemandDictionary<ComponentsStorageKey, bool> _foldoutByKey = new();
 		private readonly Dictionary<ISystem, SystemWrapper> _wrapperBySystem = new();
 		private readonly Dictionary<ComponentsStorageKey, (int version, List<(Entity entity, string displayData)> entities)> _entitiesCache = new(ComponentsStorageKey.ComponentStorageKeyComparer);
@@ -50,13 +51,18 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		
 		private readonly TableView<IComponentList> _sparseListTableView = new(new[]
 		{
-			new TableColumn<IComponentList>("Name", ComponentName, 2f/6),
-			new TableColumn<IComponentList>("Entities", l => $"{l.Length}/{l.Capacity}", 1f/6),
+			new TableColumn<IComponentList>("Name", ComponentName, 2f/7),
+			new TableColumn<IComponentList>("Entities", l => $"{l.Length}/{l.Capacity}", 1f/7),
 			new TableColumn<IComponentList>("Size (single/in-use/alloc)", l =>
 			{
-				var size = ComponentSize(l);
-				return $"{size}B/{size*l.Length/1024}kB/{size*l.Capacity/1024}kB";
-			}, 3f/6),
+				var size = StorageWorldSizeUtils.ComponentSize(l);
+				return $"{size}B/{size*l.Length/1024f:f2}kB/{size*l.Capacity/1024f:f2}kB";
+			}, 3f/7),
+			new TableColumn<IComponentList>("Full list memory", l =>
+			{
+				var size = StorageWorldSizeUtils.FullListSize(l);
+				return $"{size/1024f:f2}kB";
+			}, 1f/7),
 		});
 		
 		private readonly TableView<SingletonComponentsStorage.IBucket> _singletonTableView = new(new[]
@@ -146,21 +152,29 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			}
 
 			_storagesScroll = EditorGUILayout.BeginScrollView(_storagesScroll, GUILayout.ExpandHeight(false));
+			var fullSize = 0f;
 			foreach (var (key, storage) in storagesDictionary)
 			{
-				DrawStorage(key, storage);
+				fullSize += DrawStorage(key, storage);
 			}
+			EditorGUILayout.LabelField($"Ful storages size: {fullSize/1024/1024:f2}MB");
 			EditorGUILayout.EndScrollView();
 		}
 		
-		private void DrawStorage(ComponentsStorageKey key, ComponentsStorage storage)
+		private float DrawStorage(ComponentsStorageKey key, ComponentsStorage storage)
 		{
 			var fold       = _foldoutByKey[key];
 			_foldoutByKey[key] = EditorGUILayout.BeginFoldoutHeaderGroup(fold, $"Key: {ComponentsStorageKey.Name(key)}");
+			var listsSize = 0f;
+			foreach (var list in storage.AllLists)
+			{
+				listsSize += StorageWorldSizeUtils.FullListSize(list);
+			}
+			
 			if (!_foldoutByKey[key])
 			{
 				EditorGUI.EndFoldoutHeaderGroup();
-				return;
+				return listsSize;
 			}
 	
 			var currentVersion = 0;
@@ -184,7 +198,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			EditorGUI.EndFoldoutHeaderGroup();
 			
 			// === Entities
-			return;
+			return listsSize;
 			if (!_entitiesCache.TryGetValue(key, out var entitiesData))
 			{
 				entitiesData        = (-1, new(128));
@@ -226,12 +240,6 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			}
 			return componentName;
 		}
-		
-		private static int ComponentSize(IComponentList list)
-		{
-			var componentType = list.GetType().GetGenericArguments()[0];
-			return Marshal.SizeOf(componentType);
-		}
 		#endregion Storages
 		
 		#region Systems
@@ -245,7 +253,8 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			{
 				return;
 			}
-			
+
+			_systemsFilter = EditorGUILayout.TextField("Search", _systemsFilter, EditorStyles.toolbarSearchField);
 			_systemsScroll = EditorGUILayout.BeginScrollView(_systemsScroll, GUILayout.ExpandHeight(false));
 			_systemsTableView.Begin(position.width);
 			_systemsTableView.DrawHeader();
@@ -266,6 +275,13 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				_wrapperBySystem[system] = wrapper;
 			}
 
+			var oldColor = GUI.color;
+			if (!string.IsNullOrWhiteSpace(_systemsFilter))
+			{
+				GUI.color = system.Name.Contains(_systemsFilter) ? Color.yellow : Color.gray;
+			}
+			
+
 			if (system.InternalSystems.Count > 0)
 			{
 				_systemsTableView.DrawRow(wrapper, ref wrapper.expanded);
@@ -274,6 +290,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			{
 				_systemsTableView.DrawRow(wrapper);
 			}
+			GUI.color = oldColor;
 
 			if (!wrapper.expanded)
 			{
