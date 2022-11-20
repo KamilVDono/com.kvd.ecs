@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.kvd.ecs/Editor/WorldDebuggerWindow/WindowStyles.uss?fileID=7433441132597879392&amp;guid=0e8c7763770f261489bf2e89d305d55b&amp;type=3#WindowStyles" />
+    <ui:VisualElement name="EditMode" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0);">
+        <ui:Label tabindex="-1" text="Enter playmode in order to debug world." display-tooltip-when-elided="true" style="-unity-font-style: bold;" />
+    </ui:VisualElement>
+    <ui:VisualElement name="PlayMode" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0);">
+        <ui:ScrollView scroll-deceleration-rate="0,135" elasticity="0,1">
+            <ui:Label tabindex="-1" text="World debugging in PlayMode." display-tooltip-when-elided="true" name="NoWorldInfo" style="-unity-text-align: upper-center; -unity-font-style: bold; color: rgb(255, 0, 0);" />
+            <ui:Foldout text="Storages" name="Storages">
+                <KVD.ECS.Editor.WorldDebuggerWindow.WorldUIControl float-attr="0,1" double-attr="0,1" />
+            </ui:Foldout>
+            <ui:Foldout text="Systems" name="Systems" />
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>
