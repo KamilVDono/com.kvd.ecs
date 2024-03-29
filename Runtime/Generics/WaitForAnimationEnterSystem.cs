@@ -9,7 +9,7 @@ namespace KVD.ECS.Generics
 	public class WaitForAnimationEnterSystem : IterationsSystemBase<World>
 	{
 #nullable disable
-		private ComponentsView<WaitForAnimationEnter, AnimatorStateEnter>[] _waitViews;
+		ComponentsView<WaitForAnimationEnter, AnimatorStateEnter>[] _waitViews;
 #nullable enable
 		
 		protected override void InitReferences()
@@ -18,7 +18,7 @@ namespace KVD.ECS.Generics
 			_waitViews = new ComponentsView<WaitForAnimationEnter, AnimatorStateEnter>[storages.Count];
 			for (var i = 0; i < _waitViews.Length; i++)
 			{
-				RegisterComponentsView(_waitViews[i] = new(storages[i]));
+				_waitViews[i] = new ComponentsViewBuilder(storages[i]).Build<WaitForAnimationEnter, AnimatorStateEnter>();
 			}
 		}
 		

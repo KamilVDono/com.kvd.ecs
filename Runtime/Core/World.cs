@@ -57,7 +57,7 @@ namespace KVD.ECS.Core
 			{
 				throw new ApplicationException("World already initialized");
 			}
-			Deserialize(reader);
+			//Deserialize(reader);
 			IsRestored = true;
 			await Bootstrap();
 			await RestoreSystems();
@@ -75,7 +75,7 @@ namespace KVD.ECS.Core
 			_componentsStorages.Clear();
 			foreach (var components in _componentsStoragesList)
 			{
-				components.Destroy();
+				components.Dispose();
 			}
 			_componentsStoragesList.Clear();
 
@@ -111,7 +111,7 @@ namespace KVD.ECS.Core
 				Debug.LogError("Cannot save in update phase");
 				return;
 			}
-			Serialize(writer);
+			//Serialize(writer);
 		}
 		#endregion Lifetime
 
@@ -218,32 +218,32 @@ namespace KVD.ECS.Core
 		}
 		#endregion Bootstrap
 
-		#region Serialization
-		protected virtual void Serialize(BinaryWriter writer)
-		{
-			writer.Write(ControlCharacter);
-			writer.Write(_componentsStoragesList.Count);
-			foreach (var (key, storage) in _componentsStorages)
-			{
-				SerializersHelper.ToBytesStorageKey(key, writer);
-				storage.Serialize(writer);
-			}
-			writer.Write(ControlCharacter);
-		}
-		
-		protected virtual void Deserialize(BinaryReader reader)
-		{
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-			var count = reader.ReadInt32();
-			for (var i = 0; i < count; i++)
-			{
-				ComponentsStorageKey key = new();
-				SerializersHelper.FromBytesStorageKey(ref key, reader);
-				var storage = _componentsStorages[key];
-				storage.Deserialize(this, reader);
-			}
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-		}
-		#endregion Serialization
+		// #region Serialization
+		// protected virtual void Serialize(BinaryWriter writer)
+		// {
+		// 	writer.Write(ControlCharacter);
+		// 	writer.Write(_componentsStoragesList.Count);
+		// 	foreach (var (key, storage) in _componentsStorages)
+		// 	{
+		// 		SerializersHelper.ToBytesStorageKey(key, writer);
+		// 		storage.Serialize(writer);
+		// 	}
+		// 	writer.Write(ControlCharacter);
+		// }
+		//
+		// protected virtual void Deserialize(BinaryReader reader)
+		// {
+		// 	Assert.AreEqual(reader.ReadChar(), ControlCharacter);
+		// 	var count = reader.ReadInt32();
+		// 	for (var i = 0; i < count; i++)
+		// 	{
+		// 		ComponentsStorageKey key = new();
+		// 		SerializersHelper.FromBytesStorageKey(ref key, reader);
+		// 		var storage = _componentsStorages[key];
+		// 		storage.Deserialize(this, reader);
+		// 	}
+		// 	Assert.AreEqual(reader.ReadChar(), ControlCharacter);
+		// }
+		// #endregion Serialization
 	}
 }

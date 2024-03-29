@@ -1,451 +1,392 @@
-﻿using KVD.ECS.Core.Components;
+﻿using System.Runtime.CompilerServices;
+using KVD.ECS.Core.Components;
 using KVD.ECS.Core.Entities;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 using Unity.Mathematics;
 
-#nullable enable
-
 namespace KVD.ECS.Core
 {
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
-	public sealed class Archetype<T0>
-		where T0 : struct, IComponent
+	public readonly struct Archetype<T0>
+		where T0 : unmanaged, IComponent
 	{
-		private readonly ComponentsStorage _storage;
-		private readonly LazyComponentList<T0> _list;
-		
-		public int Length => _list.Length;
+		readonly ComponentsStorage _storage;
+		readonly ComponentListPtr<T0> _list;
+
+		public int Length => ArchetypeHelpers.Length(_list);
 	
 		public Archetype(ComponentsStorage storage)
 		{
 			_storage = storage;
-			_list    = new(_storage);
+			_list    = storage.ListPtrSoft<T0>();
 		}
 	
 		public bool Has(Entity entity)
 		{
-			return _list.ReadonlyList.Has(entity);
+			ArchetypeHelpers.Has(entity, _list, out var has);
+			return has;
 		}
 	
-		public Entity Create(T0 component)
+		public Entity Create(in T0 component)
 		{
 			var entity = _storage.NextEntity();
-			_list.List.Add(entity, component);
+			ArchetypeHelpers.Add(entity, _list, component);
 			return entity;
 		}
 		
-		public void Update(Entity entity, T0 component)
+		public void Update(Entity entity, in T0 component)
 		{
-			_list.List.AddOrReplace(entity, component);
+			ArchetypeHelpers.Update(entity, _list, component);
 		}
 
 		public void Remove(Entity entity)
 		{
-			_list.List.Remove(entity);
+			ArchetypeHelpers.Remove(entity, _list);
 		}
 	}
 	
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
-	public sealed class Archetype<T0, T1>
-		where T0 : struct, IComponent
-		where T1 : struct, IComponent
+	public readonly struct Archetype<T0, T1>
+		where T0 : unmanaged, IComponent
+		where T1 : unmanaged, IComponent
 	{
-		private readonly ComponentsStorage _storage;
-		private readonly LazyComponentList<T0> _list0;
-		private readonly LazyComponentList<T1> _list1;
+		readonly ComponentsStorage _storage;
+		readonly ComponentListPtr<T0> _list0;
+		readonly ComponentListPtr<T1> _list1;
 		
-		public int Length => math.max(_list0.Length, _list1.Length);
+		public int Length => math.max(ArchetypeHelpers.Length(_list0), ArchetypeHelpers.Length(_list1));
 	
 		public Archetype(ComponentsStorage storage)
 		{
 			_storage = storage;
-			_list0   = new(_storage);
-			_list1   = new(_storage);
+			_list0   = storage.ListPtrSoft<T0>();
+			_list1   = storage.ListPtrSoft<T1>();
 		}
 		
 		public bool Has(Entity entity)
 		{
-			return _list0.ReadonlyList.Has(entity) && _list1.ReadonlyList.Has(entity);
+			ArchetypeHelpers.Has(entity, _list0, out var has0);
+			ArchetypeHelpers.Has(entity, _list1, out var has1);
+			return has0 && has1;
 		}
-		
-		public Entity Create(T0 component0)
+
+		public Entity Create(in T0 component0 = default, in T1 component1 = default)
 		{
 			var entity = _storage.NextEntity();
-			_list0.List.Add(entity, component0);
+			ArchetypeHelpers.Add(entity, _list0, component0);
+			ArchetypeHelpers.Add(entity, _list1, component1);
 			return entity;
 		}
 		
-		public Entity Create(T1 component1)
+		public void Update(Entity entity, in T0 component)
 		{
-			var entity = _storage.NextEntity();
-			_list1.List.Add(entity, component1);
-			return entity;
-		}
-	
-		public Entity Create(T0 component0, T1 component1)
-		{
-			var entity = _storage.NextEntity();
-			_list0.List.Add(entity, component0);
-			_list1.List.Add(entity, component1);
-			return entity;
+			ArchetypeHelpers.Update(entity, _list0, component);
 		}
 		
-		public void Update(Entity entity, T0 component)
+		public void Update(Entity entity, in T1 component)
 		{
-			_list0.List.AddOrReplace(entity, component);
+			ArchetypeHelpers.Update(entity, _list1, component);
 		}
 		
-		public void Update(Entity entity, T1 component)
+		public void Update(Entity entity, in T0 component0, in T1 component1)
 		{
-			_list1.List.AddOrReplace(entity, component);
-		}
-		
-		public void Update(Entity entity, T0 component0, T1 component1)
-		{
-			_list0.List.AddOrReplace(entity, component0);
-			_list1.List.AddOrReplace(entity, component1);
+			ArchetypeHelpers.Update(entity, _list0, component0);
+			ArchetypeHelpers.Update(entity, _list1, component1);
 		}
 		
 		public void Remove(Entity entity)
 		{
-			_list0.List.Remove(entity);
-			_list1.List.Remove(entity);
+			ArchetypeHelpers.Remove(entity, _list0);
+			ArchetypeHelpers.Remove(entity, _list1);
 		}
 	}
 	
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
-	public sealed class Archetype<T0, T1, T2>
-		where T0 : struct, IComponent
-		where T1 : struct, IComponent
-		where T2 : struct, IComponent
+	public readonly struct Archetype<T0, T1, T2>
+		where T0 : unmanaged, IComponent
+		where T1 : unmanaged, IComponent
+		where T2 : unmanaged, IComponent
 	{
-		private readonly ComponentsStorage _storage;
-		private readonly LazyComponentList<T0> _list0;
-		private readonly LazyComponentList<T1> _list1;
-		private readonly LazyComponentList<T2> _list2;
-		
-		public int Length => math.max(_list0.Length, math.max(_list1.Length, _list2.Length));
+		readonly ComponentsStorage _storage;
+		readonly ComponentListPtr<T0> _list0;
+		readonly ComponentListPtr<T1> _list1;
+		readonly ComponentListPtr<T2> _list2;
+
+		public int Length => math.max(ArchetypeHelpers.Length(_list0),
+			math.max(ArchetypeHelpers.Length(_list1), ArchetypeHelpers.Length(_list2)));
 	
 		public Archetype(ComponentsStorage storage)
 		{
 			_storage = storage;
-			_list0   = new(_storage);
-			_list1   = new(_storage);
-			_list2   = new(_storage);
+			_list0   = storage.ListPtrSoft<T0>();
+			_list1   = storage.ListPtrSoft<T1>();
+			_list2   = storage.ListPtrSoft<T2>();
 		}
 		
 		public bool Has(Entity entity)
 		{
-			return _list0.ReadonlyList.Has(entity) && _list1.ReadonlyList.Has(entity) && _list2.ReadonlyList.Has(entity);
-		}
-		
-		public Entity Create(T0 component0)
-		{
-			var entity = _storage.NextEntity();
-			_list0.List.Add(entity, component0);
-			return entity;
-		}
-		
-		public Entity Create(T1 component1)
-		{
-			var entity = _storage.NextEntity();
-			_list1.List.Add(entity, component1);
-			return entity;
-		}
-		
-		public Entity Create(T2 component2)
-		{
-			var entity = _storage.NextEntity();
-			_list2.List.Add(entity, component2);
-			return entity;
+			ArchetypeHelpers.Has(entity, _list0, out var has0);
+			ArchetypeHelpers.Has(entity, _list1, out var has1);
+			ArchetypeHelpers.Has(entity, _list2, out var has2);
+			return has0 & has1 & has2;
 		}
 	
-		public Entity Create(T0 component0, T1 component1, T2 component2)
+		public Entity Create(in T0 component0 = default, in T1 component1 = default, in T2 component2 = default)
 		{
 			var entity = _storage.NextEntity();
-			_list0.List.Add(entity, component0);
-			_list1.List.Add(entity, component1);
-			_list2.List.Add(entity, component2);
+			ArchetypeHelpers.Add(entity, _list0, component0);
+			ArchetypeHelpers.Add(entity, _list1, component1);
+			ArchetypeHelpers.Add(entity, _list2, component2);
 			return entity;
 		}
 		
-		public void Update(Entity entity, T0 component)
+		public void Update(Entity entity, in T0 component)
 		{
-			_list0.List.AddOrReplace(entity, component);
+			ArchetypeHelpers.Update(entity, _list0, component);
+		}
+
+		public void Update(Entity entity, in T1 component)
+		{
+			ArchetypeHelpers.Update(entity, _list1, component);
 		}
 		
-		public void Update(Entity entity, T1 component)
+		public void Update(Entity entity, in T2 component)
 		{
-			_list1.List.AddOrReplace(entity, component);
+			ArchetypeHelpers.Update(entity, _list2, component);
 		}
 		
-		public void Update(Entity entity, T2 component)
+		public void Update(Entity entity, in T0 component0, in T1 component1, in T2 component2)
 		{
-			_list2.List.AddOrReplace(entity, component);
-		}
-		
-		public void Update(Entity entity, T0 component0, T1 component1, T2 component2)
-		{
-			_list0.List.AddOrReplace(entity, component0);
-			_list1.List.AddOrReplace(entity, component1);
-			_list2.List.AddOrReplace(entity, component2);
+			ArchetypeHelpers.Update(entity, _list0, component0);
+			ArchetypeHelpers.Update(entity, _list1, component1);
+			ArchetypeHelpers.Update(entity, _list2, component2);
 		}
 		
 		public void Remove(Entity entity)
 		{
-			_list0.List.Remove(entity);
-			_list1.List.Remove(entity);
-			_list2.List.Remove(entity);
+			ArchetypeHelpers.Remove(entity, _list0);
+			ArchetypeHelpers.Remove(entity, _list1);
+			ArchetypeHelpers.Remove(entity, _list2);
 		}
 	}
 	
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
-	public sealed class Archetype<T0, T1, T2, T3>
-		where T0 : struct, IComponent
-		where T1 : struct, IComponent
-		where T2 : struct, IComponent
-		where T3 : struct, IComponent
+	public readonly struct Archetype<T0, T1, T2, T3>
+		where T0 : unmanaged, IComponent
+		where T1 : unmanaged, IComponent
+		where T2 : unmanaged, IComponent
+		where T3 : unmanaged, IComponent
 	{
-		private readonly ComponentsStorage _storage;
-		private readonly LazyComponentList<T0> _list0;
-		private readonly LazyComponentList<T1> _list1;
-		private readonly LazyComponentList<T2> _list2;
-		private readonly LazyComponentList<T3> _list3;
-		
-		public int Length => math.max(_list0.Length, math.max(_list1.Length, math.max(_list2.Length, _list3.Length)));
+		readonly ComponentsStorage _storage;
+		readonly ComponentListPtr<T0> _list0;
+		readonly ComponentListPtr<T1> _list1;
+		readonly ComponentListPtr<T2> _list2;
+		readonly ComponentListPtr<T3> _list3;
+
+		public int Length => math.max(ArchetypeHelpers.Length(_list0),
+			math.max(ArchetypeHelpers.Length(_list1),
+				math.max(ArchetypeHelpers.Length(_list2), ArchetypeHelpers.Length(_list3))));
 	
 		public Archetype(ComponentsStorage storage)
 		{
 			_storage = storage;
-			_list0   = new(_storage);
-			_list1   = new(_storage);
-			_list2   = new(_storage);
-			_list3   = new(_storage);
+			_list0 = storage.ListPtrSoft<T0>();
+			_list1 = storage.ListPtrSoft<T1>();
+			_list2 = storage.ListPtrSoft<T2>();
+			_list3 = storage.ListPtrSoft<T3>();
 		}
 		
 		public bool Has(Entity entity)
 		{
-			return _list0.ReadonlyList.Has(entity) && _list1.ReadonlyList.Has(entity) && _list2.ReadonlyList.Has(entity) && _list3.ReadonlyList.Has(entity);
-		}
-		
-		public Entity Create(T0 component0)
-		{
-			var entity = _storage.NextEntity();
-			_list0.List.Add(entity, component0);
-			return entity;
-		}
-		
-		public Entity Create(T1 component1)
-		{
-			var entity = _storage.NextEntity();
-			_list1.List.Add(entity, component1);
-			return entity;
-		}
-		
-		public Entity Create(T2 component2)
-		{
-			var entity = _storage.NextEntity();
-			_list2.List.Add(entity, component2);
-			return entity;
-		}
-		
-		public Entity Create(T3 component3)
-		{
-			var entity = _storage.NextEntity();
-			_list3.List.Add(entity, component3);
-			return entity;
+			ArchetypeHelpers.Has(entity, _list0, out var has0);
+			ArchetypeHelpers.Has(entity, _list1, out var has1);
+			ArchetypeHelpers.Has(entity, _list2, out var has2);
+			ArchetypeHelpers.Has(entity, _list3, out var has3);
+			return has0 & has1 & has2 & has3;
 		}
 	
-		public Entity Create(T0 component0, T1 component1, T2 component2, T3 component3)
+		public Entity Create(in T0 component0 = default, in T1 component1 = default, in T2 component2 = default,
+			in T3 component3 = default)
 		{
 			var entity = _storage.NextEntity();
-			_list0.List.Add(entity, component0);
-			_list1.List.Add(entity, component1);
-			_list2.List.Add(entity, component2);
-			_list3.List.Add(entity, component3);
+			ArchetypeHelpers.Add(entity, _list0, component0);
+			ArchetypeHelpers.Add(entity, _list1, component1);
+			ArchetypeHelpers.Add(entity, _list2, component2);
+			ArchetypeHelpers.Add(entity, _list3, component3);
 			return entity;
 		}
 		
-		public void Update(Entity entity, T0 component)
+		public void Update(Entity entity, in T0 component)
 		{
-			_list0.List.AddOrReplace(entity, component);
+			ArchetypeHelpers.Update(entity, _list0, component);
+		}
+
+		public void Update(Entity entity, in T1 component)
+		{
+			ArchetypeHelpers.Update(entity, _list1, component);
+		}
+
+		public void Update(Entity entity, in T2 component)
+		{
+			ArchetypeHelpers.Update(entity, _list2, component);
+		}
+
+		public void Update(Entity entity, in T3 component)
+		{
+			ArchetypeHelpers.Update(entity, _list3, component);
 		}
 		
-		public void Update(Entity entity, T1 component)
+		public void Update(Entity entity, in T0 component0, in T1 component1, in T2 component2, in T3 component3)
 		{
-			_list1.List.AddOrReplace(entity, component);
-		}
-		
-		public void Update(Entity entity, T2 component)
-		{
-			_list2.List.AddOrReplace(entity, component);
-		}
-		
-		public void Update(Entity entity, T3 component)
-		{
-			_list3.List.AddOrReplace(entity, component);
-		}
-		
-		public void Update(Entity entity, T0 component0, T1 component1, T2 component2, T3 component3)
-		{
-			_list0.List.AddOrReplace(entity, component0);
-			_list1.List.AddOrReplace(entity, component1);
-			_list2.List.AddOrReplace(entity, component2);
-			_list3.List.AddOrReplace(entity, component3);
+			ArchetypeHelpers.Update(entity, _list0, component0);
+			ArchetypeHelpers.Update(entity, _list1, component1);
+			ArchetypeHelpers.Update(entity, _list2, component2);
+			ArchetypeHelpers.Update(entity, _list3, component3);
 		}
 		
 		public void Remove(Entity entity)
 		{
-			_list0.List.Remove(entity);
-			_list1.List.Remove(entity);
-			_list2.List.Remove(entity);
-			_list3.List.Remove(entity);
+			ArchetypeHelpers.Remove(entity, _list0);
+			ArchetypeHelpers.Remove(entity, _list1);
+			ArchetypeHelpers.Remove(entity, _list2);
+			ArchetypeHelpers.Remove(entity, _list3);
 		}
 	}
 	
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
-	public sealed class Archetype<T0, T1, T2, T3, T4>
-		where T0 : struct, IComponent
-		where T1 : struct, IComponent
-		where T2 : struct, IComponent
-		where T3 : struct, IComponent
-		where T4 : struct, IComponent
+	public readonly struct Archetype<T0, T1, T2, T3, T4>
+		where T0 : unmanaged, IComponent
+		where T1 : unmanaged, IComponent
+		where T2 : unmanaged, IComponent
+		where T3 : unmanaged, IComponent
+		where T4 : unmanaged, IComponent
 	{
-		private readonly ComponentsStorage _storage;
-		private readonly LazyComponentList<T0> _list0;
-		private readonly LazyComponentList<T1> _list1;
-		private readonly LazyComponentList<T2> _list2;
-		private readonly LazyComponentList<T3> _list3;
-		private readonly LazyComponentList<T4> _list4;
-	
-		public int Length => math.max(_list0.Length,
-			math.max(_list1.Length, math.max(_list2.Length, math.max(_list3.Length, _list4.Length))));
+		readonly ComponentsStorage _storage;
+		readonly ComponentListPtr<T0> _list0;
+		readonly ComponentListPtr<T1> _list1;
+		readonly ComponentListPtr<T2> _list2;
+		readonly ComponentListPtr<T3> _list3;
+		readonly ComponentListPtr<T4> _list4;
+
+		public int Length => math.max(ArchetypeHelpers.Length(_list0),
+			math.max(ArchetypeHelpers.Length(_list1),
+				math.max(ArchetypeHelpers.Length(_list2),
+					math.max(ArchetypeHelpers.Length(_list3), ArchetypeHelpers.Length(_list4)))));
 	
 		public Archetype(ComponentsStorage storage)
 		{
 			_storage = storage;
-			_list0   = new(_storage);
-			_list1   = new(_storage);
-			_list2   = new(_storage);
-			_list3   = new(_storage);
-			_list4   = new(_storage);
+			_list0 = storage.ListPtrSoft<T0>();
+			_list1 = storage.ListPtrSoft<T1>();
+			_list2 = storage.ListPtrSoft<T2>();
+			_list3 = storage.ListPtrSoft<T3>();
+			_list4 = storage.ListPtrSoft<T4>();
 		}
 		
 		public bool Has(Entity entity)
 		{
-			return _list0.ReadonlyList.Has(entity) &&
-			       _list1.ReadonlyList.Has(entity) &&
-			       _list2.ReadonlyList.Has(entity) &&
-			       _list3.ReadonlyList.Has(entity) &&
-			       _list4.ReadonlyList.Has(entity);
+			ArchetypeHelpers.Has(entity, _list0, out var has0);
+			ArchetypeHelpers.Has(entity, _list1, out var has1);
+			ArchetypeHelpers.Has(entity, _list2, out var has2);
+			ArchetypeHelpers.Has(entity, _list3, out var has3);
+			ArchetypeHelpers.Has(entity, _list4, out var has4);
+			return has0 & has1 & has2 & has3 & has4;
 		}
-		
-		public Entity Create(T0 component0)
+
+		public Entity Create(in T0 component0 = default, in T1 component1 = default, in T2 component2 = default,
+			in T3 component3 = default, in T4 component4 = default)
 		{
 			var entity = _storage.NextEntity();
-			_list0.List.Add(entity, component0);
-			return entity;
-		}
-		
-		public Entity Create(T1 component1)
-		{
-			var entity = _storage.NextEntity();
-			_list1.List.Add(entity, component1);
-			return entity;
-		}
-		
-		public Entity Create(T2 component2)
-		{
-			var entity = _storage.NextEntity();
-			_list2.List.Add(entity, component2);
-			return entity;
-		}
-		
-		public Entity Create(T3 component3)
-		{
-			var entity = _storage.NextEntity();
-			_list3.List.Add(entity, component3);
-			return entity;
-		}
-		
-		public Entity Create(T4 component4)
-		{
-			var entity = _storage.NextEntity();
-			_list4.List.Add(entity, component4);
+			ArchetypeHelpers.Add(entity, _list0, component0);
+			ArchetypeHelpers.Add(entity, _list1, component1);
+			ArchetypeHelpers.Add(entity, _list2, component2);
+			ArchetypeHelpers.Add(entity, _list3, component3);
+			ArchetypeHelpers.Add(entity, _list4, component4);
 			return entity;
 		}
 	
-		public Entity Create(T0 component0, T1 component1, T2 component2, T3 component3, T4 component4)
+		public void Update(Entity entity, in T0 component)
 		{
-			var entity = _storage.NextEntity();
-			_list0.List.Add(entity, component0);
-			_list1.List.Add(entity, component1);
-			_list2.List.Add(entity, component2);
-			_list3.List.Add(entity, component3);
-			_list4.List.Add(entity, component4);
-			return entity;
+			ArchetypeHelpers.Update(entity, _list0, component);
 		}
-	
-		public void Update(Entity entity, T0 component)
+
+		public void Update(Entity entity, in T1 component)
 		{
-			_list0.List.AddOrReplace(entity, component);
+			ArchetypeHelpers.Update(entity, _list1, component);
 		}
-		
-		public void Update(Entity entity, T1 component)
+
+		public void Update(Entity entity, in T2 component)
 		{
-			_list1.List.AddOrReplace(entity, component);
+			ArchetypeHelpers.Update(entity, _list2, component);
 		}
-		
-		public void Update(Entity entity, T2 component)
+
+		public void Update(Entity entity, in T3 component)
 		{
-			_list2.List.AddOrReplace(entity, component);
+			ArchetypeHelpers.Update(entity, _list3, component);
 		}
 		
-		public void Update(Entity entity, T3 component)
+		public void Update(Entity entity, in T4 component)
 		{
-			_list3.List.AddOrReplace(entity, component);
+			ArchetypeHelpers.Update(entity, _list4, component);
 		}
 		
-		public void Update(Entity entity, T4 component)
+		public void Update(Entity entity, in T0 component0, in T1 component1, in T2 component2, in T3 component3, in T4 component4)
 		{
-			_list4.List.AddOrReplace(entity, component);
-		}
-		
-		public void Update(Entity entity, T0 component0, T1 component1, T2 component2, T3 component3, T4 component4)
-		{
-			_list0.List.AddOrReplace(entity, component0);
-			_list1.List.AddOrReplace(entity, component1);
-			_list2.List.AddOrReplace(entity, component2);
-			_list3.List.AddOrReplace(entity, component3);
-			_list4.List.AddOrReplace(entity, component4);
+			ArchetypeHelpers.Update(entity, _list0, component0);
+			ArchetypeHelpers.Update(entity, _list1, component1);
+			ArchetypeHelpers.Update(entity, _list2, component2);
+			ArchetypeHelpers.Update(entity, _list3, component3);
+			ArchetypeHelpers.Update(entity, _list4, component4);
 		}
 		
 		public void Remove(Entity entity)
 		{
-			_list0.List.Remove(entity);
-			_list1.List.Remove(entity);
-			_list2.List.Remove(entity);
-			_list3.List.Remove(entity);
-			_list4.List.Remove(entity);
+			ArchetypeHelpers.Remove(entity, _list0);
+			ArchetypeHelpers.Remove(entity, _list1);
+			ArchetypeHelpers.Remove(entity, _list2);
+			ArchetypeHelpers.Remove(entity, _list3);
+			ArchetypeHelpers.Remove(entity, _list4);
 		}
 	}
-	
-	internal class LazyComponentList<T> where T : struct, IComponent
+
+	static class ArchetypeHelpers
 	{
-		private readonly ComponentsStorage _storage;
-	
-		private ComponentList<T>? _list;
-		private IReadonlyComponentListView<T> _readonlyList;
-		
-		public ComponentList<T> List => _list ??= _storage.List<T>();
-		public IReadonlyComponentListView<T> ReadonlyList => _list ?? (_readonlyList = _readonlyList.Sync());
-	
-		public int Length => ReadonlyList.Length;
-	
-		public LazyComponentList(ComponentsStorage storage)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Length<T>(ComponentListPtr<T> list)
+			where T : unmanaged, IComponent
 		{
-			_storage      = storage;
-			_readonlyList = _storage.ReadonlyListView<T>();
+			return list.IsCreated ? list.AsList().Length : 0;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Has<T>(Entity entity, ComponentListPtr<T> list, out bool has)
+			where T : unmanaged, IComponent
+		{
+			has = list.IsCreated & list.AsList().Has(entity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Add<T>(Entity entity, ComponentListPtr<T> list, in T component)
+			where T : unmanaged, IComponent
+		{
+			list.Create();
+			list.AsList().Add(entity, component);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Update<T>(Entity entity, ComponentListPtr<T> list, in T component)
+			where T : unmanaged, IComponent
+		{
+			list.Create();
+			list.AsList().AddOrReplace(entity, component);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Remove<T>(Entity entity, ComponentListPtr<T> list)
+			where T : unmanaged, IComponent
+		{
+			list.Create();
+			list.AsList().Remove(entity);
 		}
 	}
 }

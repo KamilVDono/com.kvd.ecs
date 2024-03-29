@@ -1,120 +1,151 @@
-﻿
-
-#nullable enable
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using Cysharp.Threading.Tasks;
-using KVD.ECS.ComponentHelpers;
 using KVD.ECS.Core.Components;
 using KVD.ECS.Core.Entities;
 using KVD.ECS.Core.Entities.Allocators;
 using KVD.ECS.Core.Helpers;
-using KVD.ECS.Serializers;
+using KVD.Utils.DataStructures;
+using KVD.Utils.Extensions;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
-using Unity.Mathematics;
-using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.Assertions;
 
 namespace KVD.ECS.Core
 {
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 	// ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
-	public class ComponentsStorage
+	public unsafe class ComponentsStorage
 	{
-		private const char ControlCharacter = 's';
-		private const char HasStorageKeyCharacter = 'S';
-		private static readonly Type MonoComponent = typeof(IMonoComponent);
-		private static readonly Type SparseListGenericType = typeof(ComponentList<>);
-	
 		#region DEBUG
 		#if ENTITIES_NAMES
-		private readonly Dictionary<Entity, string> _debugNames = new(Entity.IndexComparer);
+		readonly Dictionary<Entity, string> _debugNames = new(Entity.IndexComparer);
 		#endif
-		private ComponentsStorageKey? _storageKey;
 		#endregion Debug
-		private readonly Dictionary<Type, IComponentList> _listsByType = new(16);
-		private readonly List<IComponentList> _lists = new(16);
-		
-		private readonly SingletonComponentsStorage _singletons = new(64);
-		private readonly List<int> _singleFrameSingletons = new(4);
-	
-		private IEntityAllocator _entityAllocator;
+		UnsafeArray<ComponentListPtr> _lists = new(128, Allocator.Persistent);
+
+		readonly SingletonComponentsStorage _singletons = new(64);
+		readonly List<int> _singleFrameSingletons = new(4);
+		readonly List<NativeAllocation> _allocations = new(128);
+
+		IEntityAllocator _entityAllocator;
 	
 		public Entity CurrentEntity{ get; private set; } = Entity.Null;
-		public IReadOnlyList<IComponentList> AllLists => _lists;
+		public UnsafeArray<ComponentListPtr> AllLists => _lists;
 	
-		public ComponentsStorage(ComponentsStorageKey? storageKey = null, IEntityAllocator? entityAllocator = null)
+		public ComponentsStorage(IEntityAllocator? entityAllocator = null)
 		{
 			_entityAllocator = entityAllocator ?? new ContinuousEntitiesAllocator();
-			_storageKey      = storageKey;
+		}
+
+		public void Dispose()
+		{
+			foreach (var listPtr in _lists)
+			{
+				if (listPtr.IsCreated)
+				{
+					listPtr.Dispose();
+				}
+			}
+			_lists.Dispose();
+
+			foreach (var allocation in _allocations)
+			{
+				allocation.Free();
+			}
+			_allocations.Clear();
+
+			_singletons.Clear();
+
+			_singleFrameSingletons.Clear();
 		}
 	
 		#region Lists
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComponentList<T>? TryList<T>() where T : struct, IComponent
+		public ComponentListPtr<T> TryGetListPtr<T>(out bool success) where T : unmanaged, IComponent
 		{
-			var key = typeof(T);
-			if (_listsByType.TryGetValue(key, out var list))
+			var typeHandle = ComponentTypeHandle.From<T>();
+			if (_lists.Length > typeHandle.index)
 			{
-				return (ComponentList<T>)list;
+				var list = _lists[typeHandle.index];
+				var componentList = list.As<T>();
+				success = list.IsCreated;
+				return componentList;
 			}
-			return null;
+			success = false;
+			return default;
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComponentList<T> List<T>(int initialSize = ComponentListConstants.InitialCapacity) where T : struct, IComponent
+		public ref ComponentList<T> TryGetList<T>(out bool success) where T : unmanaged, IComponent
 		{
-			var key = typeof(T);
-			if (!_listsByType.TryGetValue(key, out var list))
+			return ref TryGetListPtr<T>(out success).AsList();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComponentListPtr<T> ListPtr<T>(int initialSize = ComponentListConstants.InitialCapacity) where T : unmanaged, IComponent
+		{
+			var key = ComponentTypeHandle.From<T>();
+			var outOfIndex = key.index >= _lists.Length;
+			if (outOfIndex || _lists[key.index].ptr == null)
 			{
-				list = new ComponentList<T>(initialSize);
-				_listsByType.Add(key, list);
-				_lists.Add(list);
+				if (outOfIndex)
+				{
+					UnsafeArrayExt.Resize(ref _lists, key.index + 8u);
+				}
+				var listMemory = UnsafeUtility.Malloc(UnsafeUtility.SizeOf<ComponentList<T>>(),
+					UnsafeUtility.AlignOf<ComponentList<T>>(), Allocator.Persistent);
+				UnsafeUtility.MemClear(listMemory, UnsafeUtility.SizeOf<ComponentList<T>>());
+				_lists[key.index] = new(listMemory);
 			}
-			return (ComponentList<T>)list;
+			var list = _lists[key.index];
+			var componentList = list.As<T>();
+			componentList.Create(initialSize);
+			return componentList;
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IComponentList List(Type componentType, int initialSize = ComponentListConstants.InitialCapacity)
+		public ref ComponentList<T> List<T>(int initialSize = ComponentListConstants.InitialCapacity) where T : unmanaged, IComponent
 		{
-			CheckComponentType(componentType);
-			if (!_listsByType.TryGetValue(componentType, out var list))
+			return ref ListPtr<T>(initialSize).AsList();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComponentListPtr<T> ListPtrSoft<T>() where T : unmanaged, IComponent
+		{
+			var key = ComponentTypeHandle.From<T>();
+			var outOfIndex = key.index >= _lists.Length;
+			if (outOfIndex || _lists[key.index].ptr == null)
 			{
-				var storageType = typeof(ComponentList<>).MakeGenericType(componentType);
-				list = (IComponentList)Activator.CreateInstance(storageType, initialSize);
-				_listsByType.Add(componentType, list);
-				_lists.Add(list);
+				if (outOfIndex)
+				{
+					UnsafeArrayExt.Resize(ref _lists, key.index + 8u);
+				}
+				var listMemory = UnsafeUtility.Malloc(UnsafeUtility.SizeOf<ComponentList<T>>(),
+					UnsafeUtility.AlignOf<ComponentList<T>>(), Allocator.Persistent);
+				UnsafeUtility.MemClear(listMemory, UnsafeUtility.SizeOf<ComponentList<T>>());
+				_lists[key.index] = new(listMemory);
 			}
-			return list;
+			return _lists[key.index].As<T>();
 		}
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IReadonlyComponentList ReadonlyListView(Type componentType)
+
+		public ComponentListPtr ListPtrSoft(ComponentTypeHandle type)
 		{
-			CheckComponentType(componentType);
-			if (_listsByType.TryGetValue(componentType, out var list))
+			var outOfIndex = type.index >= _lists.Length;
+			if (outOfIndex || _lists[type.index].ptr == null)
 			{
-				return list;
+				if (outOfIndex)
+				{
+					UnsafeArrayExt.Resize(ref _lists, type.index + 8u);
+				}
+				var listMemory = UnsafeUtility.Malloc(UnsafeUtility.SizeOf<ComponentListTypeless>(),
+					UnsafeUtility.AlignOf<ComponentListTypeless>(), Allocator.Persistent);
+				UnsafeUtility.MemClear(listMemory, UnsafeUtility.SizeOf<ComponentListTypeless>());
+				_lists[type.index] = new(listMemory);
 			}
-			var storageType = typeof(ReadonlyComponentListViewView<>).MakeGenericType(componentType);
-			return (IReadonlyComponentList)Activator.CreateInstance(storageType, this);
-		}
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IReadonlyComponentListView<T> ReadonlyListView<T>() where T : struct, IComponent
-		{
-			var key = typeof(T);
-			return _listsByType.TryGetValue(key, out var list) ?
-				(IReadonlyComponentListView<T>)list :
-				new ReadonlyComponentListViewView<T>(this);
+			return _lists[type.index];
 		}
 		#endregion Lists
 	
@@ -157,9 +188,12 @@ namespace KVD.ECS.Core
 		
 		public void ClearSingleFrameEntities()
 		{
-			for (var i = 0; i < _lists.Count; i++)
+			foreach (var listPtr in AllLists)
 			{
-				_lists[i].ClearSingleFrameEntities();
+				if (listPtr.IsCreated)
+				{
+					listPtr.AsList().ClearSingleFrameEntities();
+				}
 			}
 			for (var i = 0; i < _singleFrameSingletons.Count; i++)
 			{
@@ -224,188 +258,41 @@ namespace KVD.ECS.Core
 			_singleFrameSingletons.Remove(SingletonComponentsStorage.Index<T>());
 		}
 		#endregion Singleton components
-		
-		public virtual void Destroy()
+
+		public void AddAllocation(NativeAllocation allocation)
 		{
-			foreach (var components in _listsByType.Values)
-			{
-				components.Destroy();
-			}
-			_listsByType.Clear();
-			_lists.Clear();
-	
-			_singletons.Clear();
-			
-			_singleFrameSingletons.Clear();
+			_allocations.Add(allocation);
 		}
 	
 		public override string ToString()
 		{
-			var estimatedSize = _listsByType.Count*32;
-			estimatedSize += 32;
-			var stringBuilder = new StringBuilder(estimatedSize);
-			if (_storageKey.HasValue)
-			{
-				#if DEBUG
-				stringBuilder.Append(ComponentsStorageKey.Name(_storageKey.Value));
-				#else
-				stringBuilder.Append(_storageKey.Value);
-				#endif
-				stringBuilder.Append("; ");
-			}
-			foreach (var listType in _listsByType.Keys)
-			{
-				stringBuilder.Append(listType.Name);
-				stringBuilder.Append(", ");
-			}
-			if (_listsByType.Count > 0)
-			{
-				stringBuilder.Length -= 2;
-			}
-			return stringBuilder.ToString();
+			// var estimatedSize = _lists.Length*32;
+			// estimatedSize += 32;
+			// var stringBuilder = new StringBuilder(estimatedSize);
+			// if (_storageKey.HasValue)
+			// {
+			// 	#if DEBUG
+			// 	stringBuilder.Append(ComponentsStorageKey.Name(_storageKey.Value));
+			// 	#else
+			// 	stringBuilder.Append(_storageKey.Value);
+			// 	#endif
+			// 	stringBuilder.Append("; ");
+			// }
+			// foreach (var listType in _lists)
+			// {
+			// 	stringBuilder.Append(listType.Type.Name);
+			// 	stringBuilder.Append(", ");
+			// }
+			// if (_listsByType.Count > 0)
+			// {
+			// 	stringBuilder.Length -= 2;
+			// }
+			return "TODO"; // stringBuilder.ToString();
 		}
-	
-		#region Serialization
-		public virtual void Serialize(BinaryWriter writer)
-		{
-			writer.Write(ControlCharacter);
-			SerializersHelper.ToBytesType(_entityAllocator.GetType(), writer);
-			_entityAllocator.Serialize(writer);
-			
-			writer.Write(ControlCharacter);
-			if (_storageKey.HasValue)
-			{
-				writer.Write(HasStorageKeyCharacter); //Storage key
-				writer.Write(_storageKey.Value.Value);
-			}
-	
-			writer.Write(ControlCharacter);
-			byte monoCount = 0;
-			foreach (var (type, _) in _listsByType)
-			{
-				if (MonoComponent.IsAssignableFrom(type))
-				{
-					monoCount++;
-				}
-			}
-			writer.Write((byte)(_listsByType.Count-monoCount));
-			foreach (var (type, sparseList) in _listsByType)
-			{
-				if (MonoComponent.IsAssignableFrom(type))
-				{
-					continue;
-				}
-				SerializersHelper.ToBytesType(type, writer);
-				sparseList.Serialize(writer);
-			}
-			
-			writer.Write(ControlCharacter);
-			// Unfortunately we need to serialize transform "manually"
-			if (monoCount > 0)
-			{
-				var transformStorage = List<MonoComponentWrapper<Transform>>();
-				var entityByIndex    = transformStorage.EntityByIndex;
-				var values           = transformStorage.DenseArray;
-	
-				for (var i = 0; i < transformStorage.Length; i++)
-				{
-					var entity     = entityByIndex[i];
-					var transform = values[i].value;
-	
-					var position = (float3)transform.position;
-					var rotation = (quaternion)transform.rotation;
-	
-					writer.Write(entity);
-					SerializersHelper.ToBytesStruct(position, writer);
-					SerializersHelper.ToBytesStruct(rotation, writer);
-				}
-			}
-			
-			writer.Write(ControlCharacter);
-			_singletons.Serialize(writer);
-			
-			writer.Write(ControlCharacter);
-			writer.Write(CurrentEntity.index);
-			writer.Write(ControlCharacter);
-		}
-		
-		public virtual void Deserialize(World world, BinaryReader reader)
-		{
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-	
-			SerializersHelper.FromBytesStatelessInstance(ref _entityAllocator, reader);
-			_entityAllocator.Deserialize(reader);
-	
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-			if (reader.PeekChar() == HasStorageKeyCharacter)
-			{
-				reader.ReadChar();
-				_storageKey = new ComponentsStorageKey(reader.ReadInt32());
-			}
-	
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-			int count          = reader.ReadByte();
-			var readerAsParams = new object[] { reader, };
-			for (var i = 0; i < count; i++)
-			{
-				var componentType  = SerializersHelper.FromBytesType(reader);
-				var sparseListType = SparseListGenericType.MakeGenericType(componentType);
-				var deserializeMethod = sparseListType.GetMethod(
-					"Deserialize", 
-					BindingFlags.Static | BindingFlags.InvokeMethod | BindingFlags.Public
-					)!;
-				var storage = deserializeMethod.Invoke(null, readerAsParams) as IComponentList;
-				if (storage == null)
-				{
-					continue;
-				}
-	
-				_listsByType[componentType] = storage;
-				_lists.Add(storage);
-			}
-			
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-			if (_listsByType.TryGetValue(typeof(PrefabWrapper), out var prefabWrappers))
-			{
-				DeserializePrefabs(world, reader, (ComponentList<PrefabWrapper>)prefabWrappers);
-			}
-			
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-			_singletons.Deserialize(reader);
-			
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-			CurrentEntity = reader.ReadInt32();
-			Assert.AreEqual(reader.ReadChar(), ControlCharacter);
-		}
-		
-		private void DeserializePrefabs(World world, BinaryReader reader, ComponentList<PrefabWrapper> prefabs)
-		{
-			for (var i = 0; i < prefabs.Length; ++i)
-			{
-				var        entityIndex = reader.ReadInt32();
-				float3     position    = new();
-				quaternion rotation    = new();
-				SerializersHelper.FromBytesStruct(ref position, reader);
-				SerializersHelper.FromBytesStruct(ref rotation, reader);
-				var    prefab   = prefabs.Value(entityIndex);
-	
-				SetupPrefabInstance(world, new(entityIndex), prefab, position, rotation).Forget();
-			}
-		}
-		
-		private async UniTaskVoid SetupPrefabInstance(World world, Entity entity, PrefabWrapper prefabWrapper,
-			Vector3 position, Quaternion rotation)
-		{
-			var request  = Addressables.InstantiateAsync(prefabWrapper.prefabKey, position, rotation);
-			var instance = await request.Task;
-	
-			RegisterEntity.SetupPrefabInstance(world, this, entity, request, instance, false);
-		}
-		#endregion Serialization
-	
+
 		#region DEBUG
 		[Conditional("UNITY_EDITOR")]
-		private void CheckComponentType(Type type)
+		void CheckComponentType(Type type)
 		{
 			var componentInterface = typeof(IComponent);
 			if (!type.IsValueType)

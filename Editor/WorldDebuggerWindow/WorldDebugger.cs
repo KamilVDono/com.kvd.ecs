@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using KVD.ECS.Core;
 using KVD.ECS.Core.Entities;
 using KVD.ECS.Core.Helpers;
 using KVD.ECS.Core.Systems;
 using KVD.Utils.DataStructures;
+using Unity.Collections;
 #if SYSTEM_PROFILER_MARKERS
 using KVD.Utils.Extensions;
 #endif
@@ -19,67 +19,67 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 {
 	public class WorldDebugger : EditorWindow
 	{
-		private static readonly BindingFlags FieldInfoFlag = BindingFlags.Instance | BindingFlags.GetField | BindingFlags.NonPublic;
-		private static readonly FieldInfo SystemsField = typeof(World).GetField("systems", FieldInfoFlag)!;
-		private static readonly FieldInfo ComponentsFieldInfo = typeof(World).GetField("_componentsStorages", FieldInfoFlag)!;
-		private static readonly FieldInfo SingletonsFieldInfo = typeof(ComponentsStorage).GetField("_singletons", FieldInfoFlag)!;
-		private static readonly FieldInfo BucketsFieldInfo = typeof(SingletonComponentsStorage).GetField("_buckets", FieldInfoFlag)!;
-	
-		private World? _world;
-		private World? World => _world ??= FindObjectOfType<WorldWrapper>()?.World;
-	
-		private Vector2 _storagesScroll;
-		private Vector2 _systemsScroll;
-		private string _systemsFilter = string.Empty;
-		private readonly OnDemandDictionary<ComponentsStorageKey, bool> _foldoutByKey = new();
-		private readonly Dictionary<ISystem, SystemWrapper> _wrapperBySystem = new();
-		private readonly Dictionary<ComponentsStorageKey, (int version, List<(Entity entity, string displayData)> entities)> _entitiesCache = new(ComponentsStorageKey.ComponentStorageKeyComparer);
-		private readonly BigBitmask _uniqueEntitiesCollector = new();
+		static readonly BindingFlags FieldInfoFlag = BindingFlags.Instance | BindingFlags.GetField | BindingFlags.NonPublic;
+		static readonly FieldInfo SystemsField = typeof(World).GetField("systems", FieldInfoFlag)!;
+		static readonly FieldInfo ComponentsFieldInfo = typeof(World).GetField("_componentsStorages", FieldInfoFlag)!;
+		static readonly FieldInfo SingletonsFieldInfo = typeof(ComponentsStorage).GetField("_singletons", FieldInfoFlag)!;
+		static readonly FieldInfo BucketsFieldInfo = typeof(SingletonComponentsStorage).GetField("_buckets", FieldInfoFlag)!;
 
-		private bool _systemsExpanded;
-		private bool _storageExpanded;
+		World? _world;
+		World? World => _world ??= FindAnyObjectByType<WorldWrapper>()?.World;
+
+		Vector2 _storagesScroll;
+		Vector2 _systemsScroll;
+		string _systemsFilter = string.Empty;
+		readonly OnDemandDictionary<ComponentsStorageKey, bool> _foldoutByKey = new();
+		readonly Dictionary<ISystem, SystemWrapper> _wrapperBySystem = new();
+		readonly Dictionary<ComponentsStorageKey, (int version, List<(Entity entity, string displayData)> entities)> _entitiesCache = new(ComponentsStorageKey.ComponentStorageKeyComparer);
+		UnsafeBitmask _uniqueEntitiesCollector = new(1, Allocator.Persistent);
+
+		bool _systemsExpanded;
+		bool _storageExpanded;
 		
 		#region Tables definitions
-		private readonly TableView<SystemWrapper> _systemsTableView = new(new[]
+		readonly TableView<SystemWrapper> _systemsTableView = new(new[]
 		{
 			new TableColumn<SystemWrapper>("Name", w => w.DisplayName, 7f/10),
-			new TableColumn<SystemWrapper>("Entities", w => (w.ComponentsViews?.FirstOrDefault()?.Size ?? 0).ToString(), 1f/10),
+			//new TableColumn<SystemWrapper>("Entities", w => (w.ComponentsViews?.FirstOrDefault()?.Size ?? 0).ToString(), 1f/10),
 #if SYSTEM_PROFILER_MARKERS
 			new TableColumn<SystemWrapper>("Time", w => $"{w.Recorder.GetRecorderAverageTime():f4} ms", 2f/10),
 #endif
 		});
-		
-		private readonly TableView<IComponentList> _sparseListTableView = new(new[]
+
+		readonly TableView<ComponentListTypeless> _sparseListTableView = new(new[]
 		{
-			new TableColumn<IComponentList>("Name", ComponentName, 2f/7),
-			new TableColumn<IComponentList>("Entities", l => $"{l.Length}/{l.Capacity}", 1f/7),
-			new TableColumn<IComponentList>("Size (single/in-use/alloc)", l =>
+			new TableColumn<ComponentListTypeless>("Name", ComponentName, 2f/7),
+			new TableColumn<ComponentListTypeless>("Entities", l => $"{l.length}/{l.capacity}", 1f/7),
+			new TableColumn<ComponentListTypeless>("Size (single/in-use/alloc)", l =>
 			{
-				var size = StorageWorldSizeUtils.ComponentSize(l);
-				return $"{size}B/{size*l.Length/1024f:f2}kB/{size*l.Capacity/1024f:f2}kB";
+				var size = l.valueSize;
+				return $"{size}B/{size*l.length/1024f:f2}kB/{size*l.capacity/1024f:f2}kB";
 			}, 3f/7),
-			new TableColumn<IComponentList>("Full list memory", l =>
+			new TableColumn<ComponentListTypeless>("Full list memory", l =>
 			{
 				var size = StorageWorldSizeUtils.FullListSize(l);
 				return $"{size/1024f:f2}kB";
 			}, 1f/7),
 		});
-		
-		private readonly TableView<SingletonComponentsStorage.IBucket> _singletonTableView = new(new[]
+
+		readonly TableView<SingletonComponentsStorage.IBucket> _singletonTableView = new(new[]
 		{
 			new TableColumn<SingletonComponentsStorage.IBucket>("Type", s => s.TargetType.Name, 1),
 		});
 		#endregion Tables definitions
 	
 		[MenuItem("KVD/ECS/World debugger")]
-		private static void Init()
+		static void Init()
 		{
 			var window = GetWindow<WorldDebugger>();
 			window.titleContent = new("World debug");
 			window.Show();
 		}
-	
-		private void OnEnable()
+
+		void OnEnable()
 		{
 			EditorApplication.playModeStateChanged -= PlayModeChanged;
 			EditorApplication.playModeStateChanged += PlayModeChanged;
@@ -89,14 +89,14 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				PlayModeChanged(PlayModeStateChange.EnteredEditMode);
 			}
 		}
-	
-		private void OnDisable()
+
+		void OnDisable()
 		{
 			EditorApplication.playModeStateChanged -= PlayModeChanged;
 			Clean();
 		}
-	
-		private void PlayModeChanged(PlayModeStateChange change)
+
+		void PlayModeChanged(PlayModeStateChange change)
 		{
 			_world = null;
 			if (change == PlayModeStateChange.EnteredPlayMode)
@@ -110,8 +110,8 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				Clean();
 			}
 		}
-	
-		private void OnGUI()
+
+		void OnGUI()
 		{
 			if (!Application.isPlaying)
 			{
@@ -129,8 +129,8 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			EditorGUILayout.Separator();
 			DrawSystems();
 		}
-	
-		private void Clean()
+
+		void Clean()
 		{
 			foreach (var wrapper in _wrapperBySystem.Values)
 			{
@@ -141,7 +141,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		}
 	
 		#region Storages
-		private void DrawStorages()
+		void DrawStorages()
 		{
 			var storagesDictionary  = (Dictionary<ComponentsStorageKey, ComponentsStorage>)ComponentsFieldInfo.GetValue(World);
 
@@ -152,20 +152,20 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			}
 
 			_storagesScroll = EditorGUILayout.BeginScrollView(_storagesScroll, GUILayout.ExpandHeight(false));
-			var fullSize = 0f;
+			var fullSize = 0ul;
 			foreach (var (key, storage) in storagesDictionary)
 			{
 				fullSize += DrawStorage(key, storage);
 			}
-			EditorGUILayout.LabelField($"Ful storages size: {fullSize/1024/1024:f2}MB");
+			EditorGUILayout.LabelField($"Ful storages size: {fullSize/1024f/1024f:f2}MB");
 			EditorGUILayout.EndScrollView();
 		}
-		
-		private float DrawStorage(ComponentsStorageKey key, ComponentsStorage storage)
+
+		ulong DrawStorage(ComponentsStorageKey key, ComponentsStorage storage)
 		{
 			var fold       = _foldoutByKey[key];
 			_foldoutByKey[key] = EditorGUILayout.BeginFoldoutHeaderGroup(fold, $"Key: {ComponentsStorageKey.Name(key)}");
-			var listsSize = 0f;
+			var listsSize = 0ul;
 			foreach (var list in storage.AllLists)
 			{
 				listsSize += StorageWorldSizeUtils.FullListSize(list);
@@ -183,10 +183,14 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			GUILayout.Label($"Components:", EditorStyles.boldLabel);
 			_sparseListTableView.Begin(position.width);
 			_sparseListTableView.DrawHeader();
-			foreach (var list in storage.AllLists)
+			foreach (var listPtr in storage.AllLists)
 			{
-				currentVersion += list.EntitiesVersion;
-				_sparseListTableView.DrawRow(list);
+				if (listPtr.IsCreated)
+				{
+					var list = listPtr.AsList();
+					currentVersion += list.entitiesVersion;
+					_sparseListTableView.DrawRow(list);
+				}
 			}
 			_sparseListTableView.End();
 			GUILayout.Space(12);
@@ -210,13 +214,16 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				_uniqueEntitiesCollector.Zero();
 	
 				entitiesData.version = currentVersion;
-				foreach (var list in storage.AllLists)
+				foreach (var listPtr in storage.AllLists)
 				{
-					_uniqueEntitiesCollector.Union(list.EntitiesMask);
+					if (listPtr.IsCreated)
+					{
+						_uniqueEntitiesCollector.Union(listPtr.AsList().entitiesMask);
+					}
 				}
-				foreach (var entity in _uniqueEntitiesCollector)
+				foreach (var entity in _uniqueEntitiesCollector.EnumerateOnes())
 				{
-					entitiesData.entities.Add((new(entity), entity.ToString()));
+					entitiesData.entities.Add((new((int)entity), entity.ToString()));
 				}
 				entitiesData.entities.Sort((left, right)=>left.entity.index.CompareTo(right.entity.index));
 				
@@ -229,8 +236,8 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				GUILayout.Label(entity.displayData);
 			}
 		}
-		
-		private static string ComponentName(IComponentList list)
+
+		static string ComponentName(ComponentListTypeless list)
 		{
 			var componentType = list.GetType().GetGenericArguments()[0];
 			var componentName = componentType.Name;
@@ -243,7 +250,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 		#endregion Storages
 		
 		#region Systems
-		private void DrawSystems()
+		void DrawSystems()
 		{
 			var systems = (List<ISystem>)SystemsField.GetValue(World);
 			
@@ -266,8 +273,8 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			
 			EditorGUILayout.EndScrollView();
 		}
-		
-		private void DrawSystem(ISystem system, int depth)
+
+		void DrawSystem(ISystem system, int depth)
 		{
 			if (!_wrapperBySystem.TryGetValue(system, out var wrapper))
 			{

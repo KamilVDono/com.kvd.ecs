@@ -17,6 +17,7 @@
     "com.unity.addressables": "1.21.8",
     "com.kvd.utils": "0.0.1",
     "com.cysharp.unitask": "2.3.3",
-    "com.mackysoft.serializereference-extensions": "1.1.7"
+    "com.mackysoft.serializereference-extensions": "1.1.7",
+    "com.unity.collections": "2.1.0-pre.18"
   }
 }

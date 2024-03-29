@@ -1,22 +1,22 @@
 ﻿using KVD.ECS.Core.Components;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
+
 
 namespace KVD.ECS.ComponentHelpers
 {
 	public readonly struct PrefabRequestWrapper : IMonoComponent
 	{
-		private readonly AsyncOperationHandle<GameObject> _request;
+		private readonly int _instanceId;
 
-		public PrefabRequestWrapper(AsyncOperationHandle<GameObject> request)
+		public PrefabRequestWrapper(GameObject spawnedPrefab)
 		{
-			_request = request;
+			_instanceId = spawnedPrefab.GetHashCode();
 		}
 
 		public void Dispose()
 		{
-			Addressables.ReleaseInstance(_request);
+			Addressables.ReleaseInstance((GameObject)Resources.InstanceIDToObject(_instanceId));
 		}
 	}
 }

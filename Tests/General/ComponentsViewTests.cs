@@ -28,10 +28,11 @@ namespace KVD.ECS.GeneralTests
 		public void Has_EmptyLists()
 		{
 			// Arrange
-			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Position), typeof(Acceleration) });
+			var builder = new ComponentsViewBuilder(world.defaultStorage);
+			var view = builder.With<Position>().With<Acceleration>().Build();
 		
 			// Act
-			CollectEntities(view);
+			CollectEntities(ref view);
 		
 			// Assert
 			Assert.AreEqual(0, view.Size);
@@ -62,11 +63,12 @@ namespace KVD.ECS.GeneralTests
 			nextEntity = world.defaultStorage.NextEntity();
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
-		
-			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Radius) });
+
+			var builder = new ComponentsViewBuilder(world.defaultStorage);
+			var view = builder.With<Radius>().Build();
 		
 			// Act
-			CollectEntities(view);
+			CollectEntities(ref view);
 		
 			// Assert
 			Assert.AreEqual(0, view.Size);
@@ -96,11 +98,12 @@ namespace KVD.ECS.GeneralTests
 			// 5
 			nextEntity = world.defaultStorage.NextEntity();
 			_accelerations.Add(nextEntity, new());
-		
-			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Position), typeof(Acceleration) });
+
+			var builder = new ComponentsViewBuilder(world.defaultStorage);
+			var view = builder.With<Position>().With<Acceleration>().Build();
 		
 			// Act
-			CollectEntities(view);
+			CollectEntities(ref view);
 		
 			// Assert
 			Assert.AreEqual(0, view.Size);
@@ -131,10 +134,11 @@ namespace KVD.ECS.GeneralTests
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
 		
-			using ComponentsView view = new(world.defaultStorage, new[] { typeof(Position), typeof(Acceleration) });
+			var builder = new ComponentsViewBuilder(world.defaultStorage);
+			var view    = builder.With<Position>().With<Acceleration>().Build();
 		
 			// Act && Assert
-			var entities = CollectEntities(view);
+			var entities = CollectEntities(ref view);
 			Assert.AreEqual(3, view.Size);
 			Assert.AreEqual(0, entities[0].index);
 			Assert.AreEqual(1, entities[1].index);
@@ -169,12 +173,12 @@ namespace KVD.ECS.GeneralTests
 			nextEntity = world.defaultStorage.NextEntity();
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
-		
-			using ComponentsView view = new(world.defaultStorage,
-				new[] { typeof(Position), typeof(Acceleration), typeof(Radius) });
-		
+
+			var builder = new ComponentsViewBuilder(world.defaultStorage);
+			var view    = builder.With<Position>().With<Acceleration>().With<Radius>().Build();
+
 			// Act
-			var entities = CollectEntities(view);
+			var entities = CollectEntities(ref view);
 		
 			// Assert
 			Assert.AreEqual(1, view.Size);
@@ -209,12 +213,11 @@ namespace KVD.ECS.GeneralTests
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
 		
-			using ComponentsView view = new(world.defaultStorage,
-				new[] { typeof(Position), typeof(Acceleration) },
-				new[] { typeof(Radius) });
+			var builder = new ComponentsViewBuilder(world.defaultStorage);
+			var view    = builder.With<Position>().With<Acceleration>().Exclude<Radius>().Build();
 		
 			// Act
-			var entities = CollectEntities(view);
+			var entities = CollectEntities(ref view);
 		
 			// Assert
 			Assert.AreEqual(2, view.Size);
@@ -257,12 +260,11 @@ namespace KVD.ECS.GeneralTests
 			_accelerations.Add(nextEntity, new());
 			_radii.Add(nextEntity, new());
 		
-			using ComponentsView view = new(world.defaultStorage,
-				new[] { typeof(Position), typeof(Acceleration) },
-				new[] { typeof(Radius) });
+			var builder = new ComponentsViewBuilder(world.defaultStorage);
+			var view    = builder.With<Position>().With<Acceleration>().Exclude<Radius>().Build();
 		
 			// Act
-			CollectEntities(view);
+			CollectEntities(ref view);
 		
 			// Assert
 			Assert.AreEqual(0, view.Size);
@@ -271,7 +273,7 @@ namespace KVD.ECS.GeneralTests
 		[Test]
 		public void OneGet_TypeCheck()
 		{
-			using var view = new ComponentsView<Acceleration>(world.defaultStorage);
+			var view = new ComponentsViewBuilder(world.defaultStorage).Build<Acceleration>();
 			foreach (var iter in view)
 			{
 				// ReSharper disable once SuggestVarOrType_SimpleTypes
@@ -282,7 +284,7 @@ namespace KVD.ECS.GeneralTests
 		[Test]
 		public void TwoGet_TypeCheck()
 		{
-			using var view = new ComponentsView<Acceleration, Circle>(world.defaultStorage);
+			var view = new ComponentsViewBuilder(world.defaultStorage).Build<Acceleration, Circle>();
 			foreach (var iter in view)
 			{
 				// ReSharper disable SuggestVarOrType_SimpleTypes
@@ -295,7 +297,7 @@ namespace KVD.ECS.GeneralTests
 		[Test]
 		public void ThreeGet_TypeCheck()
 		{
-			using var view = new ComponentsView<Acceleration, Circle, Borders>(world.defaultStorage);
+			var view = new ComponentsViewBuilder(world.defaultStorage).Build<Acceleration, Circle, Borders>();
 			foreach (var iter in view)
 			{
 				// ReSharper disable SuggestVarOrType_SimpleTypes
@@ -309,7 +311,7 @@ namespace KVD.ECS.GeneralTests
 		[Test]
 		public void FourGet_TypeCheck()
 		{
-			using var view = new ComponentsView<Acceleration, Circle, Borders, Position>(world.defaultStorage);
+			var view = new ComponentsViewBuilder(world.defaultStorage).Build<Acceleration, Circle, Borders, Position>();
 			foreach (var iter in view)
 			{
 				// ReSharper disable SuggestVarOrType_SimpleTypes
@@ -329,13 +331,10 @@ namespace KVD.ECS.GeneralTests
 			_positions.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
 		
-			var acceleration = new Acceleration{ x = 5, y = -5, z = 10, };
-			
-			using var view = new ComponentsView<Acceleration>(
-				world.defaultStorage,
-				hasComponents: new[] { typeof(Position) },
-				excludeComponents: new[] { typeof(Circle) }
-				);
+			var acceleration = new Acceleration { x = 5, y = -5, z = 10, };
+
+			var builder = new ComponentsViewBuilder(world.defaultStorage);
+			var view = builder.With<Position>().Exclude<Circle>().Build<Acceleration>();
 		
 			// Act
 			foreach (var iter in view)
@@ -363,8 +362,8 @@ namespace KVD.ECS.GeneralTests
 			nextEntity = world.defaultStorage.NextEntity();
 			_radii.Add(nextEntity, new());
 			_accelerations.Add(nextEntity, new());
-		
-			using var view = new ComponentsView<Acceleration>(world.defaultStorage);
+
+			var view = new ComponentsViewBuilder(world.defaultStorage).Build<Acceleration>();
 		
 			// Act
 			foreach (var iter in view)
@@ -381,7 +380,7 @@ namespace KVD.ECS.GeneralTests
 			Assert.AreEqual(0, entities.Count);
 		}
 		
-		private static List<Entity> CollectEntities(ComponentsView view)
+		private static List<Entity> CollectEntities(ref ComponentsView view)
 		{
 			var entities = new List<Entity>();
 			foreach (var entity in view)

@@ -6,7 +6,7 @@ namespace KVD.ECS.GeneralTests
 {
 	public class ComponentsStorageTests
 	{
-		private ComponentsStorage _storage;
+		ComponentsStorage _storage;
 
 		[SetUp]
 		public void Setup()
@@ -17,34 +17,21 @@ namespace KVD.ECS.GeneralTests
 		[TearDown]
 		public void TearDown()
 		{
-			_storage.Destroy();
+			_storage.Dispose();
 		}
 		
 		[Test]
-		public void List_MultipleOperations()
+		public unsafe void List_MultipleOperations()
 		{
 			// Act&Assert
-			Assert.IsNull(_storage.TryList<Circle>());
-			var l1 = _storage.List<Circle>();
-			var l2 = _storage.List<Circle>();
-			var l3 = _storage.TryList<Circle>();
-			var l4 = _storage.List(typeof(Circle));
+			ref var _ = ref _storage.TryGetList<Circle>(out var has);
+			Assert.IsFalse(has);
+			var l1 = _storage.ListPtr<Circle>();
+			var l2 = _storage.ListPtr<Circle>();
+			var l3 = _storage.TryGetListPtr<Circle>(out has);
 			Assert.IsNotNull(l1);
-			Assert.AreSame(l1, l2);
-			Assert.AreSame(l1, l3);
-			Assert.AreSame(l1, l4);
-		}
-		
-		// TODO: Move to ReadonlyComponentList
-		[Test]
-		public void ReadonlyListView_MultipleOperations()
-		{
-			// Act&Assert
-			Assert.IsNull(_storage.TryList<Circle>());
-			var l1 = _storage.ReadonlyListView<Circle>();
-			var l2 = _storage.ReadonlyListView(typeof(Circle));
-			Assert.IsNotNull(l1);
-			Assert.IsNotNull(l2);
+			Assert.IsTrue(l1.ptr == l2.ptr);
+			Assert.IsTrue(l1.ptr == l3.ptr);
 		}
 		
 		#region IsAlive

@@ -1,44 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using KVD.ECS.Core;
-using KVD.ECS.Core.Helpers;
+﻿using KVD.ECS.Core;
+using KVD.Utils.DataStructures;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace KVD.ECS.Editor.WorldDebuggerWindow
 {
 	public static class StorageWorldSizeUtils
 	{
-		private const BindingFlags GetFieldFlag = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.GetField;
-		private static readonly Type BigBitmaskType = typeof(BigBitmask);
-
-		public static float FullListSize(IComponentList list)
+		public static ulong FullListSize(in ComponentListTypeless list)
 		{
-			var type                      = list.GetType();
-			var indexByEntityInfo         = type.GetField("_indexByEntity", GetFieldFlag)!;
-			var entityByIndexInfo         = type.GetField("_entityByIndex", GetFieldFlag)!;
-			var singleFrameComponentsInfo = type.GetField("_singleFrameComponents", GetFieldFlag)!;
-			var entitiesMaskInfo          = type.GetField("_entitiesMask", GetFieldFlag)!;
-			var masksInfo                 = BigBitmaskType.GetField("_masks", GetFieldFlag)!;
-			
-			var intSize       = Marshal.SizeOf<int>();
-			var componentSize = ComponentSize(list);
-			
-			float size          = componentSize*list.Capacity;
-			size += intSize*3;
-			size += intSize*((int[])indexByEntityInfo.GetValue(list)).Length;
-			size += intSize*((int[])entityByIndexInfo.GetValue(list)).Length;
-			size += intSize*((List<int>)singleFrameComponentsInfo.GetValue(list)).Capacity;
-
-			var bitmask = entitiesMaskInfo.GetValue(list);
-			size += Marshal.SizeOf<ulong>()*((ulong[])masksInfo.GetValue(bitmask)).Length;
-			return size;
+			var listSize = (ulong)UnsafeUtility.SizeOf<ComponentListTypeless>();
+			var maskSize = list.entitiesMask.BucketsSize();
+			var singleFrameSize = (ulong)list.singleFrameComponents.Capacity * sizeof(int);
+			var entityByIndexSize = (ulong)list.capacity * sizeof(int);
+			var valuesSize = (ulong)list.capacity * list.valueSize;
+			var indexByEntitySize = (ulong)list.indexByEntityCount * sizeof(int);
+			return listSize + maskSize + singleFrameSize + entityByIndexSize + valuesSize + indexByEntitySize;
 		}
-		
-		public static int ComponentSize(IComponentList list)
+		public static ulong FullListSize(in ComponentListPtr listPtr)
 		{
-			var componentType = list.GetType().GetGenericArguments()[0];
-			return Marshal.SizeOf(componentType);
+			return listPtr.IsCreated ? FullListSize(listPtr.AsList()) : 0ul;
 		}
 	}
 }

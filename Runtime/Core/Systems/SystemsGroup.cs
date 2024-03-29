@@ -8,6 +8,10 @@ using Unity.Profiling;
 using Unity.Profiling.LowLevel;
 #endif
 using UnityEngine;
+using Debug = UnityEngine.Debug;
+
+// Unity serialization and nullables arent working together
+#nullable disable
 
 namespace KVD.ECS.Core.Systems
 {
@@ -16,17 +20,15 @@ namespace KVD.ECS.Core.Systems
 	{
 		[SerializeField] private string _name;
 		[SerializeReference, SubclassSelector,]
-		private List<ISystem> _children = new();
+		private ISystem[] _children = Array.Empty<ISystem>();
 		
 #if SYSTEM_PROFILER_MARKERS
 		private ProfilerMarker _updateMarker;
 #endif
 		private bool _executing;
 
-#nullable disable
 		public World World{ get; private set; }
 		public string Name => _name;
-#nullable enable
 
 		public IReadOnlyList<ISystem> InternalSystems => _children;
 		
@@ -38,7 +40,7 @@ namespace KVD.ECS.Core.Systems
 		public SystemsGroup(string name, params ISystem[] systems)
 		{
 			_name = name;
-			_children.AddRange(systems);
+			_children = systems;
 		}
 
 		public void Prepare()
@@ -46,10 +48,26 @@ namespace KVD.ECS.Core.Systems
 #if SYSTEM_PROFILER_MARKERS
 			_updateMarker = new(ProfilerCategory.Scripts, $"Update {Name}", MarkerFlags.Script);
 #endif
-			for (var i = 0; i < _children.Count; i++)
+			var length = _children.Length;
+			for (var i = 0; i < length; i++)
 			{
 				var child = _children[i];
+
+				if (child == null)
+				{
+					Debug.LogError($"System {i} in group {Name} is null.");
+					Array.Copy(_children, i+1, _children, i, length-i-1);
+					--i;
+					--length;
+					continue;
+				}
+
 				child.Prepare();
+			}
+
+			if (length != _children.Length)
+			{
+				Array.Resize(ref _children, length);
 			}
 		}
 
@@ -57,8 +75,8 @@ namespace KVD.ECS.Core.Systems
 		{
 			World = world;
 			
-			var initTasks = new UniTask[_children.Count];
-			for (var i = 0; i < _children.Count; i++)
+			var initTasks = new UniTask[_children.Length];
+			for (var i = 0; i < _children.Length; i++)
 			{
 				initTasks[i] = _children[i].Init(World);
 			}
@@ -69,8 +87,8 @@ namespace KVD.ECS.Core.Systems
 		{
 			World = world;
 			
-			var restoreTasks = new UniTask[_children.Count];
-			for (var i = 0; i < _children.Count; i++)
+			var restoreTasks = new UniTask[_children.Length];
+			for (var i = 0; i < _children.Length; i++)
 			{
 				restoreTasks[i] = _children[i].Restore(World);
 			}
@@ -83,7 +101,7 @@ namespace KVD.ECS.Core.Systems
 			_updateMarker.Begin();
 #endif
 			_executing = true;
-			for (var i = 0; i < _children.Count; i++)
+			for (var i = 0; i < _children.Length; i++)
 			{
 				var child = _children[i];
 				child.DoUpdate();
@@ -96,19 +114,20 @@ namespace KVD.ECS.Core.Systems
 		
 		public UniTask Destroy()
 		{
-			var destroyTasks = new UniTask[_children.Count];
-			for (var i = 0; i < _children.Count; i++)
+			var destroyTasks = new UniTask[_children.Length];
+			for (var i = 0; i < _children.Length; i++)
 			{
 				destroyTasks[i] = _children[i].Destroy();
 			}
-			_children.Clear();
+			_children = Array.Empty<ISystem>();
 			return UniTask.WhenAll(destroyTasks);
 		}
 
 		public UniTask Add(ISystem system)
 		{
 			CheckIfCanAdd();
-			_children.Add(system);
+			Array.Resize(ref _children, _children.Length+1);
+			_children[^1] = system;
 			return system.Init(World);
 		}
 		

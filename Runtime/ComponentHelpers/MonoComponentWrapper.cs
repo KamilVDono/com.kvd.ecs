@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using KVD.ECS.Core.Components;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -13,18 +12,25 @@ namespace KVD.ECS.ComponentHelpers
 	{
 		private static readonly bool CallDestroy = typeof(T) != typeof(Transform);
 		
-		public readonly T value;
+		public readonly int instanceId;
 
-		public TK As<TK>() where TK : T => (TK)value;
+		public TK As<TK>() where TK : T => (TK)Value;
+
+		public T Value => (T)Resources.InstanceIDToObject(instanceId);
 		
 		public MonoComponentWrapper(T value)
 		{
-			this.value = value;
+			this.instanceId = value.GetHashCode();
+		}
+
+		public MonoComponentWrapper(int instanceId)
+		{
+			this.instanceId = instanceId;
 		}
 
 		public bool Equals(MonoComponentWrapper<T> other)
 		{
-			return EqualityComparer<T>.Default.Equals(value, other.value);
+			return instanceId == other.instanceId;
 		}
 		public override bool Equals(object? obj)
 		{
@@ -32,7 +38,7 @@ namespace KVD.ECS.ComponentHelpers
 		}
 		public override int GetHashCode()
 		{
-			return value.GetHashCode();
+			return instanceId;
 		}
 		public static bool operator ==(MonoComponentWrapper<T> left, MonoComponentWrapper<T> right)
 		{
@@ -45,6 +51,7 @@ namespace KVD.ECS.ComponentHelpers
 		
 		public void Dispose()
 		{
+			var value = Value;
 			if (value && CallDestroy)
 			{
 				Object.Destroy(value);

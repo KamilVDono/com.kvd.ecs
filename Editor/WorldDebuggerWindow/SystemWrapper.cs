@@ -14,22 +14,20 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 {
 	public class SystemWrapper : IDisposable
 	{
-		private static readonly FieldInfo ComponentsViewsField = typeof(SystemBase).GetField("_componentsViews", BindingFlags.Instance | BindingFlags.GetField | BindingFlags.NonPublic)!;
 #if SYSTEM_PROFILER_MARKERS
-		private static readonly FieldInfo UpdateMarkerFieldSystemBase = typeof(SystemBase).GetField("_updateMarker", BindingFlags.Instance | BindingFlags.GetField | BindingFlags.NonPublic)!;
-		private static readonly FieldInfo UpdateMarkerFieldSystemGroup = typeof(SystemsGroup).GetField("_updateMarker", BindingFlags.Instance | BindingFlags.GetField | BindingFlags.NonPublic)!;
+		static readonly FieldInfo UpdateMarkerFieldSystemBase = typeof(SystemBase).GetField("_updateMarker", BindingFlags.Instance | BindingFlags.GetField | BindingFlags.NonPublic)!;
+		static readonly FieldInfo UpdateMarkerFieldSystemGroup = typeof(SystemsGroup).GetField("_updateMarker", BindingFlags.Instance | BindingFlags.GetField | BindingFlags.NonPublic)!;
 #endif
 		public bool expanded = true;
 
 		public string DisplayName{ get; }
-		public IReadOnlyCollection<IComponentsView>? ComponentsViews{ get; }
 #if SYSTEM_PROFILER_MARKERS
 		public ProfilerMarker UpdateMarker{ get; }
 		public ProfilerRecorder Recorder{ get; }
 #endif
 		public int Depth{ get; }
 		
-		private ISystem BackingSystem{ get; }
+		ISystem BackingSystem{ get; }
 
 		public SystemWrapper(ISystem backingSystem, int depth)
 		{
@@ -39,7 +37,6 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			if (BackingSystem is SystemBase)
 			{
 				DisplayName     = BackingSystem.GetType().Name;
-				ComponentsViews = (IReadOnlyCollection<IComponentsView>)ComponentsViewsField.GetValue(BackingSystem);
 #if SYSTEM_PROFILER_MARKERS
 				UpdateMarker    = (ProfilerMarker)UpdateMarkerFieldSystemBase.GetValue(BackingSystem);
 				Recorder        = ProfilerRecorder.StartNew(UpdateMarker, 50);

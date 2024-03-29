@@ -9,9 +9,8 @@ namespace KVD.ECS.Core.Systems
 	public abstract class SystemBase : ISystem
 	{
 #if SYSTEM_PROFILER_MARKERS
-		private ProfilerMarker _updateMarker;
+		ProfilerMarker _updateMarker;
 #endif
-		private readonly List<IComponentsView> _componentsViews = new(1);
 
 #nullable disable
 		public World World{ get; private set; }
@@ -57,11 +56,6 @@ namespace KVD.ECS.Core.Systems
 
 		public async UniTask Destroy()
 		{
-			for (var i = 0; i < _componentsViews.Count; i++)
-			{
-				var componentsView = _componentsViews[i];
-				componentsView.Dispose();
-			}
 			await TearDown();
 		}
 		
@@ -82,14 +76,9 @@ namespace KVD.ECS.Core.Systems
 			return UniTask.CompletedTask;
 		}
 
-		private void CoreSetup(World world)
+		void CoreSetup(World world)
 		{
 			World = world;
-		}
-
-		protected void RegisterComponentsView(IComponentsView view)
-		{
-			_componentsViews.Add(view);
 		}
 	}
 	

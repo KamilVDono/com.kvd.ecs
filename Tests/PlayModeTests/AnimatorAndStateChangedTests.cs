@@ -14,10 +14,10 @@ namespace KVD.ECS.PlayModeTests.Tests.PlayModeTests
 {
 	public class AnimatorAndStateChangedTests
 	{
-		private const string SceneName = "AnimatorAndStateChangedScene";
-		private static readonly int NormalStateId = Animator.StringToHash("NormalState");
-		private static readonly int AngryStateId = Animator.StringToHash("AngryState");
-		private static readonly int TransitionToAngryId = Animator.StringToHash("TransitionToAngry");
+		const string SceneName = "AnimatorAndStateChangedScene";
+		static readonly int NormalStateId = Animator.StringToHash("NormalState");
+		static readonly int AngryStateId = Animator.StringToHash("AngryState");
+		static readonly int TransitionToAngryId = Animator.StringToHash("TransitionToAngry");
 		
 		[UnityTest]
 		public IEnumerator ChangeStateAndNotify()
@@ -63,16 +63,16 @@ namespace KVD.ECS.PlayModeTests.Tests.PlayModeTests
 
 		public class CountStateChangesSystem : IterationsSystemBase<World>
 		{
-			private ComponentsView<AnimatorStateEnter> _stateEnterView;
-			private ComponentsView<AnimatorStateExit> _stateExitView;
+			ComponentsView<AnimatorStateEnter> _stateEnterView;
+			ComponentsView<AnimatorStateExit> _stateExitView;
 
 			public List<AnimatorStateInfo> entered = new();
 			public List<AnimatorStateInfo> exited = new();
 
 			protected override void InitReferences()
 			{
-				RegisterComponentsView(_stateEnterView = new(World.defaultStorage));
-				RegisterComponentsView(_stateExitView  = new(World.defaultStorage));
+				_stateEnterView = ComponentsViewBuilder.Create<AnimatorStateEnter>(World.defaultStorage);
+				_stateExitView  = ComponentsViewBuilder.Create<AnimatorStateExit>(World.defaultStorage);
 			}
 			
 			protected override void Update()

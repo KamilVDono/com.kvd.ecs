@@ -66,7 +66,7 @@ namespace KVD.ECS.ComponentHelpers
 			AsyncOperationHandle<GameObject> request, GameObject instance, bool withInitialComponents)
 		{
 			var requestStorage = storage.List<PrefabRequestWrapper>();
-			requestStorage.Add(entity, new(request));
+			requestStorage.Add(entity, new(request.Result));
 			
 			var goStorage = storage.List<GameObjectWrapper>();
 			goStorage.Add(entity, instance);

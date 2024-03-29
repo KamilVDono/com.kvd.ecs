@@ -5,6 +5,7 @@ using KVD.ECS.Core;
 using KVD.ECS.Core.Systems;
 using KVD.ECS.GeneralTests.Components;
 using NUnit.Framework;
+using Unity.Collections;
 using UnityEngine.TestTools;
 
 #nullable disable
@@ -54,9 +55,9 @@ namespace KVD.ECS.GeneralTests
 			{
 				_positionComponents     = World.defaultStorage.List<Position>();
 				_accelerationComponents = World.defaultStorage.List<Acceleration>();
-				RegisterComponentsView(_componentsView = new(World.defaultStorage,
-					new[] { typeof(Position), typeof(Acceleration) }));
-				
+				var builder = new ComponentsViewBuilder(World.defaultStorage, Allocator.Temp);
+				_componentsView = builder.With<Position>().With<Acceleration>().Build(Allocator.Persistent, true);
+
 				return base.InitialSetup();
 			}
 		
@@ -64,7 +65,7 @@ namespace KVD.ECS.GeneralTests
 			{
 				foreach (var entity in _componentsView)
 				{
-					ref var position     = ref _positionComponents.Value(entity);
+					ref var position = ref _positionComponents.Value(entity);
 					var acceleration = _accelerationComponents.Value(entity);
 		
 					position.x += acceleration.x;

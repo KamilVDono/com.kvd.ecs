@@ -72,7 +72,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			GUILayout.EndHorizontal();
 		}
 
-		public void DrawRow(T rowObject)
+		public void DrawRow(in T rowObject)
 		{
 			GUILayout.BeginHorizontal();
 			for (var i = 0; i < _columns.Length; i++)

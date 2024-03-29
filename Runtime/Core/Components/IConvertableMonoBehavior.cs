@@ -18,9 +18,10 @@ namespace KVD.ECS.Core.Components
 		
 		void IConvertableMonoBehavior.Register(Entity entity, World world, ComponentsStorage target)
 		{
-			var convertableStorage = target.List(ComponentType);
-			var component          = Component(world, target);
-			convertableStorage.AddByObject(entity, component);
+			// TODO: do it from ground zero
+			// var convertableStorage = target.List(ComponentType);
+			// var component          = Component(world, target);
+			// convertableStorage.AddByObject(entity, component);
 		}
 	}
 	

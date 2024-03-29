@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using KVD.ECS.Core.Components;
 
-#nullable enable
 namespace KVD.ECS.Core.Entities
 {
 	public readonly struct Entity : IEquatable<Entity>, IComparable<Entity>
@@ -37,16 +36,22 @@ namespace KVD.ECS.Core.Entities
 			stringBuilder.Append(name);
 			foreach (var sparseList in storage.AllLists)
 			{
-				if (!sparseList.Has(this))
+				if (!sparseList.IsCreated)
 				{
 					continue;
 				}
-				if (sparseList.ValueAsObject(this) is not IDisplayable displayable)
+				var list = sparseList.AsList();
+				if (!list.Has(this))
 				{
 					continue;
 				}
-				stringBuilder.Append(" ;-; ");
-				displayable.ToString(stringBuilder);
+				// TODO: Do it somehow
+				// if (list.Value(this) is not IDisplayable displayable)
+				// {
+				// 	continue;
+				// }
+				// stringBuilder.Append(" ;-; ");
+				// displayable.ToString(stringBuilder);
 			}
 		}
 

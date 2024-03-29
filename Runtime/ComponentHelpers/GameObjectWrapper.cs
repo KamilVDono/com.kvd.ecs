@@ -10,19 +10,20 @@ namespace KVD.ECS.ComponentHelpers
 	[Serializable]
 	public readonly struct GameObjectWrapper : IEquatable<GameObjectWrapper>, IMonoComponent
 	{
-		public readonly GameObject value;
+		private readonly int _instanceId;
+		public readonly GameObject Value => (GameObject)Resources.InstanceIDToObject(_instanceId);
 		
 		public GameObjectWrapper(GameObject value)
 		{
-			this.value = value;
+			_instanceId = value.GetHashCode();
 		}
 		
 		public static implicit operator GameObjectWrapper(GameObject go) => new(go);
-		public static implicit operator GameObject(GameObjectWrapper wrapper) => wrapper.value;
+		public static implicit operator GameObject(GameObjectWrapper wrapper) => wrapper.Value;
 
 		public bool Equals(GameObjectWrapper other)
 		{
-			return value.Equals(other.value);
+			return _instanceId == other._instanceId;
 		}
 		public override bool Equals(object? obj)
 		{
@@ -30,7 +31,7 @@ namespace KVD.ECS.ComponentHelpers
 		}
 		public override int GetHashCode()
 		{
-			return value.GetHashCode();
+			return _instanceId;
 		}
 		public static bool operator ==(GameObjectWrapper left, GameObjectWrapper right)
 		{
@@ -43,6 +44,7 @@ namespace KVD.ECS.ComponentHelpers
 		
 		public void Dispose()
 		{
+			var value = Value;
 			if (value)
 			{
 				Object.Destroy(value);

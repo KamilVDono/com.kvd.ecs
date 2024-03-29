@@ -1,9 +1,10 @@
 ﻿using System;
 using KVD.ECS.Core;
 using KVD.ECS.Core.Entities;
-using KVD.ECS.Core.Helpers;
 using KVD.ECS.GeneralTests.Components;
+using KVD.Utils.DataStructures;
 using NUnit.Framework;
+using Unity.Collections;
 
 #pragma warning disable CS0618
 
@@ -26,7 +27,7 @@ namespace KVD.ECS.GeneralTests
 		[TearDown]
 		public void TearDown()
 		{
-			_components.Destroy();
+			_components.Dispose();
 		}
 		
 		#region Add
@@ -77,14 +78,14 @@ namespace KVD.ECS.GeneralTests
 		}
 		
 		[Test]
-		public void AddByObject()
+		public unsafe void AddTypeless()
 		{
 			// Arrange
-			object pos = new Position();
+			var pos = new Position();
 			
 			// Act
-			_components.AddByObject(new(0), pos);
-			_components.AddByObject(new(1), pos);
+			_components.typeless.Add(new(0), &pos);
+			_components.typeless.Add(new(1), &pos);
 		
 			// Assert
 			Assert.IsTrue(_components.Has(new(0)));
@@ -93,15 +94,15 @@ namespace KVD.ECS.GeneralTests
 		}
 		
 		[Test]
-		public void AddOrReplaceAsObject()
+		public unsafe void AddOrReplaceTypeless()
 		{
 			// Arrange
-			object pos = new Position();
+			var pos = new Position();
 			
 			// Act
-			_components.AddOrReplaceAsObject(new(0), pos);
-			_components.AddOrReplaceAsObject(new(1), pos);
-			_components.AddOrReplaceAsObject(new(0), pos);
+			_components.typeless.AddOrReplace(new(0), &pos);
+			_components.typeless.AddOrReplace(new(1), &pos);
+			_components.typeless.AddOrReplace(new(0), &pos);
 		
 			// Assert
 			Assert.IsTrue(_components.Has(new(0)));
@@ -113,16 +114,18 @@ namespace KVD.ECS.GeneralTests
 		public void BulkAdd_DefaultValue()
 		{
 			// Arrange
-			using var entities = new RentedArray<Entity>(8);
-			entities[0] = 0;
-			entities[1] = 1;
-			entities[2] = 3;
-			entities[3] = 4;
-			entities[4] = 5;
-			entities[5] = 7;
-			entities[6] = 8;
-			entities[7] = 9;
-			
+			var entities = new UnsafeArray<Entity>(8u, Allocator.Temp)
+			{
+				[0] = 0,
+				[1] = 1,
+				[2] = 3,
+				[3] = 4,
+				[4] = 5,
+				[5] = 7,
+				[6] = 8,
+				[7] = 9,
+			};
+
 			// Act
 			_components.BulkAdd(entities);
 			
@@ -138,13 +141,15 @@ namespace KVD.ECS.GeneralTests
 			Assert.IsTrue(_components.Has(8));
 			Assert.IsTrue(_components.Has(9));
 			Assert.IsFalse(_components.Has(10));
+
+			entities.Dispose();
 		}
 		
 		[Test]
 		public void BulkAdd_CustomValue()
 		{
 			// Arrange
-			using var entities = new RentedArray<Entity>(8);
+			var entities = new UnsafeArray<Entity>(8u, Allocator.Temp);
 			entities[0] = 0;
 			entities[1] = 1;
 			entities[2] = 3;
@@ -175,6 +180,8 @@ namespace KVD.ECS.GeneralTests
 			Assert.AreEqual(_components.Value(0), pos);
 			Assert.AreEqual(_components.Value(5), pos);
 			Assert.AreEqual(_components.Value(9), pos);
+
+			entities.Dispose();
 		}
 		#endregion Add
 		
@@ -210,31 +217,31 @@ namespace KVD.ECS.GeneralTests
 			// Act & Assert
 			_components.Add(0, new());
 			Assert.AreEqual(1, _components.Length);
-			Assert.AreEqual(1, _components.EntitiesMask.Count());
+			Assert.AreEqual(1, _components.EntitiesMask.CountOnes());
 		
 			_components.Add(2, new());
 			Assert.AreEqual(2, _components.Length);
-			Assert.AreEqual(2, _components.EntitiesMask.Count());
+			Assert.AreEqual(2, _components.EntitiesMask.CountOnes());
 		
 			_components.Add(10, new());
 			Assert.AreEqual(3, _components.Length);
-			Assert.AreEqual(3, _components.EntitiesMask.Count());
+			Assert.AreEqual(3, _components.EntitiesMask.CountOnes());
 			
 			_components.Add(5, new());
 			Assert.AreEqual(4, _components.Length);
-			Assert.AreEqual(4, _components.EntitiesMask.Count());
+			Assert.AreEqual(4, _components.EntitiesMask.CountOnes());
 			
 			_components.Add(15, new());
 			Assert.AreEqual(5, _components.Length);
-			Assert.AreEqual(5, _components.EntitiesMask.Count());
+			Assert.AreEqual(5, _components.EntitiesMask.CountOnes());
 		
 			_components.Remove(2);
 			Assert.AreEqual(4, _components.Length);
-			Assert.AreEqual(4, _components.EntitiesMask.Count());
+			Assert.AreEqual(4, _components.EntitiesMask.CountOnes());
 			
 			_components.Remove(new Entity(10));
 			Assert.AreEqual(3, _components.Length);
-			Assert.AreEqual(3, _components.EntitiesMask.Count());
+			Assert.AreEqual(3, _components.EntitiesMask.CountOnes());
 			
 			Assert.True(_components.EntitiesMask.Has(0));
 			Assert.True(_components.EntitiesMask.Has(5));
@@ -264,18 +271,6 @@ namespace KVD.ECS.GeneralTests
 			
 			// Assert
 			Assert.AreEqual(pos, posFromList);
-		}
-		
-		[Test]
-		public void Value_NotPresent()
-		{
-			// Arrange
-			var pos = new Position { x = 5, y = 8, z = 9, };
-			_components.Add(1, pos);
-			_components.Add(10, pos);
-			
-			// Act & Assert
-			Assert.Catch<IndexOutOfRangeException>(() => _components.Value(8));
 		}
 		
 		[Test]
@@ -357,31 +352,6 @@ namespace KVD.ECS.GeneralTests
 			// Assert
 			Assert.IsFalse(present);
 		}
-		
-		[Test]
-		public void ValueAsObject_Present()
-		{
-			// Arrange
-			var pos = new Position { x = 5, y = 8, z = 9, };
-			_components.Add(5, pos);
-			
-			// Act
-			var posFromList = _components.ValueAsObject(5);
-			
-			// Assert
-			Assert.AreEqual(pos, posFromList);
-		}
-		
-		[Test]
-		public void ValueAsObject_NotPresent()
-		{
-			// Arrange
-			var pos = new Position { x = 5, y = 8, z = 9, };
-			_components.Add(1, pos);
-			
-			// Act & Assert
-			Assert.Catch<IndexOutOfRangeException>(() => _components.ValueAsObject(8));
-		}
 		#endregion Value
 		
 		#region Single frame
@@ -417,11 +387,11 @@ namespace KVD.ECS.GeneralTests
 			// Act&Assert
 			Assert.AreEqual(_components.Length, 0);
 			Assert.AreEqual(_components.Capacity, 64);
-			Assert.AreEqual(_components.IndexByEntity.Length, 64);
+			Assert.AreEqual(_components.IndexByEntityCount, 64);
 			_components.EnsureCapacity(128, 250);
 			Assert.AreEqual(_components.Length, 0);
 			Assert.GreaterOrEqual(_components.Capacity, 128);
-			Assert.GreaterOrEqual(_components.IndexByEntity.Length, 250);
+			Assert.GreaterOrEqual(_components.IndexByEntityCount, 250);
 		}
 		#endregion EnsureCapacity
 		
@@ -440,7 +410,7 @@ namespace KVD.ECS.GeneralTests
 			var entities = _components.EntitiesMask;
 		
 			// Assert
-			Assert.AreEqual(3, entities.Count());
+			Assert.AreEqual(3, entities.CountOnes());
 			Assert.True(_components.EntitiesMask.Has(0));
 			Assert.True(_components.EntitiesMask.Has(2));
 			Assert.True(_components.EntitiesMask.Has(5));
@@ -454,17 +424,18 @@ namespace KVD.ECS.GeneralTests
 		
 		#region Entities version
 		[Test]
-		public void Add_EntitiesVersionChanged()
+		public unsafe void Add_EntitiesVersionChanged()
 		{
 			// Act
 			var startVersion = _components.EntitiesVersion;
 			_components.Add(1, new());
 			var add1Version = _components.EntitiesVersion;
-			_components.AddByObject(2, new Position());
+			var position = new Position();
+			_components.typeless.Add(2, &position);
 			var add2Version = _components.EntitiesVersion;
-			_components.AddOrReplaceAsObject(3, new Position());
+			_components.typeless.AddOrReplace(3, &position);
 			var add3Version = _components.EntitiesVersion;
-			_components.AddOrReplaceAsObject(3, new Position());
+			_components.typeless.AddOrReplace(3, &position);
 			var add4Version = _components.EntitiesVersion;
 			_components.AddOrReplace(4, new());
 			var add5Version = _components.EntitiesVersion;
@@ -474,7 +445,7 @@ namespace KVD.ECS.GeneralTests
 			var add7Version = _components.EntitiesVersion;
 			_components.Remove(4);
 			var add8Version = _components.EntitiesVersion;
-			
+
 			// Assert
 			Assert.Less(startVersion, add1Version);
 			Assert.Less(add1Version, add2Version);

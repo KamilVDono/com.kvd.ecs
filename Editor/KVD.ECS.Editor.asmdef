@@ -4,13 +4,15 @@
     "references": [
         "GUID:6c3923f6700910949986cbf4e882c8f9",
         "GUID:59ecb471de80f35478a4ac410fa00fcf",
-        "GUID:bd9f18b77c2d97b4fb4be838632b6c10"
+        "GUID:bd9f18b77c2d97b4fb4be838632b6c10",
+        "GUID:e0cd26848372d4e5c891c569017e11f1",
+        "GUID:d8b63aba1907145bea998dd612889d6b"
     ],
     "includePlatforms": [
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
