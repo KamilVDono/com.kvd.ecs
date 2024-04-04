@@ -40,7 +40,7 @@ namespace KVD.ECS.Generics
 					
 					iter.Remove0();
 			
-					World.Storage(storageKey).List<WaitSignal>().Remove(signalEntity);
+					World.Storage(storageKey).ListPtr<WaitSignal>().AsList().Remove(signalEntity);
 				}
 			}
 		}

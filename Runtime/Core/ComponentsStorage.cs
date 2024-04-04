@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using KVD.ECS.Core.Components;
@@ -13,6 +11,8 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 
+#nullable enable
+
 namespace KVD.ECS.Core
 {
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
@@ -21,10 +21,10 @@ namespace KVD.ECS.Core
 	{
 		#region DEBUG
 		#if ENTITIES_NAMES
-		readonly Dictionary<Entity, string> _debugNames = new(Entity.IndexComparer);
+		readonly Dictionary<Entity, FixedString128Bytes> _debugNames = new(Entity.IndexComparer);
 		#endif
 		#endregion Debug
-		UnsafeArray<ComponentListPtr> _lists = new(128, Allocator.Persistent);
+		UnsafeArray<ComponentListPtrSoft> _lists = new(128, Allocator.Persistent);
 
 		readonly SingletonComponentsStorage _singletons = new(64);
 		readonly List<int> _singleFrameSingletons = new(4);
@@ -33,7 +33,7 @@ namespace KVD.ECS.Core
 		IEntityAllocator _entityAllocator;
 	
 		public Entity CurrentEntity{ get; private set; } = Entity.Null;
-		public UnsafeArray<ComponentListPtr> AllLists => _lists;
+		public UnsafeArray<ComponentListPtrSoft> AllLists => _lists;
 	
 		public ComponentsStorage(IEntityAllocator? entityAllocator = null)
 		{
@@ -42,11 +42,11 @@ namespace KVD.ECS.Core
 
 		public void Dispose()
 		{
-			foreach (var listPtr in _lists)
+			foreach (ref var listPtr in _lists)
 			{
 				if (listPtr.IsCreated)
 				{
-					listPtr.Dispose();
+					listPtr.ToListPtr().AsList().Dispose();
 				}
 			}
 			_lists.Dispose();
@@ -66,72 +66,38 @@ namespace KVD.ECS.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComponentListPtr<T> TryGetListPtr<T>(out bool success) where T : unmanaged, IComponent
 		{
-			var typeHandle = ComponentTypeHandle.From<T>();
-			if (_lists.Length > typeHandle.index)
+			var soft = ListPtrSoft<T>();
+			if (!soft.IsCreated)
 			{
-				var list = _lists[typeHandle.index];
-				var componentList = list.As<T>();
-				success = list.IsCreated;
-				return componentList;
-			}
-			success = false;
-			return default;
-		}
+				success = false;
+				return default;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref ComponentList<T> TryGetList<T>(out bool success) where T : unmanaged, IComponent
-		{
-			return ref TryGetListPtr<T>(out success).AsList();
+			}
+			success = true;
+			return soft.ToListPtr();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComponentListPtr<T> ListPtr<T>(int initialSize = ComponentListConstants.InitialCapacity) where T : unmanaged, IComponent
 		{
-			var key = ComponentTypeHandle.From<T>();
-			var outOfIndex = key.index >= _lists.Length;
-			if (outOfIndex || _lists[key.index].ptr == null)
-			{
-				if (outOfIndex)
-				{
-					UnsafeArrayExt.Resize(ref _lists, key.index + 8u);
-				}
-				var listMemory = UnsafeUtility.Malloc(UnsafeUtility.SizeOf<ComponentList<T>>(),
-					UnsafeUtility.AlignOf<ComponentList<T>>(), Allocator.Persistent);
-				UnsafeUtility.MemClear(listMemory, UnsafeUtility.SizeOf<ComponentList<T>>());
-				_lists[key.index] = new(listMemory);
-			}
-			var list = _lists[key.index];
-			var componentList = list.As<T>();
-			componentList.Create(initialSize);
-			return componentList;
+			return ListPtr(ComponentTypeHandle.From<T>(), initialSize).As<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref ComponentList<T> List<T>(int initialSize = ComponentListConstants.InitialCapacity) where T : unmanaged, IComponent
+		public ComponentListPtr ListPtr(ComponentTypeHandle type, int initialSize = ComponentListConstants.InitialCapacity)
 		{
-			return ref ListPtr<T>(initialSize).AsList();
+			var listSoft = ListPtrSoft(type);
+			return listSoft.ToListPtr(initialSize);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComponentListPtr<T> ListPtrSoft<T>() where T : unmanaged, IComponent
+		public ComponentListPtrSoft<T> ListPtrSoft<T>() where T : unmanaged, IComponent
 		{
-			var key = ComponentTypeHandle.From<T>();
-			var outOfIndex = key.index >= _lists.Length;
-			if (outOfIndex || _lists[key.index].ptr == null)
-			{
-				if (outOfIndex)
-				{
-					UnsafeArrayExt.Resize(ref _lists, key.index + 8u);
-				}
-				var listMemory = UnsafeUtility.Malloc(UnsafeUtility.SizeOf<ComponentList<T>>(),
-					UnsafeUtility.AlignOf<ComponentList<T>>(), Allocator.Persistent);
-				UnsafeUtility.MemClear(listMemory, UnsafeUtility.SizeOf<ComponentList<T>>());
-				_lists[key.index] = new(listMemory);
-			}
-			return _lists[key.index].As<T>();
+			return ListPtrSoft(ComponentTypeHandle.From<T>()).As<T>();
 		}
 
-		public ComponentListPtr ListPtrSoft(ComponentTypeHandle type)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ComponentListPtrSoft ListPtrSoft(ComponentTypeHandle type)
 		{
 			var outOfIndex = type.index >= _lists.Length;
 			if (outOfIndex || _lists[type.index].ptr == null)
@@ -140,10 +106,10 @@ namespace KVD.ECS.Core
 				{
 					UnsafeArrayExt.Resize(ref _lists, type.index + 8u);
 				}
-				var listMemory = UnsafeUtility.Malloc(UnsafeUtility.SizeOf<ComponentListTypeless>(),
-					UnsafeUtility.AlignOf<ComponentListTypeless>(), Allocator.Persistent);
-				UnsafeUtility.MemClear(listMemory, UnsafeUtility.SizeOf<ComponentListTypeless>());
-				_lists[type.index] = new(listMemory);
+				var listMemory = UnsafeUtility.Malloc(UnsafeUtility.SizeOf<ComponentList>(),
+					UnsafeUtility.AlignOf<ComponentList>(), Allocator.Persistent);
+				UnsafeUtility.MemClear(listMemory, UnsafeUtility.SizeOf<ComponentList>());
+				_lists[type.index] = new(listMemory, type.TypeInfo);
 			}
 			return _lists[type.index];
 		}
@@ -169,11 +135,11 @@ namespace KVD.ECS.Core
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Entity NextEntity(string name)
+		public Entity NextEntity(FixedString128Bytes name)
 		{
 			CurrentEntity = _entityAllocator.Allocate();
 			#if ENTITIES_NAMES
-			name                       = string.IsNullOrWhiteSpace(name) ? CurrentEntity.index.ToString() : name;
+			name                       = name.IsEmpty ? new FixedString128Bytes(CurrentEntity.index.ToString()) : name;
 			_debugNames[CurrentEntity] = name;
 			#endif
 			return CurrentEntity;
@@ -192,7 +158,7 @@ namespace KVD.ECS.Core
 			{
 				if (listPtr.IsCreated)
 				{
-					listPtr.AsList().ClearSingleFrameEntities();
+					listPtr.ToListPtr().AsList().ClearSingleFrameEntities();
 				}
 			}
 			for (var i = 0; i < _singleFrameSingletons.Count; i++)
@@ -238,7 +204,7 @@ namespace KVD.ECS.Core
 		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Singleton<T>(T singleton, bool singleFrame = false) where T : struct, IComponent
+		public void Singleton<T>(T singleton, bool singleFrame = false) where T : unmanaged, IComponent
 		{
 			_singletons.Add(singleton);
 			if (singleFrame)
@@ -291,27 +257,17 @@ namespace KVD.ECS.Core
 		}
 
 		#region DEBUG
-		[Conditional("UNITY_EDITOR")]
-		void CheckComponentType(Type type)
-		{
-			var componentInterface = typeof(IComponent);
-			if (!type.IsValueType)
-			{
-				throw new ConstraintException($"Type {type} is not value type, that violate the contract");
-			}
-	
-			if (!componentInterface.IsAssignableFrom(type))
-			{
-				throw new ConstraintException($"Type {type} is not implement {nameof(IComponent)} interface");
-			}
-		}
-	
 		[Conditional("ENTITIES_NAMES")]
 		// ReSharper disable once RedundantAssignment
-		public void Name(Entity entity, ref string name)
+		public void Name(Entity entity, ref FixedString128Bytes name)
 		{
 			#if ENTITIES_NAMES
-			var _ = _debugNames.TryGetValue(entity, out name) || (name = entity.index.ToString()) != null;
+			if (_debugNames.TryGetValue(entity, out name))
+			{
+				return;
+			}
+			var indexName = entity.index.ToString();
+			name = new FixedString128Bytes(indexName);
 			#endif
 		}
 		

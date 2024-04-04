@@ -10,8 +10,8 @@ namespace KVD.ECS.Core
 		internal readonly ComponentsStorage _storage;
 		internal bool _onlyWhenStructuralChanges;
 
-		internal UnsafeList<ComponentListPtr> _hasComponents;
-		internal UnsafeList<ComponentListPtr> _excludeComponents;
+		internal UnsafeList<ComponentListPtrSoft> _hasComponents;
+		internal UnsafeList<ComponentListPtrSoft> _excludeComponents;
 
 		#region Create
 		public static ComponentsView<T0> Create<T0>(ComponentsStorage storage,
@@ -60,8 +60,8 @@ namespace KVD.ECS.Core
 
 		public ComponentsView Build(Allocator allocator = Allocator.Persistent, bool disposeWithStorage = true)
 		{
-			var hasComponents     = UnsafeArray<ComponentListPtr>.Move(ref _hasComponents, allocator);
-			var excludeComponents = UnsafeArray<ComponentListPtr>.Move(ref _excludeComponents, allocator);
+			var hasComponents     = UnsafeArray<ComponentListPtrSoft>.Move(ref _hasComponents, allocator);
+			var excludeComponents = UnsafeArray<ComponentListPtrSoft>.Move(ref _excludeComponents, allocator);
 			if (disposeWithStorage)
 			{
 				_storage.AddAllocation(hasComponents.AsAllocation());
@@ -78,8 +78,8 @@ namespace KVD.ECS.Core
 			{
 				_hasComponents.Add(list0.TypeLess());
 			}
-			var hasComponents     = UnsafeArray<ComponentListPtr>.Move(ref _hasComponents, allocator);
-			var excludeComponents = UnsafeArray<ComponentListPtr>.Move(ref _excludeComponents, allocator);
+			var hasComponents     = UnsafeArray<ComponentListPtrSoft>.Move(ref _hasComponents, allocator);
+			var excludeComponents = UnsafeArray<ComponentListPtrSoft>.Move(ref _excludeComponents, allocator);
 			if (disposeWithStorage)
 			{
 				_storage.AddAllocation(hasComponents.AsAllocation());
@@ -102,8 +102,8 @@ namespace KVD.ECS.Core
 			{
 				_hasComponents.Add(list1.TypeLess());
 			}
-			var hasComponents     = UnsafeArray<ComponentListPtr>.Move(ref _hasComponents, allocator);
-			var excludeComponents = UnsafeArray<ComponentListPtr>.Move(ref _excludeComponents, allocator);
+			var hasComponents     = UnsafeArray<ComponentListPtrSoft>.Move(ref _hasComponents, allocator);
+			var excludeComponents = UnsafeArray<ComponentListPtrSoft>.Move(ref _excludeComponents, allocator);
 			if (disposeWithStorage)
 			{
 				_storage.AddAllocation(hasComponents.AsAllocation());
@@ -132,8 +132,8 @@ namespace KVD.ECS.Core
 			{
 				_hasComponents.Add(list2.TypeLess());
 			}
-			var hasComponents     = UnsafeArray<ComponentListPtr>.Move(ref _hasComponents, allocator);
-			var excludeComponents = UnsafeArray<ComponentListPtr>.Move(ref _excludeComponents, allocator);
+			var hasComponents     = UnsafeArray<ComponentListPtrSoft>.Move(ref _hasComponents, allocator);
+			var excludeComponents = UnsafeArray<ComponentListPtrSoft>.Move(ref _excludeComponents, allocator);
 			if (disposeWithStorage)
 			{
 				_storage.AddAllocation(hasComponents.AsAllocation());
@@ -168,8 +168,8 @@ namespace KVD.ECS.Core
 			{
 				_hasComponents.Add(list3.TypeLess());
 			}
-			var hasComponents     = UnsafeArray<ComponentListPtr>.Move(ref _hasComponents, allocator);
-			var excludeComponents = UnsafeArray<ComponentListPtr>.Move(ref _excludeComponents, allocator);
+			var hasComponents     = UnsafeArray<ComponentListPtrSoft>.Move(ref _hasComponents, allocator);
+			var excludeComponents = UnsafeArray<ComponentListPtrSoft>.Move(ref _excludeComponents, allocator);
 			if (disposeWithStorage)
 			{
 				_storage.AddAllocation(hasComponents.AsAllocation());

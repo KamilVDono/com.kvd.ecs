@@ -12,15 +12,15 @@ namespace KVD.ECS.GeneralTests
 {
 	public class ComponentsViewTests : EcsTestsBase
 	{
-		private ComponentList<Position> _positions;
-		private ComponentList<Radius> _radii;
-		private ComponentList<Acceleration> _accelerations;
+		ComponentListPtr<Position> _positions;
+		ComponentListPtr<Radius> _radii;
+		ComponentListPtr<Acceleration> _accelerations;
 		
 		protected override Task OnSetup()
 		{
-			_positions     = world.defaultStorage.List<Position>();
-			_radii         = world.defaultStorage.List<Radius>();
-			_accelerations = world.defaultStorage.List<Acceleration>();
+			_positions     = world.defaultStorage.ListPtr<Position>();
+			_radii         = world.defaultStorage.ListPtr<Radius>();
+			_accelerations = world.defaultStorage.ListPtr<Acceleration>();
 			return base.OnSetup();
 		}
 		
@@ -44,25 +44,25 @@ namespace KVD.ECS.GeneralTests
 			// Arrange
 			// 0
 			var nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 1
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 2
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
 			// 3
 			nextEntity = world.defaultStorage.NextEntity();
-			_accelerations.Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 4
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
 			// 5
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 
 			var builder = new ComponentsViewBuilder(world.defaultStorage);
 			var view = builder.With<Radius>().Build();
@@ -80,24 +80,24 @@ namespace KVD.ECS.GeneralTests
 			// Arrange
 			// 0
 			var nextEntity = world.defaultStorage.NextEntity();
-			_accelerations.Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 1
 			nextEntity = world.defaultStorage.NextEntity();
-			_accelerations.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 2
 			nextEntity = world.defaultStorage.NextEntity();
-			_radii.Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 3
 			nextEntity = world.defaultStorage.NextEntity();
-			_accelerations.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 4
 			nextEntity = world.defaultStorage.NextEntity();
-			_radii.Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 5
 			nextEntity = world.defaultStorage.NextEntity();
-			_accelerations.Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 
 			var builder = new ComponentsViewBuilder(world.defaultStorage);
 			var view = builder.With<Position>().With<Acceleration>().Build();
@@ -115,24 +115,24 @@ namespace KVD.ECS.GeneralTests
 			// Arrange
 			// 0
 			var nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 1
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 2
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
 			// 3
 			nextEntity = world.defaultStorage.NextEntity();
-			_accelerations.Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 4
 			world.defaultStorage.NextEntity();
 			// 5
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 		
 			var builder = new ComponentsViewBuilder(world.defaultStorage);
 			var view    = builder.With<Position>().With<Acceleration>().Build();
@@ -151,28 +151,28 @@ namespace KVD.ECS.GeneralTests
 			// Arrange
 			// 0
 			var nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 1
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 2
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 3
 			nextEntity = world.defaultStorage.NextEntity();
-			_accelerations.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 4
 			nextEntity = world.defaultStorage.NextEntity();
-			_radii.Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 5
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 
 			var builder = new ComponentsViewBuilder(world.defaultStorage);
 			var view    = builder.With<Position>().With<Acceleration>().With<Radius>().Build();
@@ -191,27 +191,27 @@ namespace KVD.ECS.GeneralTests
 			// Arrange
 			// 0
 			var nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 1
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 2
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
 			// 3
 			nextEntity = world.defaultStorage.NextEntity();
-			_accelerations.Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 4
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 5
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 		
 			var builder = new ComponentsViewBuilder(world.defaultStorage);
 			var view    = builder.With<Position>().With<Acceleration>().Exclude<Radius>().Build();
@@ -231,34 +231,34 @@ namespace KVD.ECS.GeneralTests
 			// Arrange
 			// 0
 			var nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 1
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 2
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 3
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 4
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 			// 5
 			nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
-			_radii.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
 		
 			var builder = new ComponentsViewBuilder(world.defaultStorage);
 			var view    = builder.With<Position>().With<Acceleration>().Exclude<Radius>().Build();
@@ -328,8 +328,8 @@ namespace KVD.ECS.GeneralTests
 		{
 			// Arrange
 			var nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 		
 			var acceleration = new Acceleration { x = 5, y = -5, z = 10, };
 
@@ -344,7 +344,7 @@ namespace KVD.ECS.GeneralTests
 			}
 			
 			// Assert
-			Assert.AreEqual(acceleration, _accelerations.Value(nextEntity));
+			Assert.AreEqual(acceleration, _accelerations.AsList().Value(nextEntity));
 		}
 		
 		[Test]
@@ -353,15 +353,15 @@ namespace KVD.ECS.GeneralTests
 			// Arrange
 			// 0
 			var nextEntity = world.defaultStorage.NextEntity();
-			_positions.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_positions.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 1
 			nextEntity = world.defaultStorage.NextEntity();
-			_accelerations.Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 			// 2
 			nextEntity = world.defaultStorage.NextEntity();
-			_radii.Add(nextEntity, new());
-			_accelerations.Add(nextEntity, new());
+			_radii.AsList().Add(nextEntity, new());
+			_accelerations.AsList().Add(nextEntity, new());
 
 			var view = new ComponentsViewBuilder(world.defaultStorage).Build<Acceleration>();
 		
@@ -379,8 +379,8 @@ namespace KVD.ECS.GeneralTests
 			// Assert
 			Assert.AreEqual(0, entities.Count);
 		}
-		
-		private static List<Entity> CollectEntities(ref ComponentsView view)
+
+		static List<Entity> CollectEntities(ref ComponentsView view)
 		{
 			var entities = new List<Entity>();
 			foreach (var entity in view)

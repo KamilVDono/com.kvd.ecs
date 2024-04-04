@@ -22,7 +22,7 @@ namespace KVD.ECS.Core
 
 		private void Start()
 		{
-			var loadRequest = FindObjectOfType<LoadRequest>();
+			var loadRequest = FindAnyObjectByType<LoadRequest>();
 			if (loadRequest)
 			{
 				var reader = loadRequest.Consume();

@@ -1,5 +1,8 @@
 ﻿using System;
 using KVD.ECS.Core.Components;
+using KVD.ECS.Core.ComponentsLists;
+
+#nullable enable
 
 namespace KVD.ECS.Core.Helpers
 {
@@ -7,7 +10,7 @@ namespace KVD.ECS.Core.Helpers
 	{
 		public readonly ushort index;
 
-		public ComponentTypeHandle(ushort value)
+		ComponentTypeHandle(ushort value)
 		{
 			index = value;
 		}
@@ -18,6 +21,7 @@ namespace KVD.ECS.Core.Helpers
 		}
 
 		public Type Type => s_types[index];
+		public ref readonly ComponentsListTypeInfo TypeInfo => ref s_typeInfos[index];
 
 		public bool Equals(ComponentTypeHandle other)
 		{
@@ -42,6 +46,7 @@ namespace KVD.ECS.Core.Helpers
 
 		static ushort s_nextTypeIndex;
 		static Type[] s_types = new Type[1024];
+		static ComponentsListTypeInfo[] s_typeInfos = new ComponentsListTypeInfo[1024];
 
 		static class TypeIndex<T> where T : unmanaged, IComponent
 		{
@@ -53,8 +58,10 @@ namespace KVD.ECS.Core.Helpers
 				if (index >= s_types.Length)
 				{
 					Array.Resize(ref s_types, s_types.Length * 2);
+					Array.Resize(ref s_typeInfos, s_typeInfos.Length * 2);
 				}
 				s_types[index] = typeof(T);
+				s_typeInfos[index] = ComponentsListTypeInfo.From<T>(new ComponentTypeHandle(index));
 				return index;
 			}
 		}

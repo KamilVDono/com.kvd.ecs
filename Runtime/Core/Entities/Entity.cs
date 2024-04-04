@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using KVD.ECS.Core.Components;
+using Unity.Collections;
+
+#nullable enable
 
 namespace KVD.ECS.Core.Entities
 {
@@ -29,7 +31,7 @@ namespace KVD.ECS.Core.Entities
 		public void ToString(StringBuilder stringBuilder, ComponentsStorage storage)
 		{
 			stringBuilder.Append("Entity ");
-			var name = index.ToString();
+			var name = new FixedString128Bytes(index.ToString());
 			#if ENTITIES_NAMES
 			storage.Name(this, ref name);
 			#endif
@@ -40,7 +42,7 @@ namespace KVD.ECS.Core.Entities
 				{
 					continue;
 				}
-				var list = sparseList.AsList();
+				var list = sparseList.ToList();
 				if (!list.Has(this))
 				{
 					continue;
@@ -50,8 +52,8 @@ namespace KVD.ECS.Core.Entities
 				// {
 				// 	continue;
 				// }
-				// stringBuilder.Append(" ;-; ");
-				// displayable.ToString(stringBuilder);
+				stringBuilder.Append(" ;-; ");
+				stringBuilder.Append(list.typeInfo.typeHandle.Type.Name);
 			}
 		}
 

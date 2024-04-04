@@ -7,14 +7,14 @@ namespace KVD.ECS.UnityBridges
 	public class AnimatorBridge : MonoBehaviour, IUnityBridge
 	{
 #nullable disable
-		[SerializeField] private Animator _animator;
+		[SerializeField] Animator _animator;
 
-		private EcsToUnityLink _link;
-		private Entity _entity;
-		private ComponentList<SetAnimatorValue<int>> _setInts;
-		private ComponentList<SetAnimatorValue<float>> _setFloats;
-		private ComponentList<SetAnimatorValue<AnimatorBool>> _setBools;
-		private ComponentList<SetAnimatorValue<AnimatorTrigger>> _setTriggers;
+		EcsToUnityLink _link;
+		Entity _entity;
+		ComponentListPtrSoft<SetAnimatorValue<int>> _setInts;
+		ComponentListPtrSoft<SetAnimatorValue<float>> _setFloats;
+		ComponentListPtrSoft<SetAnimatorValue<AnimatorBool>> _setBools;
+		ComponentListPtrSoft<SetAnimatorValue<AnimatorTrigger>> _setTriggers;
 #nullable enable
 
 		public void Init()
@@ -23,40 +23,56 @@ namespace KVD.ECS.UnityBridges
 			_entity = _link.Entity;
 
 			var storage = _link.Storage;
-			_setInts     = storage.List<SetAnimatorValue<int>>();
-			_setFloats   = storage.List<SetAnimatorValue<float>>();
-			_setBools    = storage.List<SetAnimatorValue<AnimatorBool>>();
-			_setTriggers = storage.List<SetAnimatorValue<AnimatorTrigger>>();
+			_setInts     = storage.ListPtrSoft<SetAnimatorValue<int>>();
+			_setFloats   = storage.ListPtrSoft<SetAnimatorValue<float>>();
+			_setBools    = storage.ListPtrSoft<SetAnimatorValue<AnimatorBool>>();
+			_setTriggers = storage.ListPtrSoft<SetAnimatorValue<AnimatorTrigger>>();
 		}
 
-		private void Update()
+		void Update()
 		{
-			var setInt = _setInts.TryValue(_entity, out var has);
-			if (has)
+			if (_setInts.IsCreated)
 			{
-				_animator.SetInteger(setInt.id, setInt.value);
-				_setInts.Remove(_entity);
+				ref var setInts = ref _setInts.ToList();
+				var setInt = setInts.TryValue(_entity, out var has);
+				if (has)
+				{
+					_animator.SetInteger(setInt.id, setInt.value);
+					setInts.Remove(_entity);
+				}
 			}
-			
-			var setFloat = _setFloats.TryValue(_entity, out has);
-			if (has)
+
+			if (_setFloats.IsCreated)
 			{
-				_animator.SetFloat(setFloat.id, setFloat.value);
-				_setFloats.Remove(_entity);
+				ref var setFloats = ref _setFloats.ToList();
+				var setFloat = setFloats.TryValue(_entity, out var has);
+				if (has)
+				{
+					_animator.SetFloat(setFloat.id, setFloat.value);
+					setFloats.Remove(_entity);
+				}
 			}
-			
-			var setBool = _setBools.TryValue(_entity, out has);
-			if (has)
+
+			if (_setBools.IsCreated)
 			{
-				_animator.SetBool(setBool.id, setBool.value);
-				_setBools.Remove(_entity);
+				ref var setBools = ref _setBools.ToList();
+				var setBool = setBools.TryValue(_entity, out var has);
+				if (has)
+				{
+					_animator.SetBool(setBool.id, setBool.value);
+					setBools.Remove(_entity);
+				}
 			}
-			
-			var setTrigger = _setTriggers.TryValue(_entity, out has);
-			if (has)
+
+			if (_setTriggers.IsCreated)
 			{
-				_animator.SetTrigger(setTrigger.id);
-				_setTriggers.Remove(_entity);
+				ref var setTriggers = ref _setTriggers.ToList();
+				var setTrigger = setTriggers.TryValue(_entity, out var has);
+				if (has)
+				{
+					_animator.SetTrigger(setTrigger.id);
+					setTriggers.Remove(_entity);
+				}
 			}
 		}
 	}

@@ -14,7 +14,7 @@ namespace KVD.ECS.Core
 		public static Entity Add<T>(this ComponentsStorage storage, T component) where T : unmanaged, IComponent
 		{
 			var entity = storage.NextEntity();
-			storage.List<T>().Add(entity, component);
+			storage.ListPtr<T>().AsList().Add(entity, component);
 			return entity;
 		}
 	
@@ -23,8 +23,8 @@ namespace KVD.ECS.Core
 			where T1 : unmanaged, IComponent
 		{
 			var entity = storage.NextEntity();
-			storage.List<T0>().Add(entity, component0);
-			storage.List<T1>().Add(entity, component1);
+			storage.ListPtr<T0>().AsList().Add(entity, component0);
+			storage.ListPtr<T1>().AsList().Add(entity, component1);
 			return entity;
 		}
 	
@@ -35,16 +35,16 @@ namespace KVD.ECS.Core
 			where T2 : unmanaged, IComponent
 		{
 			var entity = storage.NextEntity();
-			storage.List<T0>().Add(entity, component0);
-			storage.List<T1>().Add(entity, component1);
-			storage.List<T2>().Add(entity, component2);
+			storage.ListPtr<T0>().AsList().Add(entity, component0);
+			storage.ListPtr<T1>().AsList().Add(entity, component1);
+			storage.ListPtr<T2>().AsList().Add(entity, component2);
 			return entity;
 		}
 	
 		public static Entity Add<T>(this ComponentsStorage storage, Entity entity, T component)
 			where T : unmanaged, IComponent
 		{
-			storage.List<T>().Add(entity, component);
+			storage.ListPtr<T>().AsList().Add(entity, component);
 			return entity;
 		}
 	
@@ -52,8 +52,8 @@ namespace KVD.ECS.Core
 			where T0 : unmanaged, IComponent
 			where T1 : unmanaged, IComponent
 		{
-			storage.List<T0>().Add(entity, component0);
-			storage.List<T1>().Add(entity, component1);
+			storage.ListPtr<T0>().AsList().Add(entity, component0);
+			storage.ListPtr<T1>().AsList().Add(entity, component1);
 			return entity;
 		}
 	
@@ -63,9 +63,9 @@ namespace KVD.ECS.Core
 			where T1 : unmanaged, IComponent
 			where T2 : unmanaged, IComponent
 		{
-			storage.List<T0>().Add(entity, component0);
-			storage.List<T1>().Add(entity, component1);
-			storage.List<T2>().Add(entity, component2);
+			storage.ListPtr<T0>().AsList().Add(entity, component0);
+			storage.ListPtr<T1>().AsList().Add(entity, component1);
+			storage.ListPtr<T2>().AsList().Add(entity, component2);
 			return entity;
 		}
 		#endregion Add
@@ -77,7 +77,7 @@ namespace KVD.ECS.Core
 			{
 				if (lists[i].IsCreated)
 				{
-					var list = lists[i].AsList();
+					ref var list = ref lists[i].ToList();
 					if (list.Has(entity))
 					{
 						list.Remove(entity);
@@ -97,15 +97,15 @@ namespace KVD.ECS.Core
 			while (!isAlive && i < lists.Length)
 			{
 				var list = lists[i];
-				isAlive = list.IsCreated && list.AsList().Has(entity);
+				isAlive = list.IsCreated && list.ToList().Has(entity);
 				++i;
 			}
 			return isAlive;
 		}
 	
-		public static UnsafeArray<Entity> NextEntitiesBulk(this ComponentsStorage storage, uint length, Allocator allocator)
+		public static UnsafeArray<Entity> NextEntitiesBulk(this ComponentsStorage storage, int length, Allocator allocator)
 		{
-			var entities = new UnsafeArray<Entity>(length, allocator);
+			var entities = new UnsafeArray<Entity>((uint)length, allocator);
 			for (var i = 0u; i < length; i++)
 			{
 				entities[i] = storage.NextEntity();
@@ -113,9 +113,9 @@ namespace KVD.ECS.Core
 			return entities;
 		}
 		
-		public static UnsafeArray<Entity> AddToAllBulk(this ComponentsStorage storage, uint length, Allocator allocator)
+		public static UnsafeArray<Entity> AddToAllBulk(this ComponentsStorage storage, int length, Allocator allocator)
 		{
-			var entities = new UnsafeArray<Entity>(length, allocator);
+			var entities = new UnsafeArray<Entity>((uint)length, allocator);
 			for (var i = 0u; i < length; i++)
 			{
 				entities[i] = storage.NextEntity();
@@ -124,7 +124,7 @@ namespace KVD.ECS.Core
 			{
 				if (components.IsCreated)
 				{
-					components.AsList().BulkAdd(entities);
+					components.ToList(length).BulkAdd(entities);
 				}
 			}
 			return entities;
@@ -132,7 +132,7 @@ namespace KVD.ECS.Core
 	
 		public static void Remove<T>(this ComponentsStorage storage, Entity entity) where T : unmanaged, IComponent
 		{
-			storage.List<T>().Remove(entity);
+			storage.ListPtr<T>().AsList().Remove(entity);
 		}
 	}
 }

@@ -2,6 +2,7 @@
 using KVD.ECS.Core.Components;
 using KVD.ECS.Core.Entities;
 using KVD.ECS.UnityBridges;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -38,7 +39,7 @@ namespace KVD.ECS.ComponentHelpers
 		}
 		
 		public static void Spawn(World world, ComponentsStorageKey key, AssetReferenceGameObject assetReference,
-			Vector3 position, Quaternion rotation, string name)
+			Vector3 position, Quaternion rotation, FixedString128Bytes name)
 		{
 			var storage = world.Storage(key);
 			var entity  = storage.NextEntity(name);
@@ -47,10 +48,9 @@ namespace KVD.ECS.ComponentHelpers
 		}
 		
 		public static void Spawn(World world, ComponentsStorageKey key, AssetReferenceGameObject assetReference,
-			Vector3 position, Quaternion rotation, string name, ComponentsStorage storage, Entity entity)
+			Vector3 position, Quaternion rotation, FixedString128Bytes name, ComponentsStorage storage, Entity entity)
 		{
-			var prefabStorage = storage.List<PrefabWrapper>();
-			prefabStorage.Add(entity, new() { prefabKey = assetReference.AssetGUID, });
+			storage.ListPtr<PrefabWrapper>().AsList().Add(entity, new() { prefabKey = assetReference.AssetGUID, });
 
 			var instanceRequest = assetReference.InstantiateAsync(position, rotation);
 			var instance        = instanceRequest.WaitForCompletion();
@@ -65,19 +65,15 @@ namespace KVD.ECS.ComponentHelpers
 		public static void SetupPrefabInstance(World world, ComponentsStorage storage, Entity entity,
 			AsyncOperationHandle<GameObject> request, GameObject instance, bool withInitialComponents)
 		{
-			var requestStorage = storage.List<PrefabRequestWrapper>();
-			requestStorage.Add(entity, new(request.Result));
+			storage.ListPtr<PrefabRequestWrapper>().AsList().Add(entity, new(request.Result));
 			
-			var goStorage = storage.List<GameObjectWrapper>();
-			goStorage.Add(entity, instance);
-			var transformStorage = storage.List<MonoComponentWrapper<Transform>>();
-			transformStorage.Add(entity, new(instance.transform));
+			storage.ListPtr<GameObjectWrapper>().AsList().Add(entity, instance);
+			storage.ListPtr<MonoComponentWrapper<Transform>>().AsList().Add(entity, new(instance.transform));
 
 			var instanceRenderer = instance.GetComponent<Renderer>();
 			if (instanceRenderer)
 			{
-				var rendererStorage = storage.List<MonoComponentWrapper<Renderer>>();
-				rendererStorage.Add(entity, new(instanceRenderer));
+				storage.ListPtr<MonoComponentWrapper<Renderer>>().AsList().Add(entity, new(instanceRenderer));
 			}
 
 			if (!withInitialComponents)

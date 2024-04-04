@@ -11,7 +11,7 @@ namespace KVD.ECS.Core
 		where T0 : unmanaged, IComponent
 	{
 		readonly ComponentsStorage _storage;
-		readonly ComponentListPtr<T0> _list;
+		readonly ComponentListPtrSoft<T0> _list;
 
 		public int Length => ArchetypeHelpers.Length(_list);
 	
@@ -51,8 +51,8 @@ namespace KVD.ECS.Core
 		where T1 : unmanaged, IComponent
 	{
 		readonly ComponentsStorage _storage;
-		readonly ComponentListPtr<T0> _list0;
-		readonly ComponentListPtr<T1> _list1;
+		readonly ComponentListPtrSoft<T0> _list0;
+		readonly ComponentListPtrSoft<T1> _list1;
 		
 		public int Length => math.max(ArchetypeHelpers.Length(_list0), ArchetypeHelpers.Length(_list1));
 	
@@ -108,9 +108,9 @@ namespace KVD.ECS.Core
 		where T2 : unmanaged, IComponent
 	{
 		readonly ComponentsStorage _storage;
-		readonly ComponentListPtr<T0> _list0;
-		readonly ComponentListPtr<T1> _list1;
-		readonly ComponentListPtr<T2> _list2;
+		readonly ComponentListPtrSoft<T0> _list0;
+		readonly ComponentListPtrSoft<T1> _list1;
+		readonly ComponentListPtrSoft<T2> _list2;
 
 		public int Length => math.max(ArchetypeHelpers.Length(_list0),
 			math.max(ArchetypeHelpers.Length(_list1), ArchetypeHelpers.Length(_list2)));
@@ -178,10 +178,10 @@ namespace KVD.ECS.Core
 		where T3 : unmanaged, IComponent
 	{
 		readonly ComponentsStorage _storage;
-		readonly ComponentListPtr<T0> _list0;
-		readonly ComponentListPtr<T1> _list1;
-		readonly ComponentListPtr<T2> _list2;
-		readonly ComponentListPtr<T3> _list3;
+		readonly ComponentListPtrSoft<T0> _list0;
+		readonly ComponentListPtrSoft<T1> _list1;
+		readonly ComponentListPtrSoft<T2> _list2;
+		readonly ComponentListPtrSoft<T3> _list3;
 
 		public int Length => math.max(ArchetypeHelpers.Length(_list0),
 			math.max(ArchetypeHelpers.Length(_list1),
@@ -262,11 +262,11 @@ namespace KVD.ECS.Core
 		where T4 : unmanaged, IComponent
 	{
 		readonly ComponentsStorage _storage;
-		readonly ComponentListPtr<T0> _list0;
-		readonly ComponentListPtr<T1> _list1;
-		readonly ComponentListPtr<T2> _list2;
-		readonly ComponentListPtr<T3> _list3;
-		readonly ComponentListPtr<T4> _list4;
+		readonly ComponentListPtrSoft<T0> _list0;
+		readonly ComponentListPtrSoft<T1> _list1;
+		readonly ComponentListPtrSoft<T2> _list2;
+		readonly ComponentListPtrSoft<T3> _list3;
+		readonly ComponentListPtrSoft<T4> _list4;
 
 		public int Length => math.max(ArchetypeHelpers.Length(_list0),
 			math.max(ArchetypeHelpers.Length(_list1),
@@ -352,41 +352,38 @@ namespace KVD.ECS.Core
 	static class ArchetypeHelpers
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Length<T>(ComponentListPtr<T> list)
+		public static int Length<T>(ComponentListPtrSoft<T> list)
 			where T : unmanaged, IComponent
 		{
-			return list.IsCreated ? list.AsList().Length : 0;
+			return list.IsCreated ? list.ToList().Length : 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Has<T>(Entity entity, ComponentListPtr<T> list, out bool has)
+		public static void Has<T>(Entity entity, ComponentListPtrSoft<T> list, out bool has)
 			where T : unmanaged, IComponent
 		{
-			has = list.IsCreated & list.AsList().Has(entity);
+			has = list.IsCreated & list.ToList().Has(entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Add<T>(Entity entity, ComponentListPtr<T> list, in T component)
+		public static void Add<T>(Entity entity, ComponentListPtrSoft<T> list, in T component)
 			where T : unmanaged, IComponent
 		{
-			list.Create();
-			list.AsList().Add(entity, component);
+			list.ToList().Add(entity, component);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Update<T>(Entity entity, ComponentListPtr<T> list, in T component)
+		public static void Update<T>(Entity entity, ComponentListPtrSoft<T> list, in T component)
 			where T : unmanaged, IComponent
 		{
-			list.Create();
-			list.AsList().AddOrReplace(entity, component);
+			list.ToList().AddOrReplace(entity, component);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Remove<T>(Entity entity, ComponentListPtr<T> list)
+		public static void Remove<T>(Entity entity, ComponentListPtrSoft<T> list)
 			where T : unmanaged, IComponent
 		{
-			list.Create();
-			list.AsList().Remove(entity);
+			list.ToList().Remove(entity);
 		}
 	}
 }

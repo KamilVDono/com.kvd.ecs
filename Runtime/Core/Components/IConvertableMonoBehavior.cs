@@ -1,5 +1,5 @@
-﻿using System;
-using KVD.ECS.Core.Entities;
+﻿using KVD.ECS.Core.Entities;
+using KVD.ECS.Core.Helpers;
 
 #nullable enable
 
@@ -11,35 +11,30 @@ namespace KVD.ECS.Core.Components
 		void Restore(Entity entity, World world, ComponentsStorage target) => Register(entity, world, target);
 	}
 	
-	public interface ISingleConvertableMonoBehavior : IConvertableMonoBehavior
+	public interface ISingleConvertableMonoBehavior<T> : IConvertableMonoBehavior where T : unmanaged, IComponent
 	{
-		Type ComponentType{ get; }
-		object Component(World world, ComponentsStorage target);
-		
-		void IConvertableMonoBehavior.Register(Entity entity, World world, ComponentsStorage target)
+		void Component(World world, ComponentsStorage target, out T component);
+
+		unsafe void IConvertableMonoBehavior.Register(Entity entity, World world, ComponentsStorage target)
 		{
-			// TODO: do it from ground zero
-			// var convertableStorage = target.List(ComponentType);
-			// var component          = Component(world, target);
-			// convertableStorage.AddByObject(entity, component);
+			var convertableStorage = target.ListPtr(ComponentTypeHandle.From<T>());
+			Component(world, target, out var component);
+			convertableStorage.AsList().Add(entity, &component);
 		}
 	}
-	
-	public interface ISingleConvertableMonoBehavior<out T> : ISingleConvertableMonoBehavior where T : struct, IComponent
+
+	public interface ISimpleSingleConvertableMonoBehavior<T> : ISingleConvertableMonoBehavior<T> where T : unmanaged, IComponent
 	{
-		Type ISingleConvertableMonoBehavior.ComponentType => typeof(T);
+		new T Component{ get; }
+
+		void ISingleConvertableMonoBehavior<T>.Component(World world, ComponentsStorage target, out T component)
+		{
+			component = Component;
+		}
 	}
-	
-	public interface ISimpleSingleConvertableMonoBehavior<out T> : ISingleConvertableMonoBehavior<T> where T : struct, IComponent
+
+	public interface IDefaultSingleConvertableMonoBehavior<T> : ISimpleSingleConvertableMonoBehavior<T> where T : unmanaged, IComponent
 	{
-		public new T Component{ get; }
-		
-		object ISingleConvertableMonoBehavior.Component(World world, ComponentsStorage target) => Component;
-	}
-	
-	public interface IDefaultSingleConvertableMonoBehavior<out T> : ISimpleSingleConvertableMonoBehavior<T> where T : struct, IComponent
-	{
-		T ISimpleSingleConvertableMonoBehavior<T>.Component => Component;
-		public new T Component => default;
+		T ISimpleSingleConvertableMonoBehavior<T>.Component => default;
 	}
 }

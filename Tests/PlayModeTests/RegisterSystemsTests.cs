@@ -21,7 +21,7 @@ namespace KVD.ECS.PlayModeTests.Tests.PlayModeTests
 				yield return loadScene;
 			}
 			
-			var wrapper = Object.FindObjectOfType<WorldWrapper>();
+			var wrapper = Object.FindAnyObjectByType<WorldWrapper>();
 			while (wrapper.InitTask.Status != UniTaskStatus.Succeeded)
 			{
 				yield return null;

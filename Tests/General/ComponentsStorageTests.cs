@@ -24,7 +24,7 @@ namespace KVD.ECS.GeneralTests
 		public unsafe void List_MultipleOperations()
 		{
 			// Act&Assert
-			ref var _ = ref _storage.TryGetList<Circle>(out var has);
+			ref var _ = ref _storage.TryGetListPtr<Circle>(out var has).AsList();
 			Assert.IsFalse(has);
 			var l1 = _storage.ListPtr<Circle>();
 			var l2 = _storage.ListPtr<Circle>();
@@ -327,9 +327,9 @@ namespace KVD.ECS.GeneralTests
 		#region Helpers
 		private void InitializeStandard()
 		{
-			_storage.List<Acceleration>();
-			_storage.List<Borders>();
-			_storage.List<Circle>();
+			_storage.ListPtr<Acceleration>();
+			_storage.ListPtr<Borders>();
+			_storage.ListPtr<Circle>();
 		}
 		#endregion Helpers
 	}

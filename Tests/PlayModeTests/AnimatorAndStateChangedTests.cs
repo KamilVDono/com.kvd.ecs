@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Cysharp.Threading.Tasks;
 using KVD.ECS.Core;
 using KVD.ECS.Core.Systems;
@@ -27,7 +26,7 @@ namespace KVD.ECS.PlayModeTests.Tests.PlayModeTests
 				yield return loadScene;
 			}
 			
-			var wrapper = Object.FindObjectOfType<WorldWrapper>();
+			var wrapper = Object.FindAnyObjectByType<WorldWrapper>();
 			while (wrapper.InitTask.Status != UniTaskStatus.Succeeded)
 			{
 				yield return null;
@@ -35,17 +34,17 @@ namespace KVD.ECS.PlayModeTests.Tests.PlayModeTests
 			var world       = wrapper.World;
 			var countSystem = new CountStateChangesSystem();
 			world.RegisterSystem(countSystem).GetAwaiter().GetResult();
-			var triggerList = world.defaultStorage.List<SetAnimatorValue<AnimatorTrigger>>();
+			var triggerListPtr = world.defaultStorage.ListPtr<SetAnimatorValue<AnimatorTrigger>>();
 			
-			var entityLink = Object.FindObjectOfType<EcsToUnityLink>();
+			var entityLink = Object.FindAnyObjectByType<EcsToUnityLink>();
 			
-			var animator = Object.FindObjectOfType<Animator>();
+			var animator = Object.FindAnyObjectByType<Animator>();
 			var animatorState = animator.GetCurrentAnimatorStateInfo(0);
 			Assert.AreEqual(NormalStateId, animatorState.shortNameHash);
 			
 			yield return null;
 			
-			triggerList.Add(entityLink.Entity, new(TransitionToAngryId, new()));
+			triggerListPtr.AsList().Add(entityLink.Entity, new(TransitionToAngryId, new()));
 			
 			yield return null;
 			yield return null;

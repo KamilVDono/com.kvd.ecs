@@ -14,7 +14,7 @@ namespace KVD.ECS.UnityBridges
 				return;
 			}
 			
-			link.Storage.List<AnimatorStateEnter>().AddSingleFrame(link.Entity, new(stateInfo));
+			link.Storage.ListPtr<AnimatorStateEnter>().AsList().AddSingleFrame(link.Entity, new(stateInfo));
 		}
 
 		public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
@@ -25,7 +25,7 @@ namespace KVD.ECS.UnityBridges
 				return;
 			}
 			
-			link.Storage.List<AnimatorStateExit>().AddSingleFrame(link.Entity, new(stateInfo));
+			link.Storage.ListPtr<AnimatorStateExit>().AsList().AddSingleFrame(link.Entity, new(stateInfo));
 		}
 		
 		private static EcsToUnityLink? Link(Animator animator)

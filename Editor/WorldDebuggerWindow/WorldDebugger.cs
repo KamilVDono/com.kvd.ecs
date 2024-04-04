@@ -49,16 +49,16 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 #endif
 		});
 
-		readonly TableView<ComponentListTypeless> _sparseListTableView = new(new[]
+		readonly TableView<ComponentList> _sparseListTableView = new(new[]
 		{
-			new TableColumn<ComponentListTypeless>("Name", ComponentName, 2f/7),
-			new TableColumn<ComponentListTypeless>("Entities", l => $"{l.length}/{l.capacity}", 1f/7),
-			new TableColumn<ComponentListTypeless>("Size (single/in-use/alloc)", l =>
+			new TableColumn<ComponentList>("Name", ComponentName, 2f/7),
+			new TableColumn<ComponentList>("Entities", l => $"{l.length}/{l.capacity}", 1f/7),
+			new TableColumn<ComponentList>("Size (single/in-use/alloc)", l =>
 			{
-				var size = l.valueSize;
+				var size = l.typeInfo.valueSize;
 				return $"{size}B/{size*l.length/1024f:f2}kB/{size*l.capacity/1024f:f2}kB";
 			}, 3f/7),
-			new TableColumn<ComponentListTypeless>("Full list memory", l =>
+			new TableColumn<ComponentList>("Full list memory", l =>
 			{
 				var size = StorageWorldSizeUtils.FullListSize(l);
 				return $"{size/1024f:f2}kB";
@@ -187,7 +187,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			{
 				if (listPtr.IsCreated)
 				{
-					var list = listPtr.AsList();
+					ref var list = ref listPtr.ToList();
 					currentVersion += list.entitiesVersion;
 					_sparseListTableView.DrawRow(list);
 				}
@@ -218,7 +218,7 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 				{
 					if (listPtr.IsCreated)
 					{
-						_uniqueEntitiesCollector.Union(listPtr.AsList().entitiesMask);
+						_uniqueEntitiesCollector.Union(listPtr.ToList().entitiesMask);
 					}
 				}
 				foreach (var entity in _uniqueEntitiesCollector.EnumerateOnes())
@@ -237,13 +237,13 @@ namespace KVD.ECS.Editor.WorldDebuggerWindow
 			}
 		}
 
-		static string ComponentName(ComponentListTypeless list)
+		static string ComponentName(ComponentList list)
 		{
-			var componentType = list.GetType().GetGenericArguments()[0];
+			var componentType = list.typeInfo.typeHandle.Type;
 			var componentName = componentType.Name;
 			if (componentType.IsGenericType)
 			{
-				componentName += "<"+string.Join(", ", componentType.GetGenericArguments().Select(t => t.Name))+">";
+				componentName += "<"+string.Join(", ", componentType.GetGenericArguments().Select(static t => t.Name))+">";
 			}
 			return componentName;
 		}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using KVD.ECS.Core.Components;
+using KVD.ECS.Core.ComponentsLists;
 using KVD.ECS.Core.Entities;
 using KVD.Utils.DataStructures;
 using KVD.Utils.Extensions;
@@ -28,100 +29,7 @@ namespace KVD.ECS.Core
 #endif
 	}
 
-	public unsafe struct ComponentListPtr : IEquatable<ComponentListPtr>
-	{
-		public ComponentListTypeless* ptr;
-
-		public readonly bool IsCreated => ptr != null && ptr->IsCreated;
-
-		public ComponentListPtr(void* ptr)
-		{
-			this.ptr = (ComponentListTypeless*)ptr;
-		}
-
-		public readonly ComponentListPtr<T> As<T>() where T : unmanaged, IComponent => new((ComponentList<T>*)ptr);
-
-		public readonly ref ComponentListTypeless AsList() => ref UnsafeUtility.AsRef<ComponentListTypeless>(ptr);
-
-		public void Dispose()
-		{
-			ptr->Dispose();
-			UnsafeUtility.Free(ptr, Allocator.Persistent);
-			ptr = null;
-		}
-
-		public readonly bool Equals(ComponentListPtr other)
-		{
-			return ptr == other.ptr;
-		}
-		public readonly override bool Equals(object? obj)
-		{
-			return obj is ComponentListPtr other && Equals(other);
-		}
-		public readonly override int GetHashCode()
-		{
-			return unchecked((int)(long)ptr);
-		}
-		public static bool operator ==(ComponentListPtr left, ComponentListPtr right)
-		{
-			return left.Equals(right);
-		}
-		public static bool operator !=(ComponentListPtr left, ComponentListPtr right)
-		{
-			return !left.Equals(right);
-		}
-	}
-
-	public readonly unsafe struct ComponentListPtr<T> : IEquatable<ComponentListPtr<T>> where T : unmanaged, IComponent
-	{
-		public readonly ComponentList<T>* ptr;
-
-		public bool IsCreated => ptr != null && ptr->IsCreated;
-
-		public ComponentListPtr(void* ptr)
-		{
-			this.ptr = (ComponentList<T>*)ptr;
-		}
-
-		public ComponentListPtr TypeLess() => new(ptr);
-		public ref ComponentList<T> AsList() => ref UnsafeUtility.AsRef<ComponentList<T>>(ptr);
-
-		public void Create(int initialSize = ComponentListConstants.InitialCapacity)
-		{
-			if (!IsCreated)
-			{
-				*ptr = new ComponentList<T>(initialSize);
-			}
-		}
-
-		public void Dispose()
-		{
-			TypeLess().Dispose();
-		}
-
-		public bool Equals(ComponentListPtr<T> other)
-		{
-			return ptr == other.ptr;
-		}
-		public override bool Equals(object? obj)
-		{
-			return obj is ComponentListPtr<T> other && Equals(other);
-		}
-		public override int GetHashCode()
-		{
-			return unchecked((int)(long)ptr);
-		}
-		public static bool operator ==(ComponentListPtr<T> left, ComponentListPtr<T> right)
-		{
-			return left.Equals(right);
-		}
-		public static bool operator !=(ComponentListPtr<T> left, ComponentListPtr<T> right)
-		{
-			return !left.Equals(right);
-		}
-	}
-
-	public unsafe struct ComponentListTypeless
+	public unsafe struct ComponentList
 	{
 		public UnsafeBitmask entitiesMask;
 		public int entitiesVersion;
@@ -136,11 +44,28 @@ namespace KVD.ECS.Core
 		public void* values;
 		public int* indexByEntity;
 
-		public void* defaultComponent;
-		public ushort valueSize;
-		public ushort valueAlignment;
+		public ComponentsListTypeInfo typeInfo;
 
 		public bool IsCreated => values != null;
+
+		public ComponentList(in ComponentsListTypeInfo typeInfo, int capacity = ComponentListConstants.InitialCapacity)
+		{
+			this.typeInfo = typeInfo;
+
+			this.capacity = Math.Max(capacity, 64);
+			entitiesVersion = 0;
+			length          = 0;
+			indexByEntity = (int*)UnsafeUtility.Malloc(capacity*UnsafeUtility.SizeOf<int>(),
+				UnsafeUtility.AlignOf<int>(), Allocator.Persistent);
+			UnsafeUtils.Fill(indexByEntity, -1, capacity);
+			indexByEntityCount = capacity;
+			entityByIndex = (int*)UnsafeUtility.Malloc(capacity*UnsafeUtility.SizeOf<int>(),
+				UnsafeUtility.AlignOf<int>(), Allocator.Persistent);
+			values = (byte*)UnsafeUtility.Malloc(capacity*typeInfo.valueSize, typeInfo.valueAlignment, Allocator.Persistent);
+
+			entitiesMask          = new((uint)capacity, Allocator.Persistent);
+			singleFrameComponents = new(12, Allocator.Persistent);
+		}
 
 		public void Dispose()
 		{
@@ -171,10 +96,10 @@ namespace KVD.ECS.Core
 #if LIST_CHECKS
 			if (!Has(entity))
 			{
-				throw new ArgumentException($"Entity [{entity}] is not present in ComponentListTypelessData");
+				throw new ArgumentException($"Entity [{entity}] is not present in ComponentListData");
 			}
 #endif
-			return ((byte*)values)+indexByEntity[entity]*valueSize;
+			return ((byte*)values)+indexByEntity[entity]*typeInfo.valueSize;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -182,7 +107,7 @@ namespace KVD.ECS.Core
 		{
 			var index = Index(entity);
 			has = index >= 0;
-			return has ? Value(entity) : defaultComponent;
+			return has ? Value(entity) : typeInfo.defaultComponent;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -199,7 +124,7 @@ namespace KVD.ECS.Core
 #if LIST_CHECKS
 			if (Has(e))
 			{
-				throw new ArgumentException($"Entity [{e}] already present in ComponentListTypelessData");
+				throw new ArgumentException($"Entity [{e}] already present in ComponentListData");
 				// TODO: better message
 				//throw new ArgumentException($"Entity [{e}] already present in ComponentList<{typeof(T).Name}>");
 			}
@@ -215,7 +140,7 @@ namespace KVD.ECS.Core
 			var index = Index(entity);
 			if (index > -1)
 			{
-				UnsafeUtility.MemCpy(((byte*)values)+index*valueSize, value, valueSize);
+				UnsafeUtility.MemCpy(((byte*)values)+index*typeInfo.valueSize, value, typeInfo.valueSize);
 			}
 			// Create new value
 			else
@@ -242,7 +167,7 @@ namespace KVD.ECS.Core
 				var entityIndex = entities[i].index;
 				indexByEntity[entityIndex] = (int)index;
 				entityByIndex[index]       = entities[i];
-				UnsafeUtility.MemSet(((byte*)values)+index*valueSize, 0, valueSize);
+				UnsafeUtility.MemSet(((byte*)values)+index*typeInfo.valueSize, 0, typeInfo.valueSize);
 				entitiesMask.Up((uint)entityIndex);
 			}
 
@@ -267,7 +192,7 @@ namespace KVD.ECS.Core
 				var entityIndex = entities[i].index;
 				indexByEntity[entityIndex] = (int)index;
 				entityByIndex[index]       = entities[i];
-				UnsafeUtility.MemCpy(((byte*)values)+index*valueSize, value, valueSize);
+				UnsafeUtility.MemCpy(((byte*)values)+index*typeInfo.valueSize, value, typeInfo.valueSize);
 				entitiesMask.Up((uint)entityIndex);
 			}
 
@@ -329,9 +254,9 @@ namespace KVD.ECS.Core
 			}
 			// _length was decreased so it's pointing to last element
 			// Swap last value with removed one
-			var destination = ((byte*)values)+index*valueSize;
-			var source = ((byte*)values)+length*valueSize;
-			UnsafeUtility.MemCpy(destination, source, valueSize);
+			var destination = ((byte*)values)+index*typeInfo.valueSize;
+			var source = ((byte*)values)+length*typeInfo.valueSize;
+			UnsafeUtility.MemCpy(destination, source, typeInfo.valueSize);
 			// Remove entity from list
 			entitiesMask.Down((uint)entity);
 
@@ -358,7 +283,7 @@ namespace KVD.ECS.Core
 			var entityIndex = e.index;
 			indexByEntity[entityIndex] = length-1;
 			entityByIndex[length-1] = entityIndex;
-			UnsafeUtility.MemCpy(((byte*)values)+(length-1)*valueSize, value, valueSize);
+			UnsafeUtility.MemCpy(((byte*)values)+(length-1)*typeInfo.valueSize, value, typeInfo.valueSize);
 			entitiesMask.Up((uint)entityIndex);
 
 			entitiesVersion++;
@@ -390,7 +315,7 @@ namespace KVD.ECS.Core
 				capacity <<= 2;
 			}
 
-			UnsafeUtils.Resize(ref values, Allocator.Persistent, oldLength, capacity, valueSize, valueAlignment);
+			UnsafeUtils.Resize(ref values, Allocator.Persistent, oldLength, capacity, typeInfo.valueSize, typeInfo.valueAlignment);
 			UnsafeUtils.Resize(ref entityByIndex, Allocator.Persistent, oldLength, capacity);
 		}
 
@@ -423,7 +348,7 @@ namespace KVD.ECS.Core
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 	public unsafe struct ComponentList<T> where T : unmanaged, IComponent
 	{
-		public ComponentListTypeless typeless;
+		public ComponentList typeless;
 
 		public readonly bool IsCreated => typeless.IsCreated;
 
@@ -440,23 +365,7 @@ namespace KVD.ECS.Core
 
 		public ComponentList(int capacity = ComponentListConstants.InitialCapacity)
 		{
-			typeless.entitiesVersion = 0;
-			typeless.capacity      = Math.Max(capacity, 64);
-			typeless.length        = 0;
-			typeless.indexByEntity = (int*)UnsafeUtility.Malloc(typeless.capacity*UnsafeUtility.SizeOf<int>(),
-				UnsafeUtility.AlignOf<int>(), Allocator.Persistent);
-			UnsafeUtils.Fill(typeless.indexByEntity, -1, typeless.capacity);
-			typeless.indexByEntityCount = typeless.capacity;
-			typeless.entityByIndex = (int*)UnsafeUtility.Malloc(typeless.capacity*UnsafeUtility.SizeOf<int>(),
-				UnsafeUtility.AlignOf<int>(), Allocator.Persistent);
-			typeless.defaultComponent = UnsafeUtility.AddressOf(ref DefaultComponentProvider<T>.Default());
-			typeless.valueSize = (ushort)UnsafeUtility.SizeOf<T>();
-			typeless.valueAlignment = (ushort)UnsafeUtility.AlignOf<T>();
-			typeless.values = (byte*)UnsafeUtility.Malloc(typeless.capacity*typeless.valueSize,
-				typeless.valueAlignment, Allocator.Persistent);
-
-			typeless.entitiesMask          = new((uint)typeless.capacity, Allocator.Persistent);
-			typeless.singleFrameComponents = new(12, Allocator.Persistent);
+			typeless = new(ComponentsListTypeInfo.From<T>(), capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
