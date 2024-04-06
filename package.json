@@ -1,6 +1,6 @@
 {
   "name": "com.kvd.ecs",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "displayName": "KamilVDono - ECS",
   "description": "This package contains my implementation od ECS.",
   "keywords": [
@@ -15,9 +15,10 @@
     "com.unity.mathematics": "1.2.6",
     "com.unity.test-framework": "1.3.3",
     "com.unity.addressables": "1.21.8",
-    "com.kvd.utils": "0.0.1",
+    "com.kvd.utils": "0.0.2",
     "com.cysharp.unitask": "2.3.3",
     "com.mackysoft.serializereference-extensions": "1.1.7",
     "com.unity.collections": "2.1.0-pre.18"
-  }
+  },
+  "hideInEditor": false
 }
