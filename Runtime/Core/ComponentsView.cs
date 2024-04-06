@@ -11,8 +11,8 @@ namespace KVD.ECS.Core
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 	public unsafe struct ComponentsView
 	{
-		readonly UnsafeArray<ComponentListPtrSoft> _hasComponents;
-		readonly UnsafeArray<ComponentListPtrSoft> _excludeComponents;
+		UnsafeArray<ComponentListPtrSoft> _hasComponents;
+		UnsafeArray<ComponentListPtrSoft> _excludeComponents;
 
 		readonly bool _onlyWhenStructuralChanges;
 		int _lastVersion;
@@ -28,6 +28,12 @@ namespace KVD.ECS.Core
 			_hasComponents = hasComponents;
 			_excludeComponents = excludeComponents;
 			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
+		}
+
+		public void Dispose()
+		{
+			_hasComponents.Dispose();
+			_excludeComponents.Dispose();
 		}
 
 		public ComponentsIterator GetEnumerator()
@@ -65,8 +71,8 @@ namespace KVD.ECS.Core
 	public struct ComponentsView<T0>
 		where T0 : unmanaged, IComponent
 	{
-		readonly UnsafeArray<ComponentListPtrSoft> _hasComponents;
-		readonly UnsafeArray<ComponentListPtrSoft> _excludeComponents;
+		UnsafeArray<ComponentListPtrSoft> _hasComponents;
+		UnsafeArray<ComponentListPtrSoft> _excludeComponents;
 
 		readonly ComponentListPtrSoft<T0> _componentsList0;
 
@@ -87,6 +93,12 @@ namespace KVD.ECS.Core
 			_componentsList0   = componentsList0;
 
 			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
+		}
+
+		public void Dispose()
+		{
+			_hasComponents.Dispose();
+			_excludeComponents.Dispose();
 		}
 
 		public ComponentsIterator GetEnumerator()
@@ -123,7 +135,7 @@ namespace KVD.ECS.Core
 		{
 			public readonly int entity;
 
-			ComponentListPtr<T0> _componentsList0;
+			readonly ComponentListPtr<T0> _componentsList0;
 
 			public IterationView(int entity, ComponentListPtr<T0> componentsList0)
 			{
@@ -150,11 +162,11 @@ namespace KVD.ECS.Core
 		where T0 : unmanaged, IComponent
 		where T1 : unmanaged, IComponent
 	{
-		readonly UnsafeArray<ComponentListPtrSoft> _hasComponents;
-		readonly UnsafeArray<ComponentListPtrSoft> _excludeComponents;
+		UnsafeArray<ComponentListPtrSoft> _hasComponents;
+		UnsafeArray<ComponentListPtrSoft> _excludeComponents;
 
-		ComponentListPtrSoft<T0> _componentsList0;
-		ComponentListPtrSoft<T1> _componentsList1;
+		readonly ComponentListPtrSoft<T0> _componentsList0;
+		readonly ComponentListPtrSoft<T1> _componentsList1;
 
 		readonly bool _onlyWhenStructuralChanges;
 		int _lastVersion;
@@ -175,6 +187,12 @@ namespace KVD.ECS.Core
 			_componentsList1 = componentsList1;
 
 			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
+		}
+
+		public void Dispose()
+		{
+			_hasComponents.Dispose();
+			_excludeComponents.Dispose();
 		}
 
 		public ComponentsIterator GetEnumerator()
@@ -215,8 +233,8 @@ namespace KVD.ECS.Core
 		{
 			public readonly int entity;
 
-			ComponentListPtr<T0> _componentsList0;
-			ComponentListPtr<T1> _componentsList1;
+			readonly ComponentListPtr<T0> _componentsList0;
+			readonly ComponentListPtr<T1> _componentsList1;
 
 			public IterationView(int entity, ComponentListPtr<T0> componentsList0, ComponentListPtr<T1> componentsList1)
 			{
@@ -257,12 +275,12 @@ namespace KVD.ECS.Core
 		where T1 : unmanaged, IComponent
 		where T2 : unmanaged, IComponent
 	{
-		readonly UnsafeArray<ComponentListPtrSoft> _hasComponents;
-		readonly UnsafeArray<ComponentListPtrSoft> _excludeComponents;
+		UnsafeArray<ComponentListPtrSoft> _hasComponents;
+		UnsafeArray<ComponentListPtrSoft> _excludeComponents;
 
-		ComponentListPtrSoft<T0> _componentsList0;
-		ComponentListPtrSoft<T1> _componentsList1;
-		ComponentListPtrSoft<T2> _componentsList2;
+		readonly ComponentListPtrSoft<T0> _componentsList0;
+		readonly ComponentListPtrSoft<T1> _componentsList1;
+		readonly ComponentListPtrSoft<T2> _componentsList2;
 
 		readonly bool _onlyWhenStructuralChanges;
 		int _lastVersion;
@@ -285,6 +303,12 @@ namespace KVD.ECS.Core
 			_componentsList2 = componentsList2;
 
 			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
+		}
+
+		public void Dispose()
+		{
+			_hasComponents.Dispose();
+			_excludeComponents.Dispose();
 		}
 
 		public ComponentsIterator GetEnumerator()
@@ -329,9 +353,9 @@ namespace KVD.ECS.Core
 		{
 			public readonly int entity;
 
-			ComponentListPtr<T0> _componentsList0;
-			ComponentListPtr<T1> _componentsList1;
-			ComponentListPtr<T2> _componentsList2;
+			readonly ComponentListPtr<T0> _componentsList0;
+			readonly ComponentListPtr<T1> _componentsList1;
+			readonly ComponentListPtr<T2> _componentsList2;
 
 			public IterationView(int entity, ComponentListPtr<T0> componentsList0, ComponentListPtr<T1> componentsList1,
 				ComponentListPtr<T2> componentsList2)
@@ -387,13 +411,13 @@ namespace KVD.ECS.Core
 		where T2 : unmanaged, IComponent
 		where T3 : unmanaged, IComponent
 	{
-		readonly UnsafeArray<ComponentListPtrSoft> _hasComponents;
-		readonly UnsafeArray<ComponentListPtrSoft> _excludeComponents;
+		UnsafeArray<ComponentListPtrSoft> _hasComponents;
+		UnsafeArray<ComponentListPtrSoft> _excludeComponents;
 
-		ComponentListPtrSoft<T0> _componentsList0;
-		ComponentListPtrSoft<T1> _componentsList1;
-		ComponentListPtrSoft<T2> _componentsList2;
-		ComponentListPtrSoft<T3> _componentsList3;
+		readonly ComponentListPtrSoft<T0> _componentsList0;
+		readonly ComponentListPtrSoft<T1> _componentsList1;
+		readonly ComponentListPtrSoft<T2> _componentsList2;
+		readonly ComponentListPtrSoft<T3> _componentsList3;
 
 		readonly bool _onlyWhenStructuralChanges;
 		int _lastVersion;
@@ -417,6 +441,12 @@ namespace KVD.ECS.Core
 			_componentsList3 = componentsList3;
 
 			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
+		}
+
+		public void Dispose()
+		{
+			_hasComponents.Dispose();
+			_excludeComponents.Dispose();
 		}
 
 		public ComponentsIterator GetEnumerator()
@@ -464,10 +494,10 @@ namespace KVD.ECS.Core
 		{
 			public readonly int entity;
 
-			ComponentListPtr<T0> _componentsList0;
-			ComponentListPtr<T1> _componentsList1;
-			ComponentListPtr<T2> _componentsList2;
-			ComponentListPtr<T3> _componentsList3;
+			readonly ComponentListPtr<T0> _componentsList0;
+			readonly ComponentListPtr<T1> _componentsList1;
+			readonly ComponentListPtr<T2> _componentsList2;
+			readonly ComponentListPtr<T3> _componentsList3;
 
 			public IterationView(int entity, ComponentListPtr<T0> componentsList0, ComponentListPtr<T1> componentsList1,
 				ComponentListPtr<T2> componentsList2, ComponentListPtr<T3> componentsList3)
