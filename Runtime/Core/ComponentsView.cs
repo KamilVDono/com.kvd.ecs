@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using KVD.ECS.Core.Components;
 using KVD.Utils.DataStructures;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
 using Unity.Profiling;
@@ -528,13 +529,15 @@ namespace KVD.ECS.Core
 		}
 	}
 
+	[BurstCompile]
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 	static class ComponentsViewHelper
 	{
 		static readonly ProfilerMarker ZipMarker = new("ComponentsIterator.Zip");
 
+		[BurstCompile]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Zip(UnsafeArray<ComponentListPtrSoft> hasComponents, UnsafeArray<ComponentListPtrSoft> excludeComponents,
+		public static void Zip(in UnsafeArray<ComponentListPtrSoft> hasComponents, in UnsafeArray<ComponentListPtrSoft> excludeComponents,
 			bool onlyWhenStructuralChanges, ref int lastVersion, out UnsafeArray<int> entities)
 		{
 			using var marker = ZipMarker.Auto();
