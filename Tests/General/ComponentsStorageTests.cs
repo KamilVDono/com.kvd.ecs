@@ -2,6 +2,8 @@
 using KVD.ECS.GeneralTests.Components;
 using NUnit.Framework;
 
+#nullable enable
+
 namespace KVD.ECS.GeneralTests
 {
 	public class ComponentsStorageTests
@@ -24,11 +26,12 @@ namespace KVD.ECS.GeneralTests
 		public unsafe void List_MultipleOperations()
 		{
 			// Act&Assert
-			ref var _ = ref _storage.TryGetListPtr<Circle>(out var has).AsList();
+			var has = _storage.TryGetListPtr<Circle>(out _);
 			Assert.IsFalse(has);
 			var l1 = _storage.ListPtr<Circle>();
 			var l2 = _storage.ListPtr<Circle>();
-			var l3 = _storage.TryGetListPtr<Circle>(out has);
+			has = _storage.TryGetListPtr<Circle>(out var l3);
+			Assert.IsTrue(has);
 			Assert.IsNotNull(l1);
 			Assert.IsTrue(l1.ptr == l2.ptr);
 			Assert.IsTrue(l1.ptr == l3.ptr);

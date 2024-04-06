@@ -16,14 +16,14 @@ namespace KVD.ECS.Core
 		public readonly ComponentsStorage defaultStorage;
 
 		protected readonly List<ISystem> systems = new();
-		private readonly Dictionary<ComponentsStorageKey, ComponentsStorage> _componentsStorages =
+		readonly Dictionary<ComponentsStorageKey, ComponentsStorage> _componentsStorages =
 			new(4, ComponentsStorageKey.ComponentStorageKeyComparer);
-		private readonly List<ComponentsStorage> _componentsStoragesList = new(4);
-		private readonly IBootstrapable[] _bootstrapables;
-		private readonly Dictionary<Type, object> _singletons = new();
+		readonly List<ComponentsStorage> _componentsStoragesList = new(4);
+		readonly IBootstrapable[] _bootstrapables;
+		readonly Dictionary<Type, object> _singletons = new();
 
-		private bool _initialized;
-		private bool _inUpdatePhase;
+		bool _initialized;
+		bool _inUpdatePhase;
 
 		public bool IsRestored{ get; private set; }
 		public IReadOnlyList<ComponentsStorage> AllComponentsStorages => _componentsStoragesList;
@@ -45,6 +45,7 @@ namespace KVD.ECS.Core
 			IsRestored = false;
 			await Bootstrap();
 			await InitInitialSystems();
+
 			_initialized = true;
 		}
 		
@@ -145,7 +146,7 @@ namespace KVD.ECS.Core
 			throw new ArgumentException($"There is no system of {typeof(T).Name}");
 		}
 
-		private T? FindSystem<T>(ISystem system) where T : class, ISystem
+		T? FindSystem<T>(ISystem system) where T : class, ISystem
 		{
 			{
 				if (system is T targetSystem)
@@ -166,16 +167,16 @@ namespace KVD.ECS.Core
 
 			return null;
 		}
-		
-		private async UniTask InitInitialSystems()
+
+		async UniTask InitInitialSystems()
 		{
 			foreach (var system in systems)
 			{
 				await system.Init(this);
 			}
 		}
-		
-		private async UniTask RestoreSystems()
+
+		async UniTask RestoreSystems()
 		{
 			foreach (var system in systems)
 			{
@@ -206,7 +207,7 @@ namespace KVD.ECS.Core
 		#endregion ComponentsStorages
 
 		#region Bootstrap
-		private async UniTask Bootstrap()
+		async UniTask Bootstrap()
 		{
 			foreach (var bootstrapable in _bootstrapables)
 			{

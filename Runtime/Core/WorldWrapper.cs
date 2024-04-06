@@ -17,10 +17,10 @@ namespace KVD.ECS.Core
 		
 		public World World{ get; private set; }
 #nullable enable
-		private UniTask _initTask;
+		UniTask _initTask;
 		public UniTask InitTask => _initTask;
 
-		private void Start()
+		void Start()
 		{
 			var loadRequest = FindAnyObjectByType<LoadRequest>();
 			if (loadRequest)
@@ -34,14 +34,14 @@ namespace KVD.ECS.Core
 				StartWorld().Forget(Debug.LogException);
 			}
 		}
-		
-		private async void OnDestroy()
+
+		async void OnDestroy()
 		{
 			await World.Destroy();
 			_initTask = default;
 		}
 
-		private void Update()
+		void Update()
 		{
 			if (_initTask.Status != UniTaskStatus.Succeeded)
 			{

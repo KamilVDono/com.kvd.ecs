@@ -64,17 +64,17 @@ namespace KVD.ECS.Core
 	
 		#region Lists
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComponentListPtr<T> TryGetListPtr<T>(out bool success) where T : unmanaged, IComponent
+		public bool TryGetListPtr<T>(out ComponentListPtr<T> componentList) where T : unmanaged, IComponent
 		{
 			var soft = ListPtrSoft<T>();
 			if (!soft.IsCreated)
 			{
-				success = false;
-				return default;
+				componentList = default;
+				return false;
 
 			}
-			success = true;
-			return soft.ToListPtr();
+			componentList = soft.ToListPtr();
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

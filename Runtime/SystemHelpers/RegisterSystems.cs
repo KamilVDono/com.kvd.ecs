@@ -12,12 +12,12 @@ namespace KVD.ECS.SystemHelpers
 	public class RegisterSystems : MonoBehaviour, IBootstrapable
 	{
 #nullable disable
-		[SerializeField] private string _name;
+		[SerializeField] string _name;
 		[SerializeReference, SubclassSelector,]
-		private ISystem[] _systemReferences = Array.Empty<ISystem>();
+		ISystem[] _systemReferences = Array.Empty<ISystem>();
 #nullable enable
 
-		private SystemsGroup? _myGroup;
+		SystemsGroup? _myGroup;
 
 		public void OnDestroy()
 		{
@@ -37,8 +37,8 @@ namespace KVD.ECS.SystemHelpers
 		{
 			return Register(world);
 		}
-		
-		private UniTask Register(World world)
+
+		UniTask Register(World world)
 		{
 			var systemName = string.IsNullOrWhiteSpace(_name) ? name : _name;
 			_myGroup = new(systemName, _systemReferences);
