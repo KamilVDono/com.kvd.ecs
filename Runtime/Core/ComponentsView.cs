@@ -3,18 +3,19 @@ using KVD.ECS.Core.Components;
 using KVD.Utils.DataStructures;
 using Unity.Burst;
 using Unity.Collections;
-using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
+using Unity.IL2CPP.CompilerServices;
 using Unity.Profiling;
 
 namespace KVD.ECS.Core
 {
+	// TODO: Code generation for ComponentsView
 	[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 	public unsafe struct ComponentsView
 	{
 		UnsafeArray<ComponentListPtrSoft> _hasComponents;
 		UnsafeArray<ComponentListPtrSoft> _excludeComponents;
 
-		readonly bool _onlyWhenStructuralChanges;
+		readonly byte _onlyWhenStructuralChanges;
 		int _lastVersion;
 
 		public uint Size{ get; private set; }
@@ -27,7 +28,7 @@ namespace KVD.ECS.Core
 
 			_hasComponents = hasComponents;
 			_excludeComponents = excludeComponents;
-			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
+			_onlyWhenStructuralChanges = (byte)(onlyWhenStructuralChanges ? 1 : 0);
 		}
 
 		public void Dispose()
@@ -76,7 +77,7 @@ namespace KVD.ECS.Core
 
 		readonly ComponentListPtrSoft<T0> _componentsList0;
 
-		readonly bool _onlyWhenStructuralChanges;
+		readonly byte _onlyWhenStructuralChanges;
 		int _lastVersion;
 
 		public uint Size{ get; private set; }
@@ -92,7 +93,7 @@ namespace KVD.ECS.Core
 			_excludeComponents = excludeComponents;
 			_componentsList0   = componentsList0;
 
-			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
+			_onlyWhenStructuralChanges = (byte)(onlyWhenStructuralChanges ? 1 : 0);
 		}
 
 		public void Dispose()
@@ -112,47 +113,72 @@ namespace KVD.ECS.Core
 		public unsafe ref struct ComponentsIterator
 		{
 			UnsafeArray<int> _entities;
-			readonly ComponentListPtrSoft<T0> _componentsList0;
+			readonly ComponentList<T0>* _componentsList0;
 
 			int _iteration;
 
 			public ComponentsIterator(UnsafeArray<int> entities, ComponentListPtrSoft<T0> componentsList0)
 			{
-				_componentsList0 = componentsList0;
+				if (entities.Length > 0)
+				{
+					_componentsList0 = componentsList0.ToListPtr().ptr;
+				}
+				else
+				{
+					_componentsList0 = default;
+				}
 				_entities = entities;
 
 				_iteration = -1;
 			}
 
 			[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
-			public IterationView Current => new(_entities.Ptr[_iteration], _componentsList0.ToListPtr());
+			public IterationView Current => new(_entities.Ptr[_iteration], _componentsList0);
 
 			public bool MoveNext() => ++_iteration < _entities.Length;
 			public void Dispose() => _entities.Dispose();
 		}
 
-		public ref struct IterationView
+		public readonly unsafe ref struct IterationView
 		{
 			public readonly int entity;
 
-			readonly ComponentListPtr<T0> _componentsList0;
+			readonly ComponentList<T0>* _componentsList0;
 
-			public IterationView(int entity, ComponentListPtr<T0> componentsList0)
+			public IterationView(int entity, ComponentList<T0>* componentsList0)
 			{
 				this.entity      = entity;
 				_componentsList0 = componentsList0;
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public readonly ref T0 Get0()
+			public ref T0 Get0()
 			{
-				return ref _componentsList0.AsList().Value(entity);
+				return ref *_componentsList0->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get0RW(out T0* component)
+			{
+				component = _componentsList0->ValuePtr(entity);
+			}
+			
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get0RO(out T0 component)
+			{
+				component = *_componentsList0->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get0RO<TU>(out TU component) where TU : unmanaged
+			{
+				component = *(TU*)_componentsList0->ValuePtr(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Remove0()
 			{
-				_componentsList0.AsList().Remove(entity);
+				_componentsList0->Remove(entity);
 			}
 		}
 	}
@@ -168,7 +194,7 @@ namespace KVD.ECS.Core
 		readonly ComponentListPtrSoft<T0> _componentsList0;
 		readonly ComponentListPtrSoft<T1> _componentsList1;
 
-		readonly bool _onlyWhenStructuralChanges;
+		readonly byte _onlyWhenStructuralChanges;
 		int _lastVersion;
 
 		public uint Size{ get; private set; }
@@ -186,7 +212,7 @@ namespace KVD.ECS.Core
 			_componentsList0 = componentsList0;
 			_componentsList1 = componentsList1;
 
-			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
+			_onlyWhenStructuralChanges = (byte)(onlyWhenStructuralChanges ? 1 : 0);
 		}
 
 		public void Dispose()
@@ -206,16 +232,24 @@ namespace KVD.ECS.Core
 		public unsafe ref struct ComponentsIterator
 		{
 			UnsafeArray<int> _entities;
-			readonly ComponentListPtrSoft<T0> _componentsList0;
-			readonly ComponentListPtrSoft<T1> _componentsList1;
+			readonly ComponentList<T0>* _componentsList0;
+			readonly ComponentList<T1>* _componentsList1;
 
 			int _iteration;
 
 			public ComponentsIterator(UnsafeArray<int> entities,
 				ComponentListPtrSoft<T0> componentsList0, ComponentListPtrSoft<T1> componentsList1)
 			{
-				_componentsList0 = componentsList0;
-				_componentsList1 = componentsList1;
+				if (entities.Length > 0)
+				{
+					_componentsList0 = componentsList0.ToListPtr().ptr;
+					_componentsList1 = componentsList1.ToListPtr().ptr;
+				}
+				else
+				{
+					_componentsList0 = default;
+					_componentsList1 = default;
+				}
 
 				_entities  = entities;
 				_iteration = -1;
@@ -223,20 +257,20 @@ namespace KVD.ECS.Core
 
 			[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 			public IterationView Current => new(_entities.Ptr[_iteration],
-				_componentsList0.ToListPtr(), _componentsList1.ToListPtr());
+				_componentsList0, _componentsList1);
 
 			public bool MoveNext() => ++_iteration < _entities.Length;
 			public void Dispose() => _entities.Dispose();
 		}
 
-		public ref struct IterationView
+		public readonly unsafe ref struct IterationView
 		{
 			public readonly int entity;
 
-			readonly ComponentListPtr<T0> _componentsList0;
-			readonly ComponentListPtr<T1> _componentsList1;
+			readonly ComponentList<T0>* _componentsList0;
+			readonly ComponentList<T1>* _componentsList1;
 
-			public IterationView(int entity, ComponentListPtr<T0> componentsList0, ComponentListPtr<T1> componentsList1)
+			public IterationView(int entity, ComponentList<T0>* componentsList0, ComponentList<T1>* componentsList1)
 			{
 				this.entity      = entity;
 				_componentsList0 = componentsList0;
@@ -246,25 +280,49 @@ namespace KVD.ECS.Core
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T0 Get0()
 			{
-				return ref _componentsList0.AsList().Value(entity);
+				return ref *_componentsList0->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get0RO(out T0 component)
+			{
+				component = *_componentsList0->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get0RO<TU>(out TU component) where TU : unmanaged
+			{
+				component = *(TU*)_componentsList0->ValuePtr(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T1 Get1()
 			{
-				return ref _componentsList1.AsList().Value(entity);
+				return ref *_componentsList1->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get1RO(out T1 component)
+			{
+				component = *_componentsList1->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get1RO<TU>(out TU component) where TU : unmanaged
+			{
+				component = *(TU*)_componentsList1->ValuePtr(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Remove0()
 			{
-				_componentsList0.AsList().Remove(entity);
+				_componentsList0->Remove(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Remove1()
 			{
-				_componentsList1.AsList().Remove(entity);
+				_componentsList1->Remove(entity);
 			}
 		}
 	}
@@ -282,7 +340,7 @@ namespace KVD.ECS.Core
 		readonly ComponentListPtrSoft<T1> _componentsList1;
 		readonly ComponentListPtrSoft<T2> _componentsList2;
 
-		readonly bool _onlyWhenStructuralChanges;
+		readonly byte _onlyWhenStructuralChanges;
 		int _lastVersion;
 
 		public uint Size{ get; private set; }
@@ -302,7 +360,7 @@ namespace KVD.ECS.Core
 			_componentsList1 = componentsList1;
 			_componentsList2 = componentsList2;
 
-			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
+			_onlyWhenStructuralChanges = (byte)(onlyWhenStructuralChanges ? 1 : 0);
 		}
 
 		public void Dispose()
@@ -323,9 +381,9 @@ namespace KVD.ECS.Core
 		{
 			UnsafeArray<int> _entities;
 
-			readonly ComponentListPtrSoft<T0> _componentsList0;
-			readonly ComponentListPtrSoft<T1> _componentsList1;
-			readonly ComponentListPtrSoft<T2> _componentsList2;
+			readonly ComponentList<T0>* _componentsList0;
+			readonly ComponentList<T1>* _componentsList1;
+			readonly ComponentList<T2>* _componentsList2;
 
 			int _iteration;
 
@@ -333,32 +391,40 @@ namespace KVD.ECS.Core
 				ComponentListPtrSoft<T0> componentsList0, ComponentListPtrSoft<T1> componentsList1,
 				ComponentListPtrSoft<T2> componentsList2)
 			{
-				_componentsList0 = componentsList0;
-				_componentsList1 = componentsList1;
-				_componentsList2 = componentsList2;
+				if (entities.Length > 0)
+				{
+					_componentsList0 = componentsList0.ToListPtr().ptr;
+					_componentsList1 = componentsList1.ToListPtr().ptr;
+					_componentsList2 = componentsList2.ToListPtr().ptr;
+				}
+				else
+				{
+					_componentsList0 = default;
+					_componentsList1 = default;
+					_componentsList2 = default;
+				}
 
 				_entities  = entities;
 				_iteration = -1;
 			}
 
 			[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
-			public IterationView Current => new(_entities.Ptr[_iteration],
-				_componentsList0.ToListPtr(), _componentsList1.ToListPtr(), _componentsList2.ToListPtr());
+			public IterationView Current => new(_entities.Ptr[_iteration], _componentsList0, _componentsList1, _componentsList2);
 
 			public bool MoveNext() => ++_iteration < _entities.Length;
 			public void Dispose() => _entities.Dispose();
 		}
 
-		public ref struct IterationView
+		public readonly unsafe ref struct IterationView
 		{
 			public readonly int entity;
 
-			readonly ComponentListPtr<T0> _componentsList0;
-			readonly ComponentListPtr<T1> _componentsList1;
-			readonly ComponentListPtr<T2> _componentsList2;
+			readonly ComponentList<T0>* _componentsList0;
+			readonly ComponentList<T1>* _componentsList1;
+			readonly ComponentList<T2>* _componentsList2;
 
-			public IterationView(int entity, ComponentListPtr<T0> componentsList0, ComponentListPtr<T1> componentsList1,
-				ComponentListPtr<T2> componentsList2)
+			public IterationView(int entity, ComponentList<T0>* componentsList0, ComponentList<T1>* componentsList1,
+				ComponentList<T2>* componentsList2)
 			{
 				this.entity      = entity;
 				_componentsList0 = componentsList0;
@@ -369,37 +435,91 @@ namespace KVD.ECS.Core
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T0 Get0()
 			{
-				return ref _componentsList0.AsList().Value(entity);
+				return ref *_componentsList0->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get0RW(out T0* component)
+			{
+				component = _componentsList0->ValuePtr(entity);
+			}
+			
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get0RO(out T0 component)
+			{
+				component = *_componentsList0->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get0RO<TU>(out TU component) where TU : unmanaged
+			{
+				component = *(TU*)_componentsList0->ValuePtr(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T1 Get1()
 			{
-				return ref _componentsList1.AsList().Value(entity);
+				return ref *_componentsList1->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get1RW(out T1* component)
+			{
+				component = _componentsList1->ValuePtr(entity);
+			}
+			
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get1RO(out T1 component)
+			{
+				component =  *_componentsList1->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get1RO<TU>(out TU component) where TU : unmanaged
+			{
+				component = *(TU*)_componentsList1->ValuePtr(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T2 Get2()
 			{
-				return ref _componentsList2.AsList().Value(entity);
+				return ref *_componentsList2->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get2RW(out T2* component)
+			{
+				component = _componentsList2->ValuePtr(entity);
+			}
+			
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get2RO(out T2 component)
+			{
+				component = *_componentsList2->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get2RO<TU>(out TU component) where TU : unmanaged
+			{
+				component = *(TU*)_componentsList2->ValuePtr(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Remove0()
 			{
-				_componentsList0.AsList().Remove(entity);
+				_componentsList0->Remove(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Remove1()
 			{
-				_componentsList1.AsList().Remove(entity);
+				_componentsList1->Remove(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Remove2()
 			{
-				_componentsList2.AsList().Remove(entity);
+				_componentsList2->Remove(entity);
 			}
 		}
 	}
@@ -419,7 +539,7 @@ namespace KVD.ECS.Core
 		readonly ComponentListPtrSoft<T2> _componentsList2;
 		readonly ComponentListPtrSoft<T3> _componentsList3;
 
-		readonly bool _onlyWhenStructuralChanges;
+		readonly byte _onlyWhenStructuralChanges;
 		int _lastVersion;
 
 		public uint Size{ get; private set; }
@@ -440,7 +560,7 @@ namespace KVD.ECS.Core
 			_componentsList2 = componentsList2;
 			_componentsList3 = componentsList3;
 
-			_onlyWhenStructuralChanges = onlyWhenStructuralChanges;
+			_onlyWhenStructuralChanges = (byte)(onlyWhenStructuralChanges ? 1 : 0);
 		}
 
 		public void Dispose()
@@ -461,10 +581,10 @@ namespace KVD.ECS.Core
 		{
 			UnsafeArray<int> _entities;
 
-			readonly ComponentListPtrSoft<T0> _componentsList0;
-			readonly ComponentListPtrSoft<T1> _componentsList1;
-			readonly ComponentListPtrSoft<T2> _componentsList2;
-			readonly ComponentListPtrSoft<T3> _componentsList3;
+			readonly ComponentList<T0>* _componentsList0;
+			readonly ComponentList<T1>* _componentsList1;
+			readonly ComponentList<T2>* _componentsList2;
+			readonly ComponentList<T3>* _componentsList3;
 
 			int _iteration;
 
@@ -472,10 +592,21 @@ namespace KVD.ECS.Core
 				ComponentListPtrSoft<T0> componentsList0, ComponentListPtrSoft<T1> componentsList1,
 				ComponentListPtrSoft<T2> componentsList2, ComponentListPtrSoft<T3> componentsList3)
 			{
-				_componentsList0 = componentsList0;
-				_componentsList1 = componentsList1;
-				_componentsList2 = componentsList2;
-				_componentsList3 = componentsList3;
+				if (entities.Length > 0)
+				{
+					_componentsList0 = componentsList0.ToListPtr().ptr;
+					_componentsList1 = componentsList1.ToListPtr().ptr;
+					_componentsList2 = componentsList2.ToListPtr().ptr;
+					_componentsList3 = componentsList3.ToListPtr().ptr;
+				}
+				else
+				{
+					_componentsList0 = default;
+					_componentsList1 = default;
+					_componentsList2 = default;
+					_componentsList3 = default;
+				}
+
 
 				_entities  = entities;
 				_iteration = -1;
@@ -483,24 +614,23 @@ namespace KVD.ECS.Core
 
 			[Il2CppSetOption(Option.NullChecks, false), Il2CppSetOption(Option.ArrayBoundsChecks, false),]
 			public IterationView Current => new(_entities.Ptr[_iteration],
-				_componentsList0.ToListPtr(), _componentsList1.ToListPtr(), _componentsList2.ToListPtr(),
-				_componentsList3.ToListPtr());
+				_componentsList0, _componentsList1, _componentsList2, _componentsList3);
 
 			public bool MoveNext() => ++_iteration < _entities.Length;
 			public void Dispose() => _entities.Dispose();
 		}
 
-		public ref struct IterationView
+		public readonly unsafe ref struct IterationView
 		{
 			public readonly int entity;
 
-			readonly ComponentListPtr<T0> _componentsList0;
-			readonly ComponentListPtr<T1> _componentsList1;
-			readonly ComponentListPtr<T2> _componentsList2;
-			readonly ComponentListPtr<T3> _componentsList3;
+			readonly ComponentList<T0>* _componentsList0;
+			readonly ComponentList<T1>* _componentsList1;
+			readonly ComponentList<T2>* _componentsList2;
+			readonly ComponentList<T3>* _componentsList3;
 
-			public IterationView(int entity, ComponentListPtr<T0> componentsList0, ComponentListPtr<T1> componentsList1,
-				ComponentListPtr<T2> componentsList2, ComponentListPtr<T3> componentsList3)
+			public IterationView(int entity, ComponentList<T0>* componentsList0, ComponentList<T1>* componentsList1,
+				ComponentList<T2>* componentsList2, ComponentList<T3>* componentsList3)
 			{
 				this.entity      = entity;
 				_componentsList0 = componentsList0;
@@ -512,49 +642,97 @@ namespace KVD.ECS.Core
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T0 Get0()
 			{
-				return ref _componentsList0.AsList().Value(entity);
+				return ref *_componentsList0->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get0RW(out T0* component)
+			{
+				component = _componentsList0->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get0RO(out T0 component)
+			{
+				component = *_componentsList0->ValuePtr(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T1 Get1()
 			{
-				return ref _componentsList1.AsList().Value(entity);
+				return ref *_componentsList1->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get1RW(out T1* component)
+			{
+				component = _componentsList1->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get1RO(out T1 component)
+			{
+				component = *_componentsList1->ValuePtr(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T2 Get2()
 			{
-				return ref _componentsList2.AsList().Value(entity);
+				return ref *_componentsList2->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get2RW(out T2* component)
+			{
+				component = _componentsList2->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get2RO(out T2 component)
+			{
+				component = *_componentsList2->ValuePtr(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ref T3 Get3()
 			{
-				return ref _componentsList3.AsList().Value(entity);
+				return ref *_componentsList3->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get3RW(out T3* component)
+			{
+				component = _componentsList3->ValuePtr(entity);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Get3RO(out T3 component)
+			{
+				component = *_componentsList3->ValuePtr(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Remove0()
 			{
-				_componentsList0.AsList().Remove(entity);
+				_componentsList0->Remove(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Remove1()
 			{
-				_componentsList1.AsList().Remove(entity);
+				_componentsList1->Remove(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Remove2()
 			{
-				_componentsList2.AsList().Remove(entity);
+				_componentsList2->Remove(entity);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Remove3()
 			{
-				_componentsList3.AsList().Remove(entity);
+				_componentsList3->Remove(entity);
 			}
 		}
 	}
@@ -568,7 +746,7 @@ namespace KVD.ECS.Core
 		[BurstCompile]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Zip(in UnsafeArray<ComponentListPtrSoft> hasComponents, in UnsafeArray<ComponentListPtrSoft> excludeComponents,
-			bool onlyWhenStructuralChanges, ref int lastVersion, out UnsafeArray<int> entities)
+			byte onlyWhenStructuralChanges, ref int lastVersion, out UnsafeArray<int> entities)
 		{
 			using var marker = ZipMarker.Auto();
 
@@ -596,7 +774,7 @@ namespace KVD.ECS.Core
 				}
 			}
 
-			if ((lastVersion == currentVersion) & onlyWhenStructuralChanges)
+			if ((lastVersion == currentVersion) & onlyWhenStructuralChanges != 0)
 			{
 				entities = UnsafeArray<int>.Empty;
 				return;

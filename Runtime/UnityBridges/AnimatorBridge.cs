@@ -29,15 +29,14 @@ namespace KVD.ECS.UnityBridges
 			_setTriggers = storage.ListPtrSoft<SetAnimatorValue<AnimatorTrigger>>();
 		}
 
-		void Update()
+		unsafe void Update()
 		{
 			if (_setInts.IsCreated)
 			{
 				ref var setInts = ref _setInts.ToList();
-				var setInt = setInts.TryValue(_entity, out var has);
-				if (has)
+				if (setInts.TryValuePtr(_entity, out var setInt))
 				{
-					_animator.SetInteger(setInt.id, setInt.value);
+					_animator.SetInteger(setInt->id, setInt->value);
 					setInts.Remove(_entity);
 				}
 			}
@@ -45,10 +44,9 @@ namespace KVD.ECS.UnityBridges
 			if (_setFloats.IsCreated)
 			{
 				ref var setFloats = ref _setFloats.ToList();
-				var setFloat = setFloats.TryValue(_entity, out var has);
-				if (has)
+				if (setFloats.TryValuePtr(_entity, out var setFloat))
 				{
-					_animator.SetFloat(setFloat.id, setFloat.value);
+					_animator.SetFloat(setFloat->id, setFloat->value);
 					setFloats.Remove(_entity);
 				}
 			}
@@ -56,10 +54,9 @@ namespace KVD.ECS.UnityBridges
 			if (_setBools.IsCreated)
 			{
 				ref var setBools = ref _setBools.ToList();
-				var setBool = setBools.TryValue(_entity, out var has);
-				if (has)
+				if (setBools.TryValuePtr(_entity, out var setBool))
 				{
-					_animator.SetBool(setBool.id, setBool.value);
+					_animator.SetBool(setBool->id, setBool->value);
 					setBools.Remove(_entity);
 				}
 			}
@@ -67,10 +64,9 @@ namespace KVD.ECS.UnityBridges
 			if (_setTriggers.IsCreated)
 			{
 				ref var setTriggers = ref _setTriggers.ToList();
-				var setTrigger = setTriggers.TryValue(_entity, out var has);
-				if (has)
+				if (setTriggers.TryValuePtr(_entity, out var setTrigger))
 				{
-					_animator.SetTrigger(setTrigger.id);
+					_animator.SetTrigger(setTrigger->id);
 					setTriggers.Remove(_entity);
 				}
 			}

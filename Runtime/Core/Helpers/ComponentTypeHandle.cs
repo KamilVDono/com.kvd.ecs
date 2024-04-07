@@ -44,6 +44,7 @@ namespace KVD.ECS.Core.Helpers
 			return !left.Equals(right);
 		}
 
+		// TODO: Make it eager initialized by all known types
 		static ushort s_nextTypeIndex;
 		static Type[] s_types = new Type[1024];
 		static ComponentsListTypeInfo[] s_typeInfos = new ComponentsListTypeInfo[1024];

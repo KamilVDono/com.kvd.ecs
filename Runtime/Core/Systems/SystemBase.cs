@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+#if SYSTEM_PROFILER_MARKERS
 using Unity.Profiling;
 using Unity.Profiling.LowLevel;
+#endif
 
 namespace KVD.ECS.Core.Systems
 {

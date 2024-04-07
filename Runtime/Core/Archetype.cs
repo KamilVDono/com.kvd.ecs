@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using KVD.ECS.Core.Components;
 using KVD.ECS.Core.Entities;
-using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
+using Unity.IL2CPP.CompilerServices;
 using Unity.Mathematics;
 
 namespace KVD.ECS.Core

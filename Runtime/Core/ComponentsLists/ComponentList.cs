@@ -7,7 +7,7 @@ using KVD.Utils.DataStructures;
 using KVD.Utils.Extensions;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
+using Unity.IL2CPP.CompilerServices;
 #if LIST_PROFILER_MARKERS
 using Unity.Profiling;
 #endif
@@ -48,11 +48,11 @@ namespace KVD.ECS.Core
 
 		public bool IsCreated => values != null;
 
-		public ComponentList(in ComponentsListTypeInfo typeInfo, int capacity = ComponentListConstants.InitialCapacity)
+		public ComponentList(in ComponentsListTypeInfo typeInfo, int initialCapacity = ComponentListConstants.InitialCapacity)
 		{
 			this.typeInfo = typeInfo;
 
-			this.capacity = Math.Max(capacity, 64);
+			capacity = initialCapacity;
 			entitiesVersion = 0;
 			length          = 0;
 			indexByEntity = (int*)UnsafeUtility.Malloc(capacity*UnsafeUtility.SizeOf<int>(),
@@ -103,11 +103,19 @@ namespace KVD.ECS.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void* TryValue(int entity, out bool has)
+		public readonly bool TryValue(int entity, out void* value)
 		{
 			var index = Index(entity);
-			has = index >= 0;
-			return has ? Value(entity) : typeInfo.defaultComponent;
+			if (index >= 0)
+			{
+				value = ((byte*)values)+index*typeInfo.valueSize;
+				return true;
+			}
+			else
+			{
+				value = null;
+				return false;
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -315,8 +323,14 @@ namespace KVD.ECS.Core
 				capacity <<= 2;
 			}
 
-			UnsafeUtils.Resize(ref values, Allocator.Persistent, oldLength, capacity, typeInfo.valueSize, typeInfo.valueAlignment);
-			UnsafeUtils.Resize(ref entityByIndex, Allocator.Persistent, oldLength, capacity);
+			fixed (void** ptr = &values)
+			{
+				UnsafeUtils.Resize(ptr, Allocator.Persistent, oldLength, capacity, typeInfo.valueSize, typeInfo.valueAlignment);
+			}
+			fixed (int** ptr = &entityByIndex)
+			{
+				UnsafeUtils.Resize(ptr, Allocator.Persistent, oldLength, capacity);
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -338,7 +352,10 @@ namespace KVD.ECS.Core
 			}
 
 			indexByEntityCount = sizeRequest;
-			UnsafeUtils.Resize(ref indexByEntity, Allocator.Persistent, oldSize, sizeRequest);
+			fixed (int** ptr = &indexByEntity)
+			{
+				UnsafeUtils.Resize(ptr, Allocator.Persistent, oldSize, sizeRequest);
+			}
 			UnsafeUtils.Fill(indexByEntity+oldSize, -1, sizeRequest-oldSize);
 			entitiesMask.EnsureCapacity((uint)sizeRequest);
 		}
@@ -363,9 +380,12 @@ namespace KVD.ECS.Core
 		public readonly T* DenseArray => (T*)typeless.values;
 		public readonly Span<T> ValidDenseArray => new(typeless.values, Length);
 
-		public ComponentList(int capacity = ComponentListConstants.InitialCapacity)
+		public ComponentList(int capacity = ComponentListConstants.InitialCapacity) : this(
+			ComponentsListTypeInfo.From<T>(), capacity) {}
+
+		public ComponentList(in ComponentsListTypeInfo typeInfo, int capacity = ComponentListConstants.InitialCapacity)
 		{
-			typeless = new(ComponentsListTypeInfo.From<T>(), capacity);
+			typeless = new(typeInfo, capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -375,10 +395,39 @@ namespace KVD.ECS.Core
 		public readonly bool Has(Entity entity) => typeless.Has(entity);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T Value(int entity) => ref UnsafeUtility.AsRef<T>(typeless.Value(entity));
+		public readonly ref T Value(int entity) => ref *(T*)typeless.Value(entity);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T TryValue(int entity, out bool has) => ref UnsafeUtility.AsRef<T>(typeless.TryValue(entity, out has));
+		public readonly T* ValuePtr(int entity) => (T*)typeless.Value(entity);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool TryValue(int entity, ref T value)
+		{
+			if (typeless.TryValue(entity, out var valueTypeless))
+			{
+				value = *(T*)valueTypeless;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool TryValuePtr(int entity, out T* value)
+		{
+			if (typeless.TryValue(entity, out var valueTypeless))
+			{
+				value = (T*)valueTypeless;
+				return true;
+			}
+			else
+			{
+				value = null;
+				return false;
+			}
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add(Entity e, T value) => typeless.Add(e, UnsafeUtility.AddressOf(ref value));

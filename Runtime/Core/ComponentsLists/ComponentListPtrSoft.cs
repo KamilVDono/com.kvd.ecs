@@ -21,7 +21,7 @@ namespace KVD.ECS.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ComponentListPtrSoft<T> As<T>() where T : unmanaged, IComponent => new((ComponentListPtrSoft<T>*)ptr);
+		public ComponentListPtrSoft<T> As<T>() where T : unmanaged, IComponent => new((ComponentListPtrSoft<T>*)ptr, typeInfo);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComponentListPtr ToListPtr(int initialSize = ComponentListConstants.InitialCapacity)
@@ -36,7 +36,7 @@ namespace KVD.ECS.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref ComponentList ToList(int initialSize = ComponentListConstants.InitialCapacity)
 		{
-			return ref ToListPtr().AsList();
+			return ref ToListPtr(initialSize).AsList();
 		}
 
 		public bool Equals(ComponentListPtrSoft other)
@@ -64,6 +64,7 @@ namespace KVD.ECS.Core
 	public readonly unsafe struct ComponentListPtrSoft<T> : IEquatable<ComponentListPtrSoft<T>> where T : unmanaged, IComponent
 	{
 		public readonly ComponentList<T>* ptr;
+		public readonly ComponentsListTypeInfo typeInfo;
 
 		public bool IsCreated
 		{
@@ -71,9 +72,14 @@ namespace KVD.ECS.Core
 			get => ptr != null && ptr->IsCreated;
 		}
 
-		public ComponentListPtrSoft(void* ptr)
+		public ComponentListPtrSoft(void* ptr) : this(ptr, ComponentsListTypeInfo.From<T>())
+		{
+		}
+
+		public ComponentListPtrSoft(void* ptr, in ComponentsListTypeInfo typeInfo)
 		{
 			this.ptr = (ComponentList<T>*)ptr;
+			this.typeInfo = typeInfo;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -84,7 +90,7 @@ namespace KVD.ECS.Core
 		{
 			if (!IsCreated)
 			{
-				*ptr = new ComponentList<T>(initialSize);
+				*ptr = new ComponentList<T>(typeInfo, initialSize);
 			}
 			return new ComponentListPtr<T>(ptr);
 		}
@@ -92,7 +98,7 @@ namespace KVD.ECS.Core
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref ComponentList<T> ToList(int initialSize = ComponentListConstants.InitialCapacity)
 		{
-			return ref ToListPtr().AsList();
+			return ref ToListPtr(initialSize).AsList();
 		}
 
 		public bool Equals(ComponentListPtrSoft<T> other)

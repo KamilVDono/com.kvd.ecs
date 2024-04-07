@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
-using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
+using Unity.IL2CPP.CompilerServices;
 
 #nullable enable
 

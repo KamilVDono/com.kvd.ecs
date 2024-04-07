@@ -3,7 +3,7 @@ using KVD.ECS.Core.Components;
 using KVD.ECS.Core.Entities;
 using KVD.Utils.DataStructures;
 using Unity.Collections;
-using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
+using Unity.IL2CPP.CompilerServices;
 
 namespace KVD.ECS.Core
 {

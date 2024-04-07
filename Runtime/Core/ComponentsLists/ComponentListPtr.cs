@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using KVD.ECS.Core.Components;
 using Unity.Collections.LowLevel.Unsafe;
 
@@ -15,8 +16,10 @@ namespace KVD.ECS.Core
 			this.ptr = (ComponentList*)ptr;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComponentListPtr<T> As<T>() where T : unmanaged, IComponent => new((ComponentList<T>*)ptr);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref ComponentList AsList() => ref UnsafeUtility.AsRef<ComponentList>(ptr);
 
 		public bool Equals(ComponentListPtr other)
@@ -50,8 +53,10 @@ namespace KVD.ECS.Core
 			this.ptr = (ComponentList<T>*)ptr;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ComponentListPtr TypeLess() => new(ptr);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref ComponentList<T> AsList() => ref UnsafeUtility.AsRef<ComponentList<T>>(ptr);
 
 		public bool Equals(ComponentListPtr<T> other)

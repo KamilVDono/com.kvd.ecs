@@ -1,5 +1,4 @@
-﻿using System;
-using KVD.ECS.Core;
+﻿using KVD.ECS.Core;
 using KVD.ECS.Core.Entities;
 using KVD.ECS.GeneralTests.Components;
 using KVD.Utils.DataStructures;
@@ -299,7 +298,8 @@ namespace KVD.ECS.GeneralTests
 			_components.Add(15, pos);
 			
 			// Act
-			var posFromList = _components.TryValue(5, out var present);
+			var posFromList = default(Position);
+			var present = _components.TryValue(5, ref posFromList);
 			
 			// Assert
 			Assert.IsTrue(present);
@@ -307,21 +307,23 @@ namespace KVD.ECS.GeneralTests
 		}
 		
 		[Test]
-		public void TryValue_NotPresent()
+		public unsafe void TryValue_NotPresent()
 		{
 			// Arrange
 			var pos = new Position { x = 5, y = 8, z = 9, };
 			_components.Add(1, pos);
 			_components.Add(15, pos);
-			
-			var _ = _components.TryValue(5, out var present);
+
+			// Act
+			var posFromList = default(Position);
+			var present = _components.TryValue(5, ref posFromList);
 			
 			// Assert
 			Assert.IsFalse(present);
 		}
 		
 		[Test]
-		public void RefTryValue_Present_Updated()
+		public unsafe void RefTryValue_Present_Updated()
 		{
 			// Arrange
 			var pos = new Position { x = 5, y = 8, z = 9, };
@@ -329,25 +331,25 @@ namespace KVD.ECS.GeneralTests
 			_components.Add(15, pos);
 			
 			// Act & Assert
-			ref var posFromList = ref _components.TryValue(5, out var present);
+			var present = _components.TryValuePtr(5, out var posFromList);
 			Assert.IsTrue(present);
-			Assert.AreEqual(pos, posFromList);
+			Assert.AreEqual(pos, *posFromList);
 		
-			posFromList.x = 15;
+			posFromList->x = 15;
 			pos.x         = 15;
-			posFromList   = ref _components.Value(5);
-			Assert.AreEqual(pos, posFromList);
+			ref var posFromList2 = ref _components.Value(5);
+			Assert.AreEqual(pos, posFromList2);
 		}
 		
 		[Test]
-		public void RefTryValue_NotPresent()
+		public unsafe void RefTryValue_NotPresent()
 		{
 			// Arrange
 			var pos = new Position { x = 5, y = 8, z = 9, };
 			_components.Add(1, pos);
 			_components.Add(15, pos);
 			
-			ref var _ = ref _components.TryValue(5, out var present);
+			var present = _components.TryValuePtr(5, out _);
 			
 			// Assert
 			Assert.IsFalse(present);

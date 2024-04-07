@@ -9,7 +9,7 @@ using KVD.Utils.DataStructures;
 using KVD.Utils.Extensions;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using Unity.IL2CPP.CompilerServices.Unity.Il2Cpp;
+using Unity.IL2CPP.CompilerServices;
 
 #nullable enable
 
