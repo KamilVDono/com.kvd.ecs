@@ -86,6 +86,21 @@ namespace KVD.ECS.Core
 			}
 			storage.ReturnEntity(entity);
 		}
+
+		public static void RemoveEntity(in UnsafeArray<ComponentListPtrSoft> lists, int entity)
+		{
+			for (var i = 0u; i < lists.Length; i++)
+			{
+				if (lists[i].IsCreated)
+				{
+					ref var list = ref lists[i].ToList();
+					if (list.Has(entity))
+					{
+						list.Remove(entity);
+					}
+				}
+			}
+		}
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsAlive(this ComponentsStorage storage, Entity entity)
@@ -103,9 +118,9 @@ namespace KVD.ECS.Core
 			return isAlive;
 		}
 	
-		public static UnsafeArray<Entity> NextEntitiesBulk(this ComponentsStorage storage, int length, Allocator allocator)
+		public static UnsafeArray<Entity> NextEntitiesBulk(this ComponentsStorage storage, uint length, Allocator allocator)
 		{
-			var entities = new UnsafeArray<Entity>((uint)length, allocator);
+			var entities = new UnsafeArray<Entity>(length, allocator);
 			for (var i = 0u; i < length; i++)
 			{
 				entities[i] = storage.NextEntity();

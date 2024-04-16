@@ -26,8 +26,10 @@ namespace KVD.ECS.GeneralTests
 			var archetype = new Archetype<Acceleration>(world.defaultStorage);
 			
 			// Act
-			var e1 = archetype.Create(new());
-			var e2 = archetype.Create(new());
+			var e1 = world.defaultStorage.NextEntity();
+			archetype.Create(e1, new());
+			var e2 = world.defaultStorage.NextEntity();
+			archetype.Create(e2, new());
 			
 			// Assert
 			Assert.IsTrue(archetype.Has(e1));

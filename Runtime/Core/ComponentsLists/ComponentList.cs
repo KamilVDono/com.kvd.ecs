@@ -277,6 +277,12 @@ namespace KVD.ECS.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void EnsureFreeSpace(int requiredFreeSpace, Entity lastEntity)
+		{
+			EnsureCapacity(length+requiredFreeSpace, lastEntity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void EnsureCapacity(int requestedCapacity, Entity lastEntity)
 		{
 			IncreaseSizeDense(requestedCapacity);
@@ -449,6 +455,9 @@ namespace KVD.ECS.Core
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Remove(int entity) => typeless.Remove(entity);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void EnsureFreeSpace(int requiredFreeSpace, Entity lastEntity) => typeless.EnsureFreeSpace(requiredFreeSpace, lastEntity);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void EnsureCapacity(int capacity, Entity lastEntity) => typeless.EnsureCapacity(capacity, lastEntity);

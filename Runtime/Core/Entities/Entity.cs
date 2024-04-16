@@ -102,6 +102,8 @@ namespace KVD.ECS.Core.Entities
 
 		public sealed class IndexEqualityComparer : IEqualityComparer<Entity>, IComparer<Entity>
 		{
+			public static IndexEqualityComparer IndexComparer{ get; } = new();
+
 			public bool Equals(Entity x, Entity y)
 			{
 				return x.index == y.index;
@@ -116,8 +118,6 @@ namespace KVD.ECS.Core.Entities
 				return x.index.CompareTo(y.index);
 			}
 		}
-
-		public static IndexEqualityComparer IndexComparer{ get; } = new();
 		#endregion Equality and comparasion
 	}
 }

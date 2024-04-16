@@ -32,10 +32,10 @@ namespace KVD.ECS.GeneralTests
 			var view = builder.With<Position>().With<Acceleration>().Build();
 		
 			// Act
-			CollectEntities(ref view);
+			var size = view.CalculateSize();
 		
 			// Assert
-			Assert.AreEqual(0, view.Size);
+			Assert.AreEqual(0, size);
 		}
 		
 		[Test]
@@ -68,10 +68,10 @@ namespace KVD.ECS.GeneralTests
 			var view = builder.With<Radius>().Build();
 		
 			// Act
-			CollectEntities(ref view);
+			var size = view.CalculateSize();
 		
 			// Assert
-			Assert.AreEqual(0, view.Size);
+			Assert.AreEqual(0, size);
 		}
 		
 		[Test]
@@ -103,10 +103,10 @@ namespace KVD.ECS.GeneralTests
 			var view = builder.With<Position>().With<Acceleration>().Build();
 		
 			// Act
-			CollectEntities(ref view);
+			var size = view.CalculateSize();
 		
 			// Assert
-			Assert.AreEqual(0, view.Size);
+			Assert.AreEqual(0, size);
 		}
 		
 		[Test]
@@ -137,9 +137,12 @@ namespace KVD.ECS.GeneralTests
 			var builder = new ComponentsViewBuilder(world.defaultStorage);
 			var view    = builder.With<Position>().With<Acceleration>().Build();
 		
-			// Act && Assert
+			// Act
 			var entities = CollectEntities(ref view);
-			Assert.AreEqual(3, view.Size);
+			var size = view.CalculateSize();
+
+			// Assert
+			Assert.AreEqual(3, size);
 			Assert.AreEqual(0, entities[0].index);
 			Assert.AreEqual(1, entities[1].index);
 			Assert.AreEqual(5, entities[2].index);
@@ -179,9 +182,10 @@ namespace KVD.ECS.GeneralTests
 
 			// Act
 			var entities = CollectEntities(ref view);
+			var size = view.CalculateSize();
 		
 			// Assert
-			Assert.AreEqual(1, view.Size);
+			Assert.AreEqual(1, size);
 			Assert.AreEqual(1, entities[0].index);
 		}
 		
@@ -218,9 +222,10 @@ namespace KVD.ECS.GeneralTests
 		
 			// Act
 			var entities = CollectEntities(ref view);
+			var size = view.CalculateSize();
 		
 			// Assert
-			Assert.AreEqual(2, view.Size);
+			Assert.AreEqual(2, size);
 			Assert.AreEqual(0, entities[0].index);
 			Assert.AreEqual(5, entities[1].index);
 		}
@@ -264,10 +269,10 @@ namespace KVD.ECS.GeneralTests
 			var view    = builder.With<Position>().With<Acceleration>().Exclude<Radius>().Build();
 		
 			// Act
-			CollectEntities(ref view);
+			var size = view.CalculateSize();
 		
 			// Assert
-			Assert.AreEqual(0, view.Size);
+			Assert.AreEqual(0, size);
 		}
 		
 		[Test]

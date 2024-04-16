@@ -8,7 +8,9 @@ namespace KVD.ECS.GeneralTests
 {
 	public class ComponentsStorageTests
 	{
+#nullable disable
 		ComponentsStorage _storage;
+#nullable enable
 
 		[SetUp]
 		public void Setup()
